@@ -4628,9 +4628,11 @@ function fillConnectPreview() {
   /* === START: SDK CONFIG (SUPABASE) === */
   ACSDK.configure({
     mode: 'supabase',
+    appscriptUrl: 'https://script.google.com/macros/s/AKfycbwP4dzclFQ6qPrZaHfJwTA-YgbEi4B0W3-Q7-7vOjx5pm0_Hi8vh6YP1qvKg-uoGkxS/exec',
     supabaseUrl: 'https://sxvsurhtnfbrsyqadyyy.supabase.co',
     supabaseKey: 'sb_publishable_JJ2noP-kKRH0xprsO5-Y7w_e4W7rAfn',
     functionName: 'bright-responder',
+    routes: { saveMeeting: 'appscript', availability: 'appscript', guestLookup: 'appscript', guestCancel: 'appscript' },
     fallback: false,
     dualLogin: false,
     timeoutMs: 30000

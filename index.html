@@ -4632,11 +4632,9 @@ function fillConnectPreview() {
     supabaseUrl: 'https://sxvsurhtnfbrsyqadyyy.supabase.co',
     supabaseKey: 'sb_publishable_JJ2noP-kKRH0xprsO5-Y7w_e4W7rAfn',
     functionName: 'bright-responder',
-    routes: { availability: 'appscript', guestLookup: 'appscript', guestCancel: 'appscript',
-      ownerListMeetings: 'appscript', ownerCreateMeeting: 'appscript', ownerEditMeeting: 'appscript',
-      ownerUpdateMeetingStatus: 'appscript', redeemCode: 'appscript', ownerRotateKey: 'appscript', ownerDeleteAccount: 'appscript' },
+    routes: {},
     fallback: false,
-    dualLogin: true,
+    dualLogin: false,
     timeoutMs: 30000
   });
   /* === END: SDK CONFIG (SUPABASE) === */
@@ -11096,7 +11094,7 @@ function rmExpired() {
   window.forgetDevice && window.forgetDevice();
   sessionStorage.removeItem('athna-owner-session'); sessionStorage.removeItem('athna-owner-token');
   document.getElementById('requestMgrScreen')?.remove();
-  window.__OPEN_RM__ = true;                     /* pagka-login ulit, babalik dito */
+  if (window.__RM_OPEN_NOW__ || document.getElementById('requestMgrScreen')) window.__OPEN_RM__ = true;
   if (window.openGate) window.openGate();
 }
 

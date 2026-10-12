@@ -4628,13 +4628,15 @@ function fillConnectPreview() {
   /* === START: SDK CONFIG (SUPABASE) === */
   ACSDK.configure({
     mode: 'supabase',
-    appscriptUrl: 'https://script.google.com/macros/s/AKfycbwP4dzclFQ6qPrZaHfJwTA-YgbEi4B0W3-Q7-7vOjx5pm0_Hi8vh6YP1qvKg-uoGkxS/exec',
+    appscriptUrl: 'https://script.google.com/macros/s/AKfycbyq5vAEyuB428ROnAO2HaujNsyUcfdlCQgz-gLXW32NeeZ9Py7X3K42fyJVBgWc-ACu/exec',
     supabaseUrl: 'https://sxvsurhtnfbrsyqadyyy.supabase.co',
     supabaseKey: 'sb_publishable_JJ2noP-kKRH0xprsO5-Y7w_e4W7rAfn',
     functionName: 'bright-responder',
-    routes: { saveMeeting: 'appscript', availability: 'appscript', guestLookup: 'appscript', guestCancel: 'appscript' },
+    routes: { availability: 'appscript', guestLookup: 'appscript', guestCancel: 'appscript',
+      ownerListMeetings: 'appscript', ownerCreateMeeting: 'appscript', ownerEditMeeting: 'appscript',
+      ownerUpdateMeetingStatus: 'appscript', redeemCode: 'appscript', ownerRotateKey: 'appscript', ownerDeleteAccount: 'appscript' },
     fallback: false,
-    dualLogin: false,
+    dualLogin: true,
     timeoutMs: 30000
   });
   /* === END: SDK CONFIG (SUPABASE) === */

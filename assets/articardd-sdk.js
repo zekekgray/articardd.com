@@ -106,10 +106,10 @@
   /* ---- auth actions (need both backends' tokens in hybrid mode) ---- */
   function login(payload, primary) {
     var other = primary === 'supabase' ? 'appscript' : 'supabase';
-    if (cfg.dualLogin && available(other)) {
-      run(other, 'ownerLogin', payload).then(function (d) { saveToken(other, d); }, function (e) { log('secondary login failed', e && e.message); });
-    }
-    return run(primary, 'ownerLogin', payload).then(function (d) { saveToken(primary, d); return d; });
+    var second = (cfg.dualLogin && available(other))
+      ? run(other, 'ownerLogin', payload).then(function (d) { saveToken(other, d); }, function (e) { log('secondary login failed', e && e.message); })
+      : Promise.resolve();
+    return run(primary, 'ownerLogin', payload).then(function (d) { saveToken(primary, d); return second.then(function () { return d; }); });
   }
   function logout(payload) {
     var jobs = ['appscript', 'supabase'].filter(function (b) { return available(b) && tokenFor(b); })

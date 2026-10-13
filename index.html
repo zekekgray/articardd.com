@@ -268,6 +268,12 @@
 .ab-qb span { font-family:-apple-system,'SF Pro Text',sans-serif; font-size:10.5px; font-weight:600; white-space:nowrap; }
 .ab-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; font-family:-apple-system,'SF Pro Text',sans-serif; font-size:11.5px; color:rgba(60,60,67,0.45); padding:18px 6px 10px; }
 
+  /* === START: CONTACTS SUB-TABS CSS === */
+  .ab-seg{display:flex;background:rgba(118,118,128,.14);border-radius:11px;padding:3px;margin:0 0 12px;}
+  .ab-seg button{flex:1;padding:9px 8px;border:none;border-radius:9px;background:none;font:600 13.5px -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.6);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+  .ab-seg button.on{background:#fff;color:#1c1c1e;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  /* === END: CONTACTS SUB-TABS CSS === */
+
   /* ── AB SECTION HEADERS ── */
   .ab-section-header { font-family:-apple-system,'SF Pro Text',sans-serif; font-size:13px; font-weight:700; color:rgba(60,60,67,0.55); background:transparent; padding:5px 4px 4px; letter-spacing:.01em; }
   .ab-section-group { background:rgba(255,255,255,0.72); border-radius:20px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,0.04); margin-bottom:8px; }
@@ -1334,19 +1340,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 17c.6-2 2-3 4-3s3.4 1 4 3"/></svg>
         ArtiCard Account
       </button>
-      <button class="cardmenu-item" onclick="closeCardMenu();enterOS('upcoming');setTimeout(()=>switchUpcomingView('calendar'),50);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-        Calendar
-      </button>
-      <div class="cardmenu-sep"></div>
-      <button class="cardmenu-item" onclick="closeCardMenu();openFeedbackChoice()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>
-        Rate This Card
-      </button>
-      <button class="cardmenu-item" onclick="closeCardMenu();shareCard()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-        Share
-      </button>
     </div>
   </div>
   <div class="vcard-wrap">
@@ -1808,40 +1801,30 @@ body.public-mode .back-mascot-btn{display:none !important;}
             </g>
             <!-- Bottom pill 1: ArtiCard Account (Contacts), Calendar, Cash -->
             <g>
-              <rect x="27.52" y="502.64" width="144.9" height="53.13" rx="26.57" fill="#F3EDE4"/>
-              <rect x="27.52" y="502.64" width="144.9" height="53.13" rx="26.57" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
+              <rect x="27.52" y="502.64" width="53.13" height="53.13" rx="26.57" fill="#F3EDE4"/>
+              <rect x="27.52" y="502.64" width="53.13" height="53.13" rx="26.57" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
 
-              <g transform="translate(41.53,519.06) scale(0.845)" stroke="#1c1c1e" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <g transform="translate(43.94,519.06) scale(0.845)" stroke="#1c1c1e" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 17c.6-2 2-3 4-3s3.4 1 4 3"/>
               </g>
-              <rect x="27.52" y="502.64" width="48.3" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('address');"/>
+              <rect x="27.52" y="502.64" width="53.13" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('address');"/>
 
-              <g transform="translate(89.83,519.06) scale(0.845)" stroke="#1c1c1e" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>
-              </g>
-              <rect x="75.82" y="502.64" width="48.3" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('upcoming');setTimeout(()=>switchUpcomingView('calendar'),50);"/>
-
-              <g transform="translate(138.13,519.06) scale(0.845)">
-                <circle cx="12" cy="12" r="9" fill="none" stroke="#1c1c1e" stroke-width="2.3"/>
-              </g>
-              <rect x="124.12" y="502.64" width="48.3" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();openAuSearch();"/>
+              <!-- === START: DISCOVER MOVED TO CONTACTS TAB === -->
+              <!-- (bottom-pill Discover button removed) -->
+              <!-- === END: DISCOVER MOVED TO CONTACTS TAB === -->
             </g>
 
-            <!-- Bottom pill 2: Rate This Card, Share -->
+            <!-- === START: SHARE PILL (prominent) === -->
             <g>
-              <rect x="235.21" y="502.64" width="77.28" height="53.13" rx="26.57" fill="#F3EDE4"/>
-              <rect x="235.21" y="502.64" width="77.28" height="53.13" rx="26.57" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
-
-              <g transform="translate(244.39,519.06) scale(0.845)" stroke="#1c1c1e" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
-              </g>
-              <rect x="235.21" y="502.64" width="38.64" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();openFeedbackChoice();"/>
-
-              <g transform="translate(283.03,519.06) scale(0.845)" stroke="#1c1c1e" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="196" y="502.64" width="116.49" height="53.13" rx="26.57" fill="#1c1c1e"/>
+              <rect x="196" y="502.64" width="116.49" height="53.13" rx="26.57" fill="none" stroke="rgba(232,204,122,0.55)" stroke-width="0.6"/>
+              <g transform="translate(214,519.06) scale(0.845)" stroke="#ECE4D6" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
               </g>
-              <rect x="273.85" y="502.64" width="38.64" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();shareCard();"/>
+              <text x="242" y="533" font-family="-apple-system,'SF Pro Text','Helvetica Neue',sans-serif" font-size="11" font-weight="700" letter-spacing="2.2" fill="#ECE4D6" pointer-events="none">SHARE</text>
+              <rect x="196" y="502.64" width="116.49" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();shareCard();"/>
             </g>
+            <!-- === END: SHARE PILL === -->
           </svg>
         </div>
 
@@ -1956,7 +1939,13 @@ body.public-mode .back-mascot-btn{display:none !important;}
         </button>
       </div>
 
-      <div class="ab-quickbar">
+      <!-- === START: CONTACTS SUB-TABS === -->
+      <div class="ab-seg" role="tablist" aria-label="Contacts sections">
+        <button type="button" role="tab" id="abSegMine" class="on" aria-selected="true" onclick="abSegSelect('mine')">My Contacts</button>
+        <button type="button" role="tab" id="abSegDiscover" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+      </div>
+      <!-- === END: CONTACTS SUB-TABS === -->
+<div class="ab-quickbar">
   <button class="ab-qb" onclick="haptic('light');switchOSTab('home')" aria-label="Home">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span>Home</span></button>
   <button class="ab-qb" onclick="haptic('light');openAccountPage()" aria-label="Profile">
@@ -2947,6 +2936,13 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <div class="os-row-text"><div class="os-row-title">Our Story</div><div class="os-row-sub">Why articardd exists, and where it is going</div></div>
         <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
+      <!-- === START: RATE THIS CARD (moved from card nav) === -->
+      <div class="os-row" onclick="haptic('light');openFeedbackChoice()" style="cursor:pointer;">
+        <div class="os-row-icon" style="background:#FF9F0A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg></div>
+        <div class="os-row-text"><div class="os-row-title">Rate This Card</div><div class="os-row-sub">Tell us how articardd is working for you</div></div>
+        <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <!-- === END: RATE THIS CARD === -->
       <div class="os-row" onclick="haptic('light');openTosScreen(true)" style="cursor:pointer;">
         <div class="os-row-icon" style="background:#8E8E93;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/></svg></div>
         <div class="os-row-text"><div class="os-row-title">Terms &amp; Privacy</div><div class="os-row-sub">Version 4.0</div></div>
@@ -6123,7 +6119,7 @@ function fillConnectPreview() {
     const scrubber = document.getElementById('abScrubber');
     if (scrubber) scrubber.style.display = pane === 'address' ? 'flex' : 'none';
     if (pane === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
-    if (pane === 'upcoming') loadMeetings();
+    if (pane === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     if (currentEntry) {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
@@ -6153,7 +6149,7 @@ function fillConnectPreview() {
     if (scrubber) scrubber.style.display = tabId === 'address' ? 'flex' : 'none';
     if (tabId === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (tabId === 'tag') renderNotes();
-    if (tabId === 'upcoming') loadMeetings();
+    if (tabId === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     currentOSPane = tabId;
     document.getElementById('osBackBtn')?.classList.toggle('os-back-home', tabId === 'home');
     if (tabId === 'home') requestAnimationFrame(handleOsBodyScroll);
@@ -7004,6 +7000,30 @@ function fillConnectPreview() {
       showToast('Open your phone Settings → Privacy → Contacts to allow access', 'neutral');
     }, 300);
   }
+
+  /* === START: CONTACTS SUB-TABS JS === */
+  function abSegSync(which) {
+    const mine = document.getElementById('abSegMine'), disc = document.getElementById('abSegDiscover');
+    if (!mine || !disc) return;
+    mine.classList.toggle('on', which === 'mine');
+    disc.classList.toggle('on', which === 'discover');
+    mine.setAttribute('aria-selected', String(which === 'mine'));
+    disc.setAttribute('aria-selected', String(which === 'discover'));
+  }
+  function abSegSelect(which) {
+    haptic('light');
+    if (which === 'discover') { openAuSearch(); return; }
+    abSegSync('mine');
+    const ov = document.getElementById('auOverlay');
+    if (ov && ov.classList.contains('show')) closeAuSearch();
+  }
+  /* keeps the segment in sync however the Discover sheet closes (X, drag, backdrop) */
+  (function abSegWatch() {
+    const ov = document.getElementById('auOverlay'); if (!ov) return;
+    new MutationObserver(() => abSegSync(ov.classList.contains('show') ? 'discover' : 'mine'))
+      .observe(ov, { attributes: true, attributeFilter: ['class'] });
+  })();
+  /* === END: CONTACTS SUB-TABS JS === */
 
   /* === START: CONTACTS MORE MENU === */
   function abUpdateMoreBadge() {
@@ -11105,6 +11125,7 @@ async function rmRefreshBadge() {
     const list = await apiPost('ownerListMeetings', { token: tok });
     const n = list.filter(m => m.requestStatus === 'Requested').length;
     el.textContent = n ? n + ' new' : '';
+    const upEl = document.getElementById('upReqValue'); if (upEl) upEl.textContent = n ? n + ' new' : '';
   } catch (e) {}
 }
 

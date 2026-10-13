@@ -939,7 +939,20 @@ body.public-mode .back-mascot-btn{display:none !important;}
   .au-other-label{font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:18px 4px 8px;}
   /* === START: DISCOVER CSS === */
   #auSearchBarWrap{display:none !important;}
-  #auSheet{height:88vh !important;max-height:88vh !important;}
+  /* Discover = full-screen page na kapareho ng Contacts layout */
+  #auOverlay{background:#ECE4D6 !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;transition:none !important;align-items:stretch !important;}
+  #auSheet{height:100dvh !important;max-height:100dvh !important;width:100% !important;max-width:none !important;border-radius:0 !important;background:#ECE4D6 !important;animation:none !important;}
+  #auHandle{display:none !important;}
+  #auHead{margin-top:59px;padding:6px 16px 14px !important;}
+  #auHead > div:nth-child(2){order:-1;text-align:left !important;}
+  #auHead > div:nth-child(2) > div:first-child{font-size:30px !important;font-weight:700 !important;letter-spacing:-.01em !important;line-height:1.2 !important;}
+  #auHead > div:nth-child(2) > div:nth-child(2){display:none !important;}
+  #auHead > button:first-child{width:44px !important;height:44px !important;background:rgba(255,255,255,0.72) !important;border-radius:50% !important;}
+  #auHead > button[aria-label="Back to card"]{position:fixed !important;top:max(14px,env(safe-area-inset-top)) !important;left:14px !important;width:54px !important;height:54px !important;z-index:50;}
+  #auHead > button[aria-label="Back to card"] svg{width:27px !important;height:27px !important;}
+  #auMenuDropdown{left:auto !important;right:16px !important;top:60px !important;}
+  #auBody{padding-left:16px !important;padding-right:16px !important;}
+  #auBody .dc-ask{margin:0 -16px !important;padding-left:16px !important;padding-right:16px !important;}
   #auBody{font-family:-apple-system,'SF Pro Text',sans-serif;}
   #auBody button,#auBody input{font-family:inherit;}
   .dc-h1{font-family:-apple-system,'SF Pro Display',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.01em;color:#1c1c1e;line-height:1.2;margin:6px 0 4px;}
@@ -3129,7 +3142,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
 <div class="share-overlay" id="auOverlay" onclick="if(event.target===this)closeAuSearch()">
   <div class="share-sheet" id="auSheet" style="height:80vh;max-height:80vh;display:flex;flex-direction:column;padding-bottom:0;position:relative;">
     <div class="share-handle" id="auHandle" style="cursor:grab;touch-action:none;flex-shrink:0;"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 14px 8px;flex-shrink:0;position:relative;">
+    <div id="auHead" style="display:flex;align-items:center;justify-content:space-between;padding:2px 14px 8px;flex-shrink:0;position:relative;">
       <button onclick="event.stopPropagation();toggleAuMenu()" aria-label="Menu"
         style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:none;border:none;cursor:pointer;padding:0;color:#1c1c1e;transition:transform .12s,opacity .12s;-webkit-tap-highlight-color:transparent;"
         onpointerdown="this.style.transform='scale(0.88)';this.style.opacity='.7'" onpointerup="this.style.transform='';this.style.opacity=''" onpointerleave="this.style.transform='';this.style.opacity=''">
@@ -3139,7 +3152,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <div style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:26px;font-weight:700;color:#1c1c1e;letter-spacing:-.01em;line-height:1.1;">Discover</div>
         <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1c1c1e;margin-top:3px;">People you should meet</div>
       </div>
-            <button type="button" onclick="event.stopPropagation();haptic('light');closeAuSearch();" aria-label="Back to card"
+            <button type="button" onclick="event.stopPropagation();closeAuSearch();exitOS();" aria-label="Back to card"
         style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex-shrink:0;border-radius:50%;background:rgba(255,255,255,0.82);border:0.6px solid rgba(255,255,255,0.9);box-shadow:0 2px 8px rgba(0,0,0,0.10);cursor:pointer;padding:0;color:#1c1c1e;transition:transform .12s,opacity .12s;-webkit-tap-highlight-color:transparent;"
         onpointerdown="this.style.transform='scale(0.88)';this.style.opacity='.7'" onpointerup="this.style.transform='';this.style.opacity=''" onpointerleave="this.style.transform='';this.style.opacity=''">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -3166,6 +3179,10 @@ body.public-mode .back-mascot-btn{display:none !important;}
           About AU
         </button>
       </div>
+    </div>
+    <div class="ab-seg" id="auSeg" role="tablist" aria-label="Contacts sections" style="margin:0 16px 12px;flex-shrink:0;">
+      <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
+      <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Discover</button>
     </div>
     <div id="auBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 30px;"></div>
     <div id="auSearchBarWrap" style="flex-shrink:0;padding:8px 16px max(8px,env(safe-area-inset-bottom));background:rgba(236,228,214,0.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:0.6px solid rgba(0,0,0,0.08);">
@@ -5348,7 +5365,7 @@ function fillConnectPreview() {
   }
   function closeAuSearch() {
     closeAuMenu();
-    try { dismissSheet('auOverlay', '#auSheet'); }
+    try { document.getElementById('auOverlay').classList.remove('show'); haptic('light'); }
     catch (err) { console.error('AU close error:', err); }
   }
 
@@ -13493,11 +13510,12 @@ function dcRender(keep) {
   const chat = v === 'chat', top = keep ? body.scrollTop : 0;
 const sh = document.getElementById('auSheet');
 if (sh) {
-  sh.style.setProperty('height', chat ? '100dvh' : '88vh', 'important');
-  sh.style.setProperty('max-height', chat ? '100dvh' : '88vh', 'important');
+  sh.style.setProperty('height', '100dvh', 'important');
+  sh.style.setProperty('max-height', '100dvh', 'important');
   sh.style.borderRadius = chat ? '0' : '';
   sh.style.paddingTop = chat ? 'env(safe-area-inset-top)' : '';
 }
+  ['auHead', 'auSeg'].forEach(i => { const e = document.getElementById(i); if (e) e.style.display = chat ? 'none' : ''; });
   const V = { discover: dcVDiscover, ambient: dcVAmbient, empty: dcVEmpty, pending: dcVPending, recipient: dcVRecipient, answered: dcVAnswered, confirm: dcVConfirm, chat: dcVChat };
   const _dm = document.getElementById('dcMsg'), _draft = (keep && _dm) ? _dm.value : '';
   body.innerHTML = V[v]();

@@ -1801,13 +1801,11 @@ body.public-mode .back-mascot-btn{display:none !important;}
             </g>
             <!-- Bottom pill 1: ArtiCard Account (Contacts), Calendar, Cash -->
             <g>
-              <rect x="27.52" y="502.64" width="53.13" height="53.13" rx="26.57" fill="#F3EDE4"/>
-              <rect x="27.52" y="502.64" width="53.13" height="53.13" rx="26.57" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
-
-              <g transform="translate(43.94,519.06) scale(0.845)" stroke="#1c1c1e" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 17c.6-2 2-3 4-3s3.4 1 4 3"/>
-              </g>
-              <rect x="27.52" y="502.64" width="53.13" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('address');"/>
+              <circle cx="170" cy="529.2" r="25" fill="#F3EDE4"/>
+              <circle cx="170" cy="529.2" r="25" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
+              <circle cx="170" cy="529.2" r="22" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+              <rect x="161" y="520.2" width="18" height="18" rx="5" fill="none" stroke="#1c1c1e" stroke-width="1.8"/>
+              <circle cx="170" cy="529.2" r="25" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('address');"/>
 
               <!-- === START: DISCOVER MOVED TO CONTACTS TAB === -->
               <!-- (bottom-pill Discover button removed) -->
@@ -1816,13 +1814,13 @@ body.public-mode .back-mascot-btn{display:none !important;}
 
             <!-- === START: SHARE PILL (prominent) === -->
             <g>
-              <rect x="196" y="502.64" width="116.49" height="53.13" rx="26.57" fill="#1c1c1e"/>
-              <rect x="196" y="502.64" width="116.49" height="53.13" rx="26.57" fill="none" stroke="rgba(232,204,122,0.55)" stroke-width="0.6"/>
-              <g transform="translate(214,519.06) scale(0.845)" stroke="#ECE4D6" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="210" y="502.64" width="102.49" height="53.13" rx="26.57" fill="#1c1c1e"/>
+              <rect x="210" y="502.64" width="102.49" height="53.13" rx="26.57" fill="none" stroke="rgba(232,204,122,0.55)" stroke-width="0.6"/>
+              <g transform="translate(226,519.06) scale(0.845)" stroke="#ECE4D6" stroke-width="2.17" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
               </g>
-              <text x="242" y="533" font-family="-apple-system,'SF Pro Text','Helvetica Neue',sans-serif" font-size="11" font-weight="700" letter-spacing="2.2" fill="#ECE4D6" pointer-events="none">SHARE</text>
-              <rect x="196" y="502.64" width="116.49" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();shareCard();"/>
+              <text x="252" y="533" font-family="-apple-system,'SF Pro Text','Helvetica Neue',sans-serif" font-size="11" font-weight="700" letter-spacing="2.2" fill="#ECE4D6" pointer-events="none">SHARE</text>
+              <rect x="210" y="502.64" width="102.49" height="53.13" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();shareCard();"/>
             </g>
             <!-- === END: SHARE PILL === -->
           </svg>
@@ -2142,6 +2140,11 @@ body.public-mode .back-mascot-btn{display:none !important;}
       </div>
 
       <!-- CALENDAR VIEW -->
+      <!-- REQUESTS VIEW -->
+      <div id="upRequestsView" style="display:none;">
+        <div id="rmList"></div>
+      </div>
+
       <div id="upCalendarView" style="display:none;">
         <div class="up-cal-card">
           <div class="up-cal-nav">
@@ -2868,12 +2871,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <div class="os-row-icon" style="background:#E8CC7A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9.82a6 6 0 0 1 0 4.36"/></svg></div>
         <div class="os-row-text"><div class="os-row-title">articardd ID</div><div class="os-row-sub">Your permanent account ID</div></div>
         <span class="os-row-value" id="acctAthIdValue" style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.04em;">—</span>
-      </div>
-      <div class="os-row" onclick="openRequestManager()" style="cursor:pointer;">
-        <div class="os-row-icon" style="background:#4A9DE0;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg></div>
-        <div class="os-row-text"><div class="os-row-title">Request Manager</div><div class="os-row-sub">Meeting requests from your card</div></div>
-        <span class="os-row-value" id="acctReqValue" style="color:#FF9F0A;font-weight:600;"></span>
-        <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
 
@@ -11125,11 +11122,11 @@ function rmExpired() {
 
 async function rmRefreshBadge() {
   const el = document.getElementById('acctReqValue'), tok = rmToken();
-  if (!el || !tok) return;
+  if (!tok) return;
   try {
     const list = await apiPost('ownerListMeetings', { token: tok });
     const n = list.filter(m => m.requestStatus === 'Requested').length;
-    el.textContent = n ? n + ' new' : '';
+    if (el) el.textContent = n ? n + ' new' : '';
     const rb = document.getElementById('upViewReqBtn'); if (rb) rb.textContent = n ? 'Requests · ' + n : 'Requests';
   } catch (e) {}
 }

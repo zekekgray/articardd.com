@@ -2123,6 +2123,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <div class="up-toggle">
             <button class="up-toggle-btn active" id="upViewListBtn" onclick="switchUpcomingView('list')">List</button>
             <button class="up-toggle-btn" id="upViewCalBtn" onclick="switchUpcomingView('calendar')">Calendar</button>
+            <button class="up-toggle-btn" id="upViewReqBtn" onclick="switchUpcomingView('requests')">Requests</button>
           </div>
         </div>
         <button class="up-add-btn"
@@ -9256,9 +9257,13 @@ function toggleContactEdit() {
     upcomingView = view;
     document.getElementById('upViewListBtn').classList.toggle('active', view === 'list');
     document.getElementById('upViewCalBtn').classList.toggle('active', view === 'calendar');
+    document.getElementById('upViewReqBtn')?.classList.toggle('active', view === 'requests');
     document.getElementById('upListView').style.display = view === 'list' ? 'block' : 'none';
     document.getElementById('upCalendarView').style.display = view === 'calendar' ? 'block' : 'none';
+    const rv = document.getElementById('upRequestsView'); if (rv) rv.style.display = view === 'requests' ? 'block' : 'none';
+    const addB = document.querySelector('#screenOS .up-add-btn'); if (addB) addB.style.visibility = view === 'requests' ? 'hidden' : '';
     if (view === 'calendar') renderCalendar();
+    if (view === 'requests') { if (rmToken()) loadRequestManager(); else rmExpired(); }
   }
 
   function meetingRowHtml(m) {
@@ -11125,7 +11130,7 @@ async function rmRefreshBadge() {
     const list = await apiPost('ownerListMeetings', { token: tok });
     const n = list.filter(m => m.requestStatus === 'Requested').length;
     el.textContent = n ? n + ' new' : '';
-    const upEl = document.getElementById('upReqValue'); if (upEl) upEl.textContent = n ? n + ' new' : '';
+    const rb = document.getElementById('upViewReqBtn'); if (rb) rb.textContent = n ? 'Requests · ' + n : 'Requests';
   } catch (e) {}
 }
 
@@ -11263,6 +11268,12 @@ function openRequestManager() {
   if (document.body.classList.contains('public-mode')) { haptic('error'); showToast('Owner access only', 'neutral'); return; }
   if (!rmToken()) { rmExpired(); return; }
   haptic('medium');
+  /* === START: REQUESTS NOW LIVE INSIDE CALENDAR === */
+  const osEl = document.getElementById('screenOS');
+  if (osEl && osEl.classList.contains('active')) switchOSTab('upcoming'); else enterOS('upcoming');
+  setTimeout(() => switchUpcomingView('requests'), 60);
+  return;
+  /* === END: REQUESTS NOW LIVE INSIDE CALENDAR === */
   document.getElementById('requestMgrScreen')?.remove();
   const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
   const pill = "display:flex;align-items:center;justify-content:center;width:54px;height:54px;padding:0;color:#1c1c1e;background:rgba(255,255,255,0.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:0.6px solid rgba(255,255,255,0.9);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.10),inset 0 1px 0 rgba(255,255,255,0.7);cursor:pointer;-webkit-tap-highlight-color:transparent;position:absolute;top:max(14px,env(safe-area-inset-top));z-index:50;";

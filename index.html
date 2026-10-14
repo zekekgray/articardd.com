@@ -994,6 +994,43 @@ body.public-mode .back-mascot-btn{display:none !important;}
   .dc-compose{display:flex;gap:8px;flex-shrink:0;}
   .dc-demo{display:inline-block;background:#1c1c1e;color:#E8CC7A;font-size:10.5px;font-weight:700;letter-spacing:.1em;padding:6px 12px;border-radius:12px;margin-bottom:6px;}
   /* === END: DISCOVER CSS === */
+
+  /* === START: AGENTS COMPOSER === */
+  .ag-comp{display:flex;align-items:center;gap:6px;position:relative;margin:10px 0 14px;padding:5px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:30px;box-shadow:0 2px 10px rgba(0,0,0,.05);transition:border-color .2s,box-shadow .2s;}
+  .ag-comp:focus-within{border-color:rgba(28,28,30,.55);box-shadow:0 0 0 3px rgba(232,204,122,.35),0 2px 10px rgba(0,0,0,.05);}
+  .ag-plus,.ag-send{width:44px;height:44px;flex-shrink:0;border:none;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .2s,color .2s,opacity .2s;}
+  .ag-plus{background:rgba(0,0,0,.06);color:#1c1c1e;}
+  .ag-plus svg{transition:transform .3s cubic-bezier(.34,1.56,.64,1),stroke .2s;}
+  .ag-plus.open{background:#1c1c1e;}
+  .ag-plus.open svg{transform:rotate(45deg);stroke:#ECE4D6;}
+  .ag-send{background:rgba(0,0,0,.07);color:rgba(60,60,67,.35);}
+  .ag-send.ready{background:#1c1c1e;color:#ECE4D6;transform:scale(1.04);}
+  .ag-send.busy{background:#1c1c1e;color:#ECE4D6;cursor:default;}
+  .ag-send.busy svg{opacity:0;}
+  .ag-send.busy::after{content:'';position:absolute;width:18px;height:18px;border:2px solid rgba(236,228,214,.3);border-top-color:#ECE4D6;border-radius:50%;animation:spin .8s linear infinite;}
+  .ag-plus:active,.ag-send:active{transform:scale(.92);}
+  .ag-send:disabled{opacity:.35;cursor:default;}
+  .ag-in{flex:1;min-width:0;height:44px;border:none;background:transparent;outline:none;padding:0 6px;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:16px;color:#1c1c1e;}
+  .ag-in::placeholder{color:rgba(60,60,67,.4);}
+  .ag-comp .ag-in:focus-visible{outline:none !important;}
+  @media (prefers-reduced-motion:reduce){.ag-send.busy::after{animation-duration:1.2s !important;animation-iteration-count:infinite !important;}}
+  /* === END: AGENTS COMPOSER === */
+
+  /* === START: AGENTS PLUS MENU === */
+  .ag-menu{position:absolute;left:0;bottom:calc(100% + 10px);width:min(300px,100%);max-height:min(46vh,340px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:rgba(255,255,255,.96);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:.6px solid rgba(0,0,0,.08);border-radius:18px;box-shadow:0 14px 36px rgba(0,0,0,.18);padding:6px;z-index:30;transform-origin:bottom left;}
+  .ag-menu.show{animation:agMenuIn .22s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes agMenuIn{from{opacity:0;transform:translateY(6px) scale(.97);}to{opacity:1;transform:none;}}
+  .ag-mi{display:flex;align-items:center;gap:12px;width:100%;padding:10px;border:none;background:none;border-radius:12px;cursor:pointer;text-align:left;font-family:-apple-system,'SF Pro Text',sans-serif;-webkit-tap-highlight-color:transparent;transition:background .12s;}
+  .ag-mi:active{background:rgba(0,0,0,.06);}
+  .ag-mi[disabled]{opacity:.4;cursor:default;}
+  .ag-mi-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ag-mi-tx{flex:1;min-width:0;}
+  .ag-mi-t{display:block;font-size:14px;font-weight:600;color:#1c1c1e;}
+  .ag-mi-s{display:block;font-size:11.5px;color:rgba(60,60,67,.55);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ag-msep{height:1px;background:rgba(0,0,0,.07);margin:4px 8px;}
+  .ag-mhead{position:sticky;top:0;z-index:2;background:rgba(255,255,255,.98);border-radius:12px;}
+  @media (prefers-reduced-motion:reduce){.ag-menu.show{animation:none;}}
+  /* === END: AGENTS PLUS MENU === */
   .au-back-row{display:flex;align-items:center;gap:8px;padding:2px 4px 10px;cursor:pointer;color:#B5583A;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13.5px;font-weight:600;-webkit-tap-highlight-color:transparent;}
   /* ── AU LAUNCHER GRID (Apple-style tiles — each opens its own clean modal) ── */
   .au-tile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px;padding:8px 2px 10px;}
@@ -2188,12 +2225,12 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <div id="agChips" style="display:none;flex-wrap:wrap;gap:6px;margin:8px 0 0;"></div>
 <input type="file" id="agFilePhoto" accept="image/*" multiple hidden onchange="agPickFiles(this)">
 <input type="file" id="agFileCam" accept="image/*" capture="environment" hidden onchange="agPickFiles(this)">
-<input type="file" id="agFileDoc" accept=".csv,.txt,.json,.md,.pdf,.xlsx,.docx" multiple hidden onchange="agPickFiles(this)">
-<div class="dc-compose" style="margin:8px 0 14px;align-items:center;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:26px;padding:4px 4px 4px 6px;gap:4px;position:relative;">
-  <div id="agPlusMenu" style="display:none;position:absolute;left:0;bottom:56px;min-width:240px;max-height:50vh;overflow-y:auto;background:rgba(255,255,255,0.97);border:0.6px solid rgba(0,0,0,0.08);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.18);padding:6px;z-index:30;"></div>
-  <button type="button" id="agPlusBtn" aria-label="Attach or choose agent" onclick="agToggleMenu()" style="width:40px;height:40px;flex-shrink:0;border-radius:50%;border:none;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-          <input id="agInput" class="dc-in" style="border:none;background:transparent;height:44px;padding:0 6px;" type="text" placeholder="Message your AI team…" autocomplete="off" enterkeyhint="send" onkeydown="if(event.key==='Enter')agSend()">
-          <button type="button" id="agSendBtn" class="dc-btn" style="width:auto;padding:0 16px;height:40px;border-radius:20px;flex-shrink:0;" onclick="agSend()">Send</button>
+<input type="file" id="agFileDoc" accept=".csv,.txt,.json,.md" multiple hidden onchange="agPickFiles(this)">
+<div class="ag-comp" id="agComposer">
+  <div id="agPlusMenu" class="ag-menu" role="menu" aria-label="Attachments and agents" style="display:none;"></div>
+  <button type="button" id="agPlusBtn" class="ag-plus" aria-label="Attach or choose agent" aria-haspopup="true" aria-expanded="false" onclick="agToggleMenu()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <input id="agInput" class="ag-in" type="text" placeholder="Message your AI team…" aria-label="Message your AI team" autocomplete="off" enterkeyhint="send" oninput="agSyncSend()" onkeydown="if(event.key==='Enter'&&!event.isComposing)agSend()">
+          <button type="button" id="agSendBtn" class="ag-send" aria-label="Send message" aria-disabled="true" onclick="agSend()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
         </div>
         <div class="up-empty-card" style="text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="agToggleDir()">
           <div style="flex:1;"><div style="font-weight:700;color:#1c1c1e;font-size:14px;">Your AI team</div><div style="font-size:12px;margin-top:2px;">28 specialized agents · available when needed</div></div>
@@ -6141,6 +6178,7 @@ function fillConnectPreview() {
   }
 
   function exitOS() {
+    agToggleMenu(false);
     haptic('light');
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('leaving');
@@ -6159,6 +6197,7 @@ function fillConnectPreview() {
     if (scrubber) scrubber.style.display = tabId === 'address' ? 'flex' : 'none';
     if (tabId === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (tabId === 'tag') renderNotes();
+    if (tabId !== 'agents') agToggleMenu(false);
     if (tabId === 'agents') renderAgents();
     if (tabId === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     currentOSPane = tabId;
@@ -6312,6 +6351,8 @@ function agToggleMenu(force) {
   document.removeEventListener('click', agMenuOutside);
   if (on) { agMenuHome(); setTimeout(() => document.addEventListener('click', agMenuOutside), 10); }
   m.style.display = on ? 'block' : 'none';
+  const pb = document.getElementById('agPlusBtn');
+  if (pb) { pb.classList.toggle('open', on); pb.setAttribute('aria-expanded', String(on)); }
 }
 function agMenuRow(ic, t, s, js) {
   const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
@@ -6338,6 +6379,72 @@ function agSetTarget(id) {
   showToast(a ? 'Sending to ' + a[1] : 'Auto routing', 'neutral');
 }
 function agPick(id) { agToggleMenu(false); const el = document.getElementById(id); if (el) el.click(); }
+
+/* === START: AGENTS PLUS MENU (overrides older versions above) === */
+const AG_ICS = 'width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const AG_IC = {
+  photo:  `<svg ${AG_ICS}><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5.5-5.5a1.5 1.5 0 0 0-2.1 0L5 19"/></svg>`,
+  camera: `<svg ${AG_ICS}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  doc:    `<svg ${AG_ICS}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/></svg>`,
+  agent:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.2 4.5 2 4.5 5.3"/></svg>`,
+  auto:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5l2.9 6.6 7.1.6-5.4 4.8 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.7l7.1-.6z"/></svg>`,
+  chev:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.35)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>`,
+  check:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`,
+  back:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>`
+};
+
+function agMi(ic, bg, t, s, js, o) {
+  o = o || {};
+  return `<button type="button" role="menuitem" class="ag-mi" ${o.off ? 'disabled aria-disabled="true"' : ''} onclick="${js}"><span class="ag-mi-ic" style="background:${bg};">${ic}</span><span class="ag-mi-tx"><span class="ag-mi-t">${t}</span>${s ? `<span class="ag-mi-s">${s}</span>` : ''}</span>${o.check ? AG_IC.check : ''}${o.chev ? AG_IC.chev : ''}</button>`;
+}
+
+function agMenuOutside(e) {
+  const m = document.getElementById('agPlusMenu'), b = document.getElementById('agPlusBtn');
+  if (m && !m.contains(e.target) && !(b && b.contains(e.target))) agToggleMenu(false);
+}
+
+function agToggleMenu(force) {
+  const m = document.getElementById('agPlusMenu'); if (!m) return;
+  const was = m.style.display === 'block';
+  const on = force === undefined ? !was : !!force;
+  if (on === was) return;
+  haptic('light');
+  document.removeEventListener('pointerdown', agMenuOutside, true);
+  const pb = document.getElementById('agPlusBtn');
+  if (pb) { pb.classList.toggle('open', on); pb.setAttribute('aria-expanded', String(on)); }
+  if (!on) { m.style.display = 'none'; m.classList.remove('show'); return; }
+  agMenuHome();
+  m.style.display = 'block';
+  m.classList.remove('show'); void m.offsetWidth; m.classList.add('show');
+  document.addEventListener('pointerdown', agMenuOutside, true);
+  requestAnimationFrame(() => m.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+}
+
+function agMenuHome() {
+  const m = document.getElementById('agPlusMenu'); if (!m) return;
+  const full = agFiles.length >= AG_MAX_FILES;
+  const lim = full ? 'Max ' + AG_MAX_FILES + ' attachments' : '';
+  const tg = AGENTS.find(a => a[0] === agTarget);
+  m.innerHTML =
+    agMi(AG_IC.photo,  '#FF9F0A', 'Photo',    lim || 'From your gallery',           "agPick('agFilePhoto')", { off: full })
+  + agMi(AG_IC.camera, '#8E8E93', 'Camera',   lim || 'Take a photo',                "agPick('agFileCam')",   { off: full })
+  + agMi(AG_IC.doc,    '#4A9DE0', 'Document', lim || 'CSV, TXT, JSON or Markdown',  "agPick('agFileDoc')",   { off: full })
+  + '<div class="ag-msep"></div>'
+  + agMi(AG_IC.agent,  '#1c1c1e', 'Choose agent', tg ? auEsc(tg[1]) : 'Auto · best agent for the task', 'agMenuAgents()', { chev: 1 });
+  m.scrollTop = 0;
+}
+
+function agMenuAgents() {
+  const m = document.getElementById('agPlusMenu'); if (!m) return;
+  haptic('light');
+  m.innerHTML =
+    `<button type="button" role="menuitem" class="ag-mi ag-mhead" onclick="haptic('light');agMenuHome()"><span class="ag-mi-ic" style="background:rgba(0,0,0,.06);">${AG_IC.back}</span><span class="ag-mi-tx"><span class="ag-mi-t">Choose agent</span></span></button>`
+  + agMi(AG_IC.auto, 'rgba(232,204,122,.4)', 'Auto', 'Best agent for the task', "agSetTarget('')", { check: !agTarget })
+  + '<div class="ag-msep"></div>'
+  + AGENTS.map(a => agMi(`<span style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11px;font-weight:700;color:#E8CC7A;">${a[0].slice(2)}</span>`, '#1c1c1e', auEsc(a[1]), auEsc(a[2]), "agSetTarget('" + a[0] + "')", { check: agTarget === a[0] })).join('');
+  m.scrollTop = 0;
+}
+/* === END: AGENTS PLUS MENU === */
 
 function agImgToB64(file) {
   return new Promise((res, rej) => {
@@ -6382,6 +6489,16 @@ function agRenderChips() {
   const h = (tg ? chip('→ ' + auEsc(tg[1]), "agSetTarget('')", true) : '')
     + agFiles.map((f, i) => chip((f.type === 'image' ? '🖼️ ' : '📄 ') + auEsc(f.name), 'agRemoveFile(' + i + ')')).join('');
   el.innerHTML = h; el.style.display = h ? 'flex' : 'none';
+  agSyncSend();
+}
+function agSyncSend() {
+  const inp = document.getElementById('agInput'), b = document.getElementById('agSendBtn');
+  if (!b) return;
+  const has = !!((inp && inp.value.trim()) || agFiles.length);
+  b.classList.toggle('ready', has && !agBusy);
+  b.classList.toggle('busy', !!agBusy);
+  b.setAttribute('aria-disabled', String(!has || !!agBusy));
+  b.setAttribute('aria-label', agBusy ? 'Sending' : 'Send message');
 }
 function agRemoveFile(i) { agFiles.splice(i, 1); haptic('light'); agRenderChips(); }
 
@@ -6409,6 +6526,7 @@ function agRender() {
     </div>`;
   }).join('') + (agBusy ? '<div class="dc-bub th" style="opacity:.6;">Routing to the right roles…</div>' : '');
   m.lastElementChild && m.lastElementChild.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  agSyncSend();
 agMeter();
 }
 async function agSend(text) {
@@ -12928,6 +13046,8 @@ function copyPIAthId() {
       const el = active; if (!el) return;
       if (typeof auMenuOpen !== 'undefined' && auMenuOpen) { closeAuMenu(); return; }
       if (typeof auPlusMenuOpen !== 'undefined' && auPlusMenuOpen) { closeAuPlusMenu(); return; }
+      const _agm = document.getElementById('agPlusMenu');
+      if (_agm && _agm.style.display === 'block') { agToggleMenu(false); const _pb = document.getElementById('agPlusBtn'); if (_pb) _pb.focus(); return; }
       if (el.id === 'contactDetailScreen') {
         const ed = document.getElementById('cdfs-notes-editor');
         if (ed && ed.style.display === 'block') { cancelInlineNotesEdit(); return; }

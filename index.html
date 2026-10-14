@@ -1396,7 +1396,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
             <div class="pill-avatar" id="pillAvatar" onclick="event.stopPropagation();haptic('light');triggerPhotoUpload();"></div>
             <div class="pill-name" id="pillName">E. N. TAMBIGA</div>
             <div class="pill-pos" id="pillPos">CEO | ARTIBYTE APOSTROPHE INC.</div>
-            <div id="pillVisToggleTrack" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:18px;border-radius:9px;background:#34C759;cursor:pointer;z-index:3;pointer-events:all;touch-action:none;">
+            <div id="pillVisToggleTrack" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:18px;border-radius:9px;background:#1c1c1e;cursor:pointer;z-index:3;pointer-events:all;touch-action:none;">
               <div id="pillVisToggleKnob" style="position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);"></div>
             </div>
           </div>
@@ -1896,6 +1896,12 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <span class="os-row-value" id="osAddressPreview"></span>
           <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
+        <div class="os-row" id="osAgentsRow" onclick="switchOSTab('agents')" style="display:none;cursor:pointer;">
+          <div class="os-row-icon" style="background:#1c1c1e;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.2 4.5 2 4.5 5.3"/></svg></div>
+          <div class="os-row-text"><div class="os-row-title">Agents</div></div>
+          <span class="os-row-value">28</span>
+          <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
         <div class="os-row" onclick="switchOSTab('upcoming')" style="cursor:pointer;">
           <div class="os-row-icon" style="background:#FF9F0A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></div>
           <div class="os-row-text"><div class="os-row-title">Calendar</div></div>
@@ -2156,6 +2162,19 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <div class="up-section-label" id="upCalSelectedLabel">—</div>
         <div id="upCalSelectedWrap"></div>
       </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="os-pane" data-pane="agents">
+      <div class="ab-pane-header">
+        <div style="display:flex;align-items:baseline;">
+          <div class="os-title" style="padding:6px 0 0 4px;">Agents</div>
+          <span class="ab-count" id="agCount"></span>
+        </div>
+      </div>
+      <div class="up-empty-card" style="margin-bottom:12px;text-align:left;">Virtual roles from the ArtiBytte Protocol. They are not employees. A role shows Planned until a real task is logged.</div>
+      <input class="ab-search" id="agSearch" type="text" placeholder="Search agents" oninput="renderAgents()"/>
+      <div id="agList"></div>
     </div>
 
     <!-- NOTE OS -->
@@ -4844,14 +4863,14 @@ function fillConnectPreview() {
       const c = Math.max(OFF_LEFT, Math.min(ON_LEFT, px));
       knob.style.left = c + 'px';
       const p = c / ON_LEFT;
-      track.style.background = p < 0.5 ? '#ddd' : (p >= 0.999 ? '#34C759' :
-        `rgb(${Math.round(221-(221-52)*p)},${Math.round(221-(221-199)*p)},${Math.round(221-(221-89)*p)})`);
+      track.style.background = p < 0.5 ? '#ddd' : (p >= 0.999 ? '#1c1c1e' :
+        `rgb(${Math.round(221-(221-28)*p)},${Math.round(221-(221-28)*p)},${Math.round(221-(221-30)*p)})`);
     }
     function settle(on) {
       knob.style.transition = 'left .2s cubic-bezier(0.25,0.1,0.25,1)';
       track.style.transition = 'background .2s cubic-bezier(0.25,0.1,0.25,1)';
       knob.style.left = (on ? ON_LEFT : OFF_LEFT) + 'px';
-      track.style.background = on ? '#34C759' : '#ddd';
+      track.style.background = on ? '#1c1c1e' : '#ddd';
       pillInfoVisible = on;
       applyPillInfoVisibility();
       haptic('light');
@@ -6082,6 +6101,8 @@ function fillConnectPreview() {
     if (currentEntry) {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
+      const agRow = document.getElementById('osAgentsRow');
+      if (agRow) agRow.style.display = currentEntry.athid === 'ARTICARD-000000' ? '' : 'none'; /* palitan ng ATH ID mo */
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');
@@ -6108,13 +6129,56 @@ function fillConnectPreview() {
     if (scrubber) scrubber.style.display = tabId === 'address' ? 'flex' : 'none';
     if (tabId === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (tabId === 'tag') renderNotes();
+    if (tabId === 'agents') renderAgents();
     if (tabId === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     currentOSPane = tabId;
     document.getElementById('osBackBtn')?.classList.toggle('os-back-home', tabId === 'home');
     if (tabId === 'home') requestAnimationFrame(handleOsBodyScroll);
   }
 
-  function osBackTapped() {
+  const AGENTS = [
+  ['A-01','Strategy Officer','Long-term direction, priorities, opportunity cost'],
+  ['A-02','Chief of Staff','Orchestrates agents, owners, deadlines, briefings'],
+  ['A-03','Product Officer','Product value, roadmap, scope discipline'],
+  ['A-04','Technology Officer','Architecture, reliability, technical debt'],
+  ['A-05','Security Officer','Threats, access control, incident response'],
+  ['A-06','Design Officer','Usability, accessibility, design consistency'],
+  ['A-07','Finance Officer','Cash flow, runway, pricing, budget controls'],
+  ['A-08','Operations Officer','Workflows, service standards, bottlenecks'],
+  ['A-09','Marketing Officer','Positioning, acquisition, campaigns'],
+  ['A-10','Revenue Officer','Monetization, pricing, funnels, conversion'],
+  ['A-11','Customer Officer','Customer friction, onboarding, retention'],
+  ['A-12','Legal & Compliance Adviser','Regulatory, contracts, IP, privacy'],
+  ['A-13','People & Organization Officer','Org structure, roles, hiring priorities'],
+  ['A-14','Data & Intelligence Officer','Metrics, data quality, reporting'],
+  ['A-15','AI & Automation Architect','Automation, agent workflows, human checkpoints'],
+  ['A-16','Procurement & Vendor Manager','Vendors, contracts, lock-in, exit plans'],
+  ['A-17','Quality & Release Director','Acceptance tests, release readiness'],
+  ['A-18','Enterprise Risk Officer','Operational, financial, legal, reputational risk'],
+  ['A-19','Investment & Capital Strategist','Funding, dilution, capital allocation'],
+  ['A-20','Ethics & Trust Officer','Privacy, fairness, user harm, conflicts'],
+  ['A-21',"Devil's Advocate",'Challenges the preferred plan and assumptions'],
+  ['A-22','Milestone & Continuity Director','Milestone register, next verifiable step'],
+  ['A-23','Revenue Execution Officer','Pipeline, closes, revenue reporting'],
+  ['A-24','Execution Officer','Drives approved tasks to completion'],
+  ['A-25','Closing Officer','Asks for the sale, handles objections'],
+  ['A-26','Field Operations Officer','In-person meetings, demos, field intelligence'],
+  ['A-27','Compensation & Payroll Officer','Compensation, payroll, statutory contributions'],
+  ['A-28','Market Intelligence Officer','Competitors, market shifts, threats, opportunities']
+];
+function renderAgents() {
+  const q = (document.getElementById('agSearch')?.value || '').trim().toLowerCase();
+  const list = AGENTS.filter(a => !q || (a[0] + ' ' + a[1] + ' ' + a[2]).toLowerCase().includes(q));
+  document.getElementById('agCount').textContent = '(' + list.length + ')';
+  document.getElementById('agList').innerHTML = list.length
+    ? '<div class="ab-section-group">' + list.map(a => `<div class="os-row">
+        <div class="os-row-icon" style="background:#1c1c1e;"><span style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:12px;font-weight:700;color:#E8CC7A;">${a[0].slice(2)}</span></div>
+        <div class="os-row-text"><div class="os-row-title">${auEsc(a[1])}</div><div class="os-row-sub">${auEsc(a[2])}</div></div>
+        <span class="os-row-value" style="font-size:11px;">Planned</span></div>`).join('') + '</div>'
+    : '<div class="ab-empty-search">No agents match your search.</div>';
+}
+
+function osBackTapped() {
     haptic('light');
     exitOS();
   }

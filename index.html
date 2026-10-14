@@ -2172,9 +2172,31 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <span class="ab-count" id="agCount"></span>
         </div>
       </div>
-      <div class="up-empty-card" style="margin-bottom:12px;text-align:left;">Virtual roles from the ArtiBytte Protocol. They are not employees. A role shows Planned until a real task is logged.</div>
-      <input class="ab-search" id="agSearch" type="text" placeholder="Search agents" oninput="renderAgents()"/>
-      <div id="agList"></div>
+      <div id="agChatView">
+        <div id="agWelcome" style="text-align:center;padding:18px 6px 6px;">
+          <div style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:22px;font-weight:700;color:#1c1c1e;">What would you like to get done?</div>
+          <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13px;color:rgba(60,60,67,0.55);margin-top:6px;line-height:1.5;">Ask anything. Your AI team will help you plan, execute, and track the work.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;">
+            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Plan my business')">Plan my business</button>
+            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Review my tasks')">Review my tasks</button>
+            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Check my progress')">Check my progress</button>
+            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Founder briefing')">Founder briefing</button>
+          </div>
+        </div>
+        <div id="agMsgs" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;"></div>
+        <div class="dc-compose" style="margin:8px 0 14px;">
+          <input id="agInput" class="dc-in" type="text" placeholder="Message your AI team…" autocomplete="off" enterkeyhint="send" onkeydown="if(event.key==='Enter')agSend()">
+          <button type="button" id="agSendBtn" class="dc-btn" style="width:auto;padding:0 18px;height:48px;" onclick="agSend()">Send</button>
+        </div>
+        <div class="up-empty-card" style="text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="agToggleDir()">
+          <div style="flex:1;"><div style="font-weight:700;color:#1c1c1e;font-size:14px;">Your AI team</div><div style="font-size:12px;margin-top:2px;">28 specialized agents · available when needed</div></div>
+          <span style="font-weight:700;color:#1c1c1e;font-size:13px;">View all</span>
+        </div>
+        <div id="agDir" style="display:none;margin-top:12px;">
+          <input class="ab-search" id="agSearch" type="text" placeholder="Search agents" oninput="renderAgents()"/>
+          <div id="agList"></div>
+        </div>
+      </div>
     </div>
 
     <!-- NOTE OS -->
@@ -6102,7 +6124,7 @@ function fillConnectPreview() {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
       const agRow = document.getElementById('osAgentsRow');
-      if (agRow) agRow.style.display = ''; /* TEMP: visible sa lahat, i-gate ulit pagkatapos */
+      if (agRow) agRow.style.display = currentEntry.athid === 'ARTICARD-000000' ? '' : 'none'; /* palitan ng ATH ID mo */
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');
@@ -6166,11 +6188,59 @@ function fillConnectPreview() {
   ['A-27','Compensation & Payroll Officer','Compensation, payroll, statutory contributions'],
   ['A-28','Market Intelligence Officer','Competitors, market shifts, threats, opportunities']
 ];
+let agChat = [], agBusy = false;
+function agToggleDir() {
+  haptic('light');
+  const d = document.getElementById('agDir'); if (!d) return;
+  const on = d.style.display === 'none';
+  d.style.display = on ? 'block' : 'none';
+  if (on) renderAgents();
+}
+function agRender() {
+  const w = document.getElementById('agWelcome'), m = document.getElementById('agMsgs'); if (!m) return;
+  if (w) w.style.display = agChat.length ? 'none' : 'block';
+  const roleName = id => { const a = AGENTS.find(z => z[0] === id); return a ? a[1] : id; };
+  m.innerHTML = agChat.map(x => {
+    if (x.role === 'user') return `<div class="dc-bub me" style="max-width:88%;white-space:pre-wrap;">${auEsc(x.content)}</div>`;
+    const d = x.data;
+    if (!d) return `<div class="dc-bub th" style="max-width:88%;white-space:pre-wrap;">${auEsc(x.content)}</div>`;
+    const lst = (t, a) => (a && a.length) ? `<div class="dc-note" style="font-weight:700;color:#1c1c1e;margin:10px 0 4px;">${t}</div>` + a.map(i => `<div style="font-size:13.5px;line-height:1.5;">• ${auEsc(i)}</div>`).join('') : '';
+    return `<div class="dc-bub th" style="max-width:94%;">
+      <div class="dc-note" style="margin-bottom:6px;">Contributed by: ${(d.roles || []).map(r => auEsc(roleName(r))).join(' · ')}</div>
+      <div style="font-size:14px;line-height:1.55;white-space:pre-wrap;">${auEsc(d.plan || x.content)}</div>
+      ${lst('Needs your approval', d.approvals)}${lst('Blockers', d.blockers)}${lst('Next steps', d.next_steps)}
+      ${(d.sections && d.sections.length) ? `<details style="margin-top:10px;"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;">See each role's input</summary>${d.sections.map(s => `<div style="margin-top:8px;"><div class="dc-note" style="font-weight:700;color:#1c1c1e;">${auEsc(s.role)} · ${auEsc(s.title)}</div><div style="font-size:13px;line-height:1.5;white-space:pre-wrap;">${auEsc(s.body)}</div></div>`).join('')}</details>` : ''}
+    </div>`;
+  }).join('') + (agBusy ? '<div class="dc-bub th" style="opacity:.6;">Routing to the right roles…</div>' : '');
+  m.lastElementChild && m.lastElementChild.scrollIntoView({ block: 'end', behavior: 'smooth' });
+}
+async function agSend(text) {
+  if (agBusy) return;
+  const inp = document.getElementById('agInput');
+  const t = String(text || (inp && inp.value) || '').trim();
+  if (!t) { haptic('error'); return; }
+  if (!rmToken()) { rmExpired(); return; }
+  haptic('light');
+  if (inp) inp.value = '';
+  agChat.push({ role: 'user', content: t });
+  agBusy = true; agRender();
+  try {
+    const r = await apiPost('ownerAskProtocol', { token: rmToken(), messages: agChat.slice(-20).map(x => ({ role: x.role, content: x.content })) });
+    agChat.push({ role: 'assistant', content: String((r && (r.plan || r.reply)) || 'No reply.'), data: (r && r.plan) ? r : null });
+    haptic('success');
+  } catch (e) {
+    if (/session|sign in/i.test(String(e && e.message))) { agChat.pop(); agBusy = false; rmExpired(); return; }
+    agChat.push({ role: 'assistant', content: 'Could not reach your AI team: ' + String((e && e.message) || 'not connected yet') });
+    haptic('error');
+  }
+  agBusy = false; agRender();
+}
 function renderAgents() {
   const q = (document.getElementById('agSearch')?.value || '').trim().toLowerCase();
   const list = AGENTS.filter(a => !q || (a[0] + ' ' + a[1] + ' ' + a[2]).toLowerCase().includes(q));
-  document.getElementById('agCount').textContent = '(' + list.length + ')';
-  document.getElementById('agList').innerHTML = list.length
+  const _c = document.getElementById('agCount'); if (_c) _c.textContent = '(' + list.length + ')';
+  const _l = document.getElementById('agList'); if (!_l) return;
+  _l.innerHTML = list.length
     ? '<div class="ab-section-group">' + list.map(a => `<div class="os-row">
         <div class="os-row-icon" style="background:#1c1c1e;"><span style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:12px;font-weight:700;color:#E8CC7A;">${a[0].slice(2)}</span></div>
         <div class="os-row-text"><div class="os-row-title">${auEsc(a[1])}</div><div class="os-row-sub">${auEsc(a[2])}</div></div>

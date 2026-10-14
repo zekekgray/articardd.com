@@ -1896,7 +1896,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <span class="os-row-value" id="osAddressPreview"></span>
           <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-       <div class="os-row" id="osAgentsRow" onclick="switchOSTab('agents')" style="cursor:pointer;">
+        <div class="os-row" id="osAgentsRow" onclick="switchOSTab('agents')" style="display:none;cursor:pointer;">
           <div class="os-row-icon" style="background:#1c1c1e;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.2 4.5 2 4.5 5.3"/></svg></div>
           <div class="os-row-text"><div class="os-row-title">Agents</div></div>
           <span class="os-row-value">28</span>
@@ -2183,10 +2183,17 @@ body.public-mode .back-mascot-btn{display:none !important;}
             <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Founder briefing')">Founder briefing</button>
           </div>
         </div>
-        <div id="agMsgs" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;"></div>
-        <div class="dc-compose" style="margin:8px 0 14px;">
-          <input id="agInput" class="dc-in" type="text" placeholder="Message your AI team…" autocomplete="off" enterkeyhint="send" onkeydown="if(event.key==='Enter')agSend()">
-          <button type="button" id="agSendBtn" class="dc-btn" style="width:auto;padding:0 18px;height:48px;" onclick="agSend()">Send</button>
+        <div id="agMeter" style="display:none;margin:8px 0 4px;"></div>
+<div id="agMsgs" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;"></div>
+        <div id="agChips" style="display:none;flex-wrap:wrap;gap:6px;margin:8px 0 0;"></div>
+<input type="file" id="agFilePhoto" accept="image/*" multiple hidden onchange="agPickFiles(this)">
+<input type="file" id="agFileCam" accept="image/*" capture="environment" hidden onchange="agPickFiles(this)">
+<input type="file" id="agFileDoc" accept=".csv,.txt,.json,.md,.pdf,.xlsx,.docx" multiple hidden onchange="agPickFiles(this)">
+<div class="dc-compose" style="margin:8px 0 14px;align-items:center;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:26px;padding:4px 4px 4px 6px;gap:4px;position:relative;">
+  <div id="agPlusMenu" style="display:none;position:absolute;left:0;bottom:56px;min-width:240px;max-height:50vh;overflow-y:auto;background:rgba(255,255,255,0.97);border:0.6px solid rgba(0,0,0,0.08);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.18);padding:6px;z-index:30;"></div>
+  <button type="button" id="agPlusBtn" aria-label="Attach or choose agent" onclick="agToggleMenu()" style="width:40px;height:40px;flex-shrink:0;border-radius:50%;border:none;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <input id="agInput" class="dc-in" style="border:none;background:transparent;height:44px;padding:0 6px;" type="text" placeholder="Message your AI team…" autocomplete="off" enterkeyhint="send" onkeydown="if(event.key==='Enter')agSend()">
+          <button type="button" id="agSendBtn" class="dc-btn" style="width:auto;padding:0 16px;height:40px;border-radius:20px;flex-shrink:0;" onclick="agSend()">Send</button>
         </div>
         <div class="up-empty-card" style="text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="agToggleDir()">
           <div style="flex:1;"><div style="font-weight:700;color:#1c1c1e;font-size:14px;">Your AI team</div><div style="font-size:12px;margin-top:2px;">28 specialized agents · available when needed</div></div>
@@ -6124,7 +6131,7 @@ function fillConnectPreview() {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
       const agRow = document.getElementById('osAgentsRow');
-     if (agRow) agRow.style.display = '';
+      if (agRow) agRow.style.display = currentEntry.athid === 'ARTICARD-000000' ? '' : 'none'; /* palitan ng ATH ID mo */
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');
@@ -6189,6 +6196,194 @@ function fillConnectPreview() {
   ['A-28','Market Intelligence Officer','Competitors, market shifts, threats, opportunities']
 ];
 let agChat = [], agBusy = false;
+const AG_TOKEN_LIMIT = 1000000, AG_WARN = .70, AG_SNAP = .85, AG_STOP = .95; /* i-adjust ang limit ayon sa model mo */
+let agBrief = '', agNextBrief = '', agSnapDone = false, agSessionId = agNewId();
+const AG_BRIEF_MAX = 5000;   /* hard cap ng buong brief, sa characters (~1.5K tokens) */
+const AG_RECENT_DAYS = 7;    /* rolling window ng L3 */
+const AG_ARCHIVE_KEEP = 30;  /* ilang snapshot ang iiwang buo sa storage */
+function agNewId() { return new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(Date.now() % 1000).padStart(3, '0'); }
+let agUsed = 0; /* totoong total_tokens ng pinakahuling DeepSeek call = laman ng context ngayon */
+function agTokens() {
+  if (agUsed > 0) return agUsed;
+  /* fallback estimate habang wala pang unang response */
+  return Math.ceil((agBrief.length + agChat.reduce((n, x) => n + String(x.content || '').length, 0)) / 3.5);
+}
+function agBuildBrief() {
+  const asks = agChat.filter(x => x.role === 'user').slice(-5).map(x => '- ' + String(x.content).slice(0, 140));
+  const last = [...agChat].reverse().find(x => x.data), d = last ? last.data : {};
+  const L = (t, a) => (a && a.length) ? t + ':\n' + a.map(i => '- ' + String(i).slice(0, 160)).join('\n') + '\n' : '';
+  const me = (currentEntry && currentEntry.name) ? currentEntry.name : '';
+  /* L1 Identity: maliit at pareho palagi */
+  const l1 = 'IDENTITY: ' + me + ' · ' + ((currentEntry && currentEntry.pos) || '') + ' · articardd owner\n';
+  /* L2 Current state: galing sa pinakahuling plan, hindi sa buong chat */
+  const l2 = 'CURRENT STATE:\n' + (d.plan ? String(d.plan).slice(0, 500) + '\n' : '(no plan yet)\n')
+    + L('Needs approval', d.approvals) + L('Blockers', d.blockers) + L('Next steps', d.next_steps);
+  /* L3 Recent: huling 5 request lang */
+  const l3 = 'RECENT REQUESTS:\n' + asks.join('\n') + '\n';
+  /* Rolling: dala lang ang HULING bahagi ng nakaraang brief, hindi nag-iipon */
+  const carry = agBrief ? 'EARLIER (condensed): ' + agBrief.replace(/\s+/g, ' ').slice(-400) + '\n' : '';
+  const ref = 'ARCHIVE: older sessions are stored, not loaded. Ask the owner if you need them.\n';
+  const head = 'CONTINUATION BRIEF (session ' + agSessionId + ')\n';
+  return (head + l1 + l2 + l3 + carry + ref).slice(0, AG_BRIEF_MAX);
+}
+async function agPruneSnaps() {
+  try {
+    const r = await window.storage.list('ag-snap:', false);
+    const keys = ((r && r.keys) || []).sort();           /* ang session ID ay nagsisimula sa petsa, kaya sorted = pinakaluma muna */
+    for (const k of keys.slice(0, Math.max(0, keys.length - AG_ARCHIVE_KEEP))) { try { await window.storage.delete(k, false); } catch (e) {} }
+  } catch (e) {}
+}
+async function agSnapshot(auto) {
+  if (!agChat.length) return false;
+  if (agSnapDone && auto) return true;
+  agSnapDone = true; /* guard laban sa double-trigger */
+  const snap = { id: agSessionId, at: new Date().toISOString(), tokens: agTokens(), chat: agChat.slice(-60), brief: agBuildBrief() };
+  let ok = false;
+  try { ok = !!(await window.storage.set('ag-snap:' + agSessionId, JSON.stringify(snap), false)); } catch (e) {}
+  if (!ok) { agSnapDone = false; if (!auto) { haptic('error'); showToast("Couldn't save snapshot", 'error'); } return false; }
+  agNextBrief = snap.brief;
+  agPruneSnaps();
+  try { await window.storage.set('ag-last-brief', snap.brief, false); } catch (e) {}
+  /* OPTIONAL Operating Record: kailangan ng 'ownerSaveSnapshot' case sa backend. Safe kahit wala pa. */
+  if (rmToken()) apiPost('ownerSaveSnapshot', { token: rmToken(), snapshot: snap }).catch(function () {});
+  if (!auto) { haptic('success'); showToast('Snapshot saved', 'success'); }
+  agMeter();
+  return true;
+}
+function agMeter() {
+  const el = document.getElementById('agMeter'); if (!el) return;
+  const inp = document.getElementById('agInput'), btn = document.getElementById('agSendBtn');
+  if (!agChat.length && !agBrief) { el.style.display = 'none'; return; }
+  const ratio = agTokens() / AG_TOKEN_LIMIT, pct = Math.min(100, Math.round(ratio * 100));
+  if (ratio >= AG_SNAP && !agSnapDone && agChat.length) agSnapshot(true);
+  const full = ratio >= AG_STOP;
+  if (inp) inp.disabled = full; if (btn) btn.disabled = full;
+  const color = ratio >= AG_SNAP ? '#FF453A' : ratio >= AG_WARN ? '#FF9F0A' : '#34C759';
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  let msg = '';
+  if (full) msg = 'Session full. Start a new session to continue.';
+  else if (ratio >= AG_SNAP) msg = (agSnapDone ? 'Snapshot saved. ' : 'Saving snapshot… ') + 'Recommended: start a new session.';
+  else if (ratio >= AG_WARN) msg = 'Session ' + pct + '% full. Save a snapshot soon.';
+  const btnS = 'padding:8px 12px;border-radius:11px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.9);color:#1c1c1e;' + F + 'font-size:12.5px;font-weight:600;cursor:pointer;';
+  el.style.display = 'block';
+  el.innerHTML = `<div style="${F}display:flex;justify-content:space-between;font-size:11px;color:rgba(60,60,67,0.55);margin-bottom:5px;"><span>Session ${auEsc(agSessionId)}${agBrief ? ' · brief loaded' : ''}</span><span style="font-weight:700;color:${color};">${pct}%</span></div>
+    <div style="height:5px;border-radius:3px;background:rgba(0,0,0,0.08);overflow:hidden;"><div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width .3s;"></div></div>
+    ${msg ? `<div style="${F}font-size:12.5px;color:#1c1c1e;margin-top:8px;">${msg}</div>
+    <div style="display:flex;gap:8px;margin-top:8px;"><button type="button" style="${btnS}" onclick="agSnapshot(false)">Save Snapshot</button><button type="button" style="${btnS}background:#1c1c1e;color:#ECE4D6;border:none;" onclick="agNewSession()">New Session</button></div>` : ''}`;
+}
+async function agSearchArchive(term) {   /* tawagin sa console o i-hook sa button mo: agSearchArchive('pricing') */
+  term = String(term || '').toLowerCase().trim(); if (!term) return [];
+  const hits = [];
+  try {
+    const r = await window.storage.list('ag-snap:', false);
+    for (const k of ((r && r.keys) || []).sort().reverse()) {
+      const v = await window.storage.get(k, false);
+      const s = v && v.value ? JSON.parse(v.value) : null;
+      if (s && JSON.stringify(s.chat).toLowerCase().includes(term)) hits.push({ id: s.id, at: s.at, brief: s.brief });
+      if (hits.length >= 5) break;                        /* maximum 5, para hindi ma-bloat ang context */
+    }
+  } catch (e) {}
+  return hits;
+}
+async function agNewSession() {
+  if (agBusy) return;
+if (agTokens() / AG_TOKEN_LIMIT >= AG_STOP) { haptic('error'); showToast('Session full. Start a new session.', 'error'); agMeter(); return; }
+  haptic('medium');
+  if (agChat.length && !agSnapDone) await agSnapshot(false);
+  agBrief = agNextBrief || agBuildBrief();
+  agNextBrief = '';
+  agChat = []; agSnapDone = false; agSessionId = agNewId(); agUsed = 0;
+  agRender();
+  showToast('New session started with continuation brief', 'success');
+}
+let agFiles = [], agTarget = '';
+const AG_MAX_FILES = 4, AG_TEXT_MAX = 20000;
+const AG_PLUGINS = { /* 'A-07': ['Revenue Sheet (DS-01)'] — idagdag mo kapag may totoong plug-in per agent */ };
+
+function agMenuOutside(e) {
+  const m = document.getElementById('agPlusMenu'), b = document.getElementById('agPlusBtn');
+  if (m && !m.contains(e.target) && !(b && b.contains(e.target))) agToggleMenu(false);
+}
+function agToggleMenu(force) {
+  const m = document.getElementById('agPlusMenu'); if (!m) return;
+  const on = force === undefined ? m.style.display === 'none' : !!force;
+  haptic('light');
+  document.removeEventListener('click', agMenuOutside);
+  if (on) { agMenuHome(); setTimeout(() => document.addEventListener('click', agMenuOutside), 10); }
+  m.style.display = on ? 'block' : 'none';
+}
+function agMenuRow(ic, t, s, js) {
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  return `<button type="button" onclick="${js}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:none;background:none;border-radius:12px;cursor:pointer;text-align:left;${F}"><span style="font-size:18px;width:24px;text-align:center;">${ic}</span><span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:600;color:#1c1c1e;">${t}</span>${s ? `<span style="display:block;font-size:11.5px;color:rgba(60,60,67,0.55);margin-top:1px;">${s}</span>` : ''}</span></button>`;
+}
+function agMenuHome() {
+  const m = document.getElementById('agPlusMenu'); if (!m) return;
+  const tg = AGENTS.find(a => a[0] === agTarget);
+  m.innerHTML = agMenuRow('🖼️', 'Photo', 'From your gallery', "agPick('agFilePhoto')")
+    + agMenuRow('📷', 'Camera', 'Take a photo', "agPick('agFileCam')")
+    + agMenuRow('📎', 'Files', 'CSV, TXT, JSON', "agPick('agFileDoc')")
+    + agMenuRow('🧩', 'Plug-ins', tg ? 'Sending to: ' + auEsc(tg[1]) : 'Optional · pick an agent', 'agMenuPlugins()');
+}
+function agMenuPlugins() {
+  const m = document.getElementById('agPlusMenu'); if (!m) return;
+  haptic('light');
+  m.innerHTML = agMenuRow('‹', 'Back', '', 'agMenuHome()')
+    + agMenuRow('✨', 'Auto (any agent)', 'Default routing', "agSetTarget('')")
+    + AGENTS.map(a => { const n = (AG_PLUGINS[a[0]] || []).length; return agMenuRow('🧩', auEsc(a[1]), n ? n + ' plug-in' + (n > 1 ? 's' : '') : 'Route to this agent', "agSetTarget('" + a[0] + "')"); }).join('');
+}
+function agSetTarget(id) {
+  agTarget = id; agToggleMenu(false); agRenderChips();
+  const a = AGENTS.find(x => x[0] === id);
+  showToast(a ? 'Sending to ' + a[1] : 'Auto routing', 'neutral');
+}
+function agPick(id) { agToggleMenu(false); const el = document.getElementById(id); if (el) el.click(); }
+
+function agImgToB64(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onerror = rej;
+    fr.onload = () => {
+      const im = new Image();
+      im.onerror = rej;
+      im.onload = () => {
+        const s = Math.min(1, 1280 / Math.max(im.width, im.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', 0.72));
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+async function agPickFiles(inp) {
+  const list = [...(inp.files || [])]; inp.value = '';
+  for (const f of list) {
+    if (agFiles.length >= AG_MAX_FILES) { showToast('Max ' + AG_MAX_FILES + ' attachments', 'neutral'); break; }
+    try {
+      if (/^image\//i.test(f.type) || /\.(jpe?g|png|webp|heic)$/i.test(f.name)) {
+        agFiles.push({ name: f.name, type: 'image', data: await agImgToB64(f) });
+      } else if (/\.(csv|txt|json|md)$/i.test(f.name)) {
+        agFiles.push({ name: f.name, type: 'text', text: (await f.text()).slice(0, AG_TEXT_MAX) });
+      } else {
+        showToast('PDF/Excel/Word: hindi pa nababasa ng app. Gamitin ang CSV, TXT o image.', 'neutral');
+      }
+    } catch (e) { haptic('error'); showToast("Couldn't read " + f.name, 'error'); }
+  }
+  haptic('light'); agRenderChips();
+}
+function agRenderChips() {
+  const el = document.getElementById('agChips'); if (!el) return;
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const chip = (label, js, dark) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 11px;border-radius:14px;background:${dark ? '#1c1c1e' : 'rgba(255,255,255,0.85)'};color:${dark ? '#ECE4D6' : '#1c1c1e'};border:1px solid rgba(0,0,0,0.08);${F}font-size:12px;font-weight:600;max-width:100%;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${label}</span><button type="button" aria-label="Remove" onclick="${js}" style="border:none;background:none;color:inherit;opacity:.6;cursor:pointer;padding:0 2px;font-size:15px;line-height:1;">×</button></span>`;
+  const tg = AGENTS.find(a => a[0] === agTarget);
+  const h = (tg ? chip('→ ' + auEsc(tg[1]), "agSetTarget('')", true) : '')
+    + agFiles.map((f, i) => chip((f.type === 'image' ? '🖼️ ' : '📄 ') + auEsc(f.name), 'agRemoveFile(' + i + ')')).join('');
+  el.innerHTML = h; el.style.display = h ? 'flex' : 'none';
+}
+function agRemoveFile(i) { agFiles.splice(i, 1); haptic('light'); agRenderChips(); }
+
 function agToggleDir() {
   haptic('light');
   const d = document.getElementById('agDir'); if (!d) return;
@@ -6213,19 +6408,29 @@ function agRender() {
     </div>`;
   }).join('') + (agBusy ? '<div class="dc-bub th" style="opacity:.6;">Routing to the right roles…</div>' : '');
   m.lastElementChild && m.lastElementChild.scrollIntoView({ block: 'end', behavior: 'smooth' });
+agMeter();
 }
 async function agSend(text) {
   if (agBusy) return;
   const inp = document.getElementById('agInput');
   const t = String(text || (inp && inp.value) || '').trim();
-  if (!t) { haptic('error'); return; }
+  if (!t && !agFiles.length) { haptic('error'); return; }
   if (!rmToken()) { rmExpired(); return; }
   haptic('light');
   if (inp) inp.value = '';
-  agChat.push({ role: 'user', content: t });
+  agChat.push({ role: 'user', content: (t || 'Please review the attached file(s).') + (agFiles.length ? '\n📎 ' + agFiles.map(f => f.name).join(', ') : '') });
   agBusy = true; agRender();
   try {
-    const r = await apiPost('ownerAskProtocol', { token: rmToken(), messages: agChat.slice(-20).map(x => ({ role: x.role, content: x.content })) });
+    const msgs = agChat.slice(-20).map(x => ({ role: x.role, content: x.content }));
+if (agBrief) {
+  if (msgs.length && msgs[0].role === 'user') msgs[0].content = agBrief + '\n\n---\n' + msgs[0].content;
+  else msgs.unshift({ role: 'user', content: agBrief });
+}
+const att = agFiles.map(f => f.type === 'image' ? { name: f.name, type: 'image', mime: 'image/jpeg', data: f.data } : { name: f.name, type: 'text', text: f.text });
+agFiles = []; agRenderChips();
+const r = await apiPost('ownerAskProtocol', { token: rmToken(), messages: msgs, target: agTarget || undefined, attachments: att.length ? att : undefined });
+const u = r && r.usage;
+if (u) { const t = Number(u.total_tokens || u.total) || 0; if (t > 0) agUsed = t; }
     agChat.push({ role: 'assistant', content: String((r && (r.plan || r.reply)) || 'No reply.'), data: (r && r.plan) ? r : null });
     haptic('success');
   } catch (e) {

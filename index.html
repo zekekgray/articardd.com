@@ -272,6 +272,7 @@
   .ab-seg{display:flex;background:rgba(118,118,128,.14);border-radius:11px;padding:3px;margin:0 0 12px;}
   .ab-seg button{flex:1;padding:9px 8px;border:none;border-radius:9px;background:none;font:600 13.5px -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.6);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
   .ab-seg button.on{background:#fff;color:#1c1c1e;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  .ab-seg button{padding:9px 2px;font-size:12.5px;white-space:nowrap;}
   /* === END: CONTACTS SUB-TABS CSS === */
 
   /* ── AB SECTION HEADERS ── */
@@ -1031,7 +1032,15 @@ body.public-mode .back-mascot-btn{display:none !important;}
   .ag-mhead{position:sticky;top:0;z-index:2;background:rgba(255,255,255,.98);border-radius:12px;}
   @media (prefers-reduced-motion:reduce){.ag-menu.show{animation:none;}}
   /* === END: AGENTS PLUS MENU === */
-  .au-back-row{display:flex;align-items:center;gap:8px;padding:2px 4px 10px;cursor:pointer;color:#B5583A;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13.5px;font-weight:600;-webkit-tap-highlight-color:transparent;}
+  /* === START: AGENTS FIXED LAYOUT === */
+#osBody:has(.os-pane[data-pane="agents"].active){overflow:hidden;}
+#agChatView{display:flex;flex-direction:column;height:calc(100dvh - 235px - env(safe-area-inset-bottom));min-height:320px;}
+#agChatView .ag-comp{flex-shrink:0;margin-bottom:0;}
+.os-pane[data-pane="agents"] .ab-pane-header > div:first-child{flex:1;min-width:0;}
+.ag-viewall{margin-left:auto;background:none;border:none;padding:6px 2px;cursor:pointer;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:14px;font-weight:700;color:#1c1c1e;-webkit-tap-highlight-color:transparent;}
+.ag-viewall:active{opacity:.5;}
+/* === END: AGENTS FIXED LAYOUT === */
+.au-back-row{display:flex;align-items:center;gap:8px;padding:2px 4px 10px;cursor:pointer;color:#B5583A;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13.5px;font-weight:600;-webkit-tap-highlight-color:transparent;}
   /* ── AU LAUNCHER GRID (Apple-style tiles — each opens its own clean modal) ── */
   .au-tile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px;padding:8px 2px 10px;}
   .au-tile{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;}
@@ -1933,12 +1942,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <span class="os-row-value" id="osAddressPreview"></span>
           <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div class="os-row" id="osAgentsRow" onclick="switchOSTab('agents')" style="display:none;cursor:pointer;">
-          <div class="os-row-icon" style="background:#1c1c1e;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.2 4.5 2 4.5 5.3"/></svg></div>
-          <div class="os-row-text"><div class="os-row-title">Agents</div></div>
-          <span class="os-row-value">28</span>
-          <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
         <div class="os-row" onclick="switchOSTab('upcoming')" style="cursor:pointer;">
           <div class="os-row-icon" style="background:#FF9F0A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></div>
           <div class="os-row-text"><div class="os-row-title">Calendar</div></div>
@@ -1978,12 +1981,12 @@ body.public-mode .back-mascot-btn{display:none !important;}
       <!-- === START: CONTACTS SUB-TABS === -->
       <div class="ab-seg" role="tablist" aria-label="Contacts sections">
         <button type="button" role="tab" id="abSegMine" class="on" aria-selected="true" onclick="abSegSelect('mine')">My Contacts</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
         <button type="button" role="tab" id="abSegDiscover" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+        <button type="button" role="tab" id="abSegAgents" aria-selected="false" hidden onclick="abSegSelect('agents')">Agents</button>
       </div>
       <!-- === END: CONTACTS SUB-TABS === -->
 <div class="ab-quickbar">
-  <button class="ab-qb" onclick="haptic('light');switchOSTab('home')" aria-label="Home">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span>Home</span></button>
   <button class="ab-qb" onclick="haptic('light');openAccountPage()" aria-label="Profile">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-7.5 8-7.5s8 3.3 8 7.5"/></svg><span>Profile</span></button>
   <button class="ab-qb" onclick="openContactsMoreMenu()" aria-label="Settings">
@@ -2170,6 +2173,13 @@ body.public-mode .back-mascot-btn{display:none !important;}
       </div>
 
       <!-- LIST VIEW -->
+      <div class="ab-seg" role="tablist" aria-label="Workspace sections">
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
+        <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Calendar</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+        <button type="button" role="tab" id="upSegAgents" aria-selected="false" hidden onclick="abSegSelect('agents')">Agents</button>
+      </div>
       <div id="upListView">
         <div class="up-section-label">Today's Meetings</div>
         <div id="upTodayWrap"></div>
@@ -2207,10 +2217,16 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <div style="display:flex;align-items:baseline;">
           <div class="os-title" style="padding:6px 0 0 4px;">Agents</div>
           <span class="ab-count" id="agCount"></span>
+<button type="button" class="ag-viewall" onclick="agToggleDir()">View all</button>
         </div>
       </div>
+      <div class="ab-seg" role="tablist" aria-label="Contacts sections">
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+        <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Agents</button>
+      </div>
       <div id="agChatView">
-        <div id="agWelcome" style="text-align:center;padding:18px 6px 6px;">
+        <div id="agWelcome" style="text-align:center;padding:18px 6px 6px;flex-shrink:0;">
           <div style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:22px;font-weight:700;color:#1c1c1e;">What would you like to get done?</div>
           <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13px;color:rgba(60,60,67,0.55);margin-top:6px;line-height:1.5;">Ask anything. Your AI team will help you plan, execute, and track the work.</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;">
@@ -2220,9 +2236,9 @@ body.public-mode .back-mascot-btn{display:none !important;}
             <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Founder briefing')">Founder briefing</button>
           </div>
         </div>
-        <div id="agMeter" style="display:none;margin:8px 0 4px;"></div>
-<div id="agMsgs" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;"></div>
-        <div id="agChips" style="display:none;flex-wrap:wrap;gap:6px;margin:8px 0 0;"></div>
+        <div id="agMeter" style="display:none;margin:8px 0 4px;flex-shrink:0;"></div>
+<div id="agMsgs" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
+        <div id="agChips" style="display:none;flex-wrap:wrap;gap:6px;margin:8px 0 0;flex-shrink:0;"></div>
 <input type="file" id="agFilePhoto" accept="image/*" multiple hidden onchange="agPickFiles(this)">
 <input type="file" id="agFileCam" accept="image/*" capture="environment" hidden onchange="agPickFiles(this)">
 <input type="file" id="agFileDoc" accept=".csv,.txt,.json,.md" multiple hidden onchange="agPickFiles(this)">
@@ -2232,11 +2248,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <input id="agInput" class="ag-in" type="text" placeholder="Message your AI team…" aria-label="Message your AI team" autocomplete="off" enterkeyhint="send" oninput="agSyncSend()" onkeydown="if(event.key==='Enter'&&!event.isComposing)agSend()">
           <button type="button" id="agSendBtn" class="ag-send" aria-label="Send message" aria-disabled="true" onclick="agSend()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
         </div>
-        <div class="up-empty-card" style="text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="agToggleDir()">
-          <div style="flex:1;"><div style="font-weight:700;color:#1c1c1e;font-size:14px;">Your AI team</div><div style="font-size:12px;margin-top:2px;">28 specialized agents · available when needed</div></div>
-          <span style="font-weight:700;color:#1c1c1e;font-size:13px;">View all</span>
-        </div>
-        <div id="agDir" style="display:none;margin-top:12px;">
+        <div id="agDir" style="display:none;margin-top:12px;max-height:45%;overflow-y:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;">
           <input class="ab-search" id="agSearch" type="text" placeholder="Search agents" oninput="renderAgents()"/>
           <div id="agList"></div>
         </div>
@@ -3259,7 +3271,9 @@ body.public-mode .back-mascot-btn{display:none !important;}
     </div>
     <div class="ab-seg" id="auSeg" role="tablist" aria-label="Contacts sections" style="margin:0 16px 12px;flex-shrink:0;">
       <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
+      <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
       <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Discover</button>
+      <button type="button" role="tab" id="auSegAgents" aria-selected="false" hidden onclick="abSegSelect('agents')">Agents</button>
     </div>
     <div id="auBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 30px;"></div>
     <div id="auSearchBarWrap" style="flex-shrink:0;padding:8px 16px max(8px,env(safe-area-inset-bottom));background:rgba(236,228,214,0.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:0.6px solid rgba(0,0,0,0.08);">
@@ -6148,13 +6162,13 @@ function fillConnectPreview() {
   }
 
   /* ── OS SHELL: enter/exit + tab switching ── */
-  let currentOSPane = 'home';
+  let currentOSPane = 'address';
   function enterOS(target) {
     if (document.body.classList.contains('public-mode')) { haptic('error'); showToast('Owner access only', 'neutral'); return; }
     haptic('medium');
     const acctScreen0 = document.getElementById('screenAccount');
     if (acctScreen0) { acctScreen0.classList.remove('active','entering','leaving'); acctScreen0.style.display = ''; }
-    const pane = target || 'home';
+    const pane = target || 'address';
     currentOSPane = pane;
     document.querySelectorAll('.os-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === pane));
     document.getElementById('osBackBtn')?.classList.toggle('os-back-home', pane === 'home');
@@ -6165,8 +6179,8 @@ function fillConnectPreview() {
     if (pane === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (pane === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     if (currentEntry) {
-      document.getElementById('osProfileName').textContent = currentEntry.name;
-      document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
+      /* home removed */
+      /* home removed */
       const agRow = document.getElementById('osAgentsRow');
      agSyncRow();
 /* agents row: handled by agSyncRow() */
@@ -6188,6 +6202,8 @@ function fillConnectPreview() {
   }
 
   function switchOSTab(tabId) {
+    if (tabId === 'home') tabId = 'address';
+    const _ob = document.getElementById('osBody'); if (_ob) _ob.scrollTop = 0;
     haptic('light');
     document.getElementById('screenAccount')?.classList.remove('active','entering','leaving');
     document.querySelectorAll('.os-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === tabId));
@@ -6575,11 +6591,11 @@ function renderAgents() {
 /* ilagay dito ang articardd ID at/o Card ID mo (makikita sa Account → Card ID / articardd ID) */
 const AG_OWNERS = ['ARTICARD-000000', 'C-BY5FK3' /*, 'ARTICARD-XXXXXX', 'C-XXXXXX' */];
 function agSyncRow() {
-  const row = document.getElementById('osAgentsRow'); if (!row) return;
+  const segBtns = ['abSegAgents', 'auSegAgents', 'upSegAgents'].map(id => document.getElementById(id)).filter(Boolean);
   const e = currentEntry || {};
   const ids = [e.athid, e.cardId].map(v => String(v || '').toUpperCase());
   const ok = !document.body.classList.contains('public-mode') && !!rmToken() && AG_OWNERS.some(id => ids.includes(id));
-  row.style.display = ok ? '' : 'none';
+  segBtns.forEach(b => { b.hidden = !ok; });
 }
 
 function osBackTapped() {
@@ -7439,6 +7455,8 @@ function osBackTapped() {
   }
   function abSegSelect(which) {
     haptic('light');
+    if (which === 'agents' || which === 'calendar') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab(which === 'calendar' ? 'upcoming' : 'agents'); return; }
+    if (currentOSPane !== 'address') switchOSTab('address');
     if (which === 'discover') { openAuSearch(); return; }
     abSegSync('mine');
     const ov = document.getElementById('auOverlay');

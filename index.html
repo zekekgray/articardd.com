@@ -943,14 +943,14 @@ body.public-mode .back-mascot-btn{display:none !important;}
   #auOverlay{background:#ECE4D6 !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;transition:none !important;align-items:stretch !important;}
   #auSheet{height:100dvh !important;max-height:100dvh !important;width:100% !important;max-width:none !important;border-radius:0 !important;background:#ECE4D6 !important;animation:none !important;}
   #auHandle{display:none !important;}
-  #auHead{margin-top:59px;padding:6px 16px 14px !important;}
-  #auHead > div:nth-child(2){order:-1;text-align:left !important;}
-  #auHead > div:nth-child(2) > div:first-child{font-size:30px !important;font-weight:700 !important;letter-spacing:-.01em !important;line-height:1.2 !important;}
-  #auHead > div:nth-child(2) > div:nth-child(2){display:none !important;}
-  #auHead > button:first-child{width:44px !important;height:44px !important;background:rgba(255,255,255,0.72) !important;border-radius:50% !important;}
+  /* === START: DISCOVER HEADER LEVEL (same as My Contacts) === */
+  #auHead{margin-top:59px;padding:6px 16px 14px 20px !important;}
+  #auHead > div:first-child{text-align:left !important;}
+  #auHead > div:first-child > div:first-child{font-size:30px !important;font-weight:700 !important;letter-spacing:-.01em !important;line-height:normal !important;}
+  #auHead > div:first-child > div:nth-child(2){display:none !important;}
+  /* === END: DISCOVER HEADER LEVEL === */
   #auHead > button[aria-label="Back to card"]{position:fixed !important;top:max(14px,env(safe-area-inset-top)) !important;left:14px !important;width:54px !important;height:54px !important;z-index:50;}
   #auHead > button[aria-label="Back to card"] svg{width:27px !important;height:27px !important;}
-  #auMenuDropdown{left:auto !important;right:16px !important;top:60px !important;}
   #auBody{padding-left:16px !important;padding-right:16px !important;}
   #auBody .dc-ask{margin:0 -16px !important;padding-left:16px !important;padding-right:16px !important;}
   #auBody{font-family:-apple-system,'SF Pro Text',sans-serif;}
@@ -3143,11 +3143,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
   <div class="share-sheet" id="auSheet" style="height:80vh;max-height:80vh;display:flex;flex-direction:column;padding-bottom:0;position:relative;">
     <div class="share-handle" id="auHandle" style="cursor:grab;touch-action:none;flex-shrink:0;"></div>
     <div id="auHead" style="display:flex;align-items:center;justify-content:space-between;padding:2px 14px 8px;flex-shrink:0;position:relative;">
-      <button onclick="event.stopPropagation();toggleAuMenu()" aria-label="Menu"
-        style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:none;border:none;cursor:pointer;padding:0;color:#1c1c1e;transition:transform .12s,opacity .12s;-webkit-tap-highlight-color:transparent;"
-        onpointerdown="this.style.transform='scale(0.88)';this.style.opacity='.7'" onpointerup="this.style.transform='';this.style.opacity=''" onpointerleave="this.style.transform='';this.style.opacity=''">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
-      </button>
       <div style="text-align:center;">
         <div style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:26px;font-weight:700;color:#1c1c1e;letter-spacing:-.01em;line-height:1.1;">Discover</div>
         <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1c1c1e;margin-top:3px;">People you should meet</div>
@@ -3176,9 +3171,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
         </button>
         <button onclick="event.stopPropagation();closeAuMenu();openAuAbout();" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;cursor:pointer;background:none;border:none;width:100%;text-align:left;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:14px;font-weight:500;color:#1c1c1e;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B5583A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg>
-          About AU
-        </button>
-      </div>
     </div>
     <div class="ab-seg" id="auSeg" role="tablist" aria-label="Contacts sections" style="margin:0 16px 12px;flex-shrink:0;">
       <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
@@ -5363,8 +5355,7 @@ function fillConnectPreview() {
       alert('AU open error: ' + (err && (err.stack || err.message) ? (err.stack || err.message) : err));
     }
   }
-  function closeAuSearch() {
-    closeAuMenu();
+   function closeAuSearch() {
     try { document.getElementById('auOverlay').classList.remove('show'); haptic('light'); }
     catch (err) { console.error('AU close error:', err); }
   }
@@ -5378,35 +5369,6 @@ function fillConnectPreview() {
   }
   function closeAuAbout() {
     dismissSheet('auAboutOverlay', '#auAboutSheet');
-  }
-
-  let auMenuOpen = false;
-  function toggleAuMenu() {
-    if (auMenuOpen) { closeAuMenu(); return; }
-    haptic('light');
-    auMenuOpen = true;
-    const dd = document.getElementById('auMenuDropdown');
-    if (dd) {
-      dd.style.opacity = '1';
-      dd.style.transform = 'translateY(0) scale(1)';
-      dd.style.pointerEvents = 'all';
-    }
-    setTimeout(() => document.addEventListener('click', auMenuOutsideClick), 10);
-  }
-  function closeAuMenu() {
-    if (!auMenuOpen) return;
-    auMenuOpen = false;
-    const dd = document.getElementById('auMenuDropdown');
-    if (dd) {
-      dd.style.opacity = '0';
-      dd.style.transform = 'translateY(-8px) scale(0.96)';
-      dd.style.pointerEvents = 'none';
-    }
-    document.removeEventListener('click', auMenuOutsideClick);
-  }
-  function auMenuOutsideClick(e) {
-    const dd = document.getElementById('auMenuDropdown');
-    if (dd && !dd.contains(e.target)) closeAuMenu();
   }
 
   /* ── AU "+" quick-action menu — Find / Create / SpotSense ── */
@@ -11176,7 +11138,7 @@ async function rmAddToContacts(id) {
 }
 /* === END: RM ADD TO CONTACTS === */
 
-function rmCardHtml(m) {
+function rmCardHtmlOld(m) {
   const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
   const p = RM_PILL[m.requestStatus] || RM_PILL['Requested'];
   const id = auEsc(m.meetingId);
@@ -11209,12 +11171,142 @@ function rmCardHtml(m) {
   </div>`;
 }
 
+/* === START: REQUEST MANAGER TABS (status-driven) === */
+let rmTab = 'requested';
+
+function rmStartMs(m) {
+  const k = mtgDateToKey(m.date); if (!k) return 0;
+  return new Date(k + 'T' + mtgTimeTo24(m.time) + ':00').getTime();
+}
+function rmBucket(m) {
+  if (m.requestStatus === 'Cancelled') return 'history';
+  const s = rmStartMs(m), dur = (parseInt(m.duration, 10) || 30) * 60000;
+  if (s && s + dur < Date.now()) return 'history';
+  return m.requestStatus === 'Confirmed' ? 'upcoming' : 'requested';
+}
+function rmSetTab(k) { haptic('light'); rmTab = k; renderRequestManager(); }
+
+function rmTabsHtml() {
+  const c = { requested: 0, upcoming: 0, history: 0 };
+  _rmMeetings.forEach(m => { c[rmBucket(m)]++; });
+  const b = (k, l) => `<button type="button" role="tab" class="${rmTab === k ? 'on' : ''}" aria-selected="${rmTab === k}" onclick="rmSetTab('${k}')">${l}${c[k] ? ' · ' + c[k] : ''}</button>`;
+  return `<div class="ab-seg" role="tablist" aria-label="Request sections" style="margin-bottom:14px;">${b('requested', 'Requested')}${b('upcoming', 'Upcoming')}${b('history', 'History')}</div>`;
+}
+
+function rmBtn(js, label, kind) {
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const bg = kind === 'primary' ? '#1c1c1e' : 'rgba(255,255,255,0.9)';
+  const fg = kind === 'primary' ? '#ECE4D6' : kind === 'danger' ? '#FF453A' : '#1c1c1e';
+  return `<button onclick="${js}" style="padding:9px 13px;border-radius:12px;border:${kind === 'primary' ? 'none' : '1px solid rgba(0,0,0,0.1)'};background:${bg};color:${fg};${F}font-size:12.5px;font-weight:600;cursor:pointer;">${label}</button>`;
+}
+
+function rmCardHtml(m, tab) {
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const st = m.requestStatus, id = auEsc(m.meetingId);
+  let label = st === 'Reviewing' ? 'Under review' : st;
+  let p = RM_PILL[st] || RM_PILL['Requested'];
+  if (tab === 'history') {
+    if (st === 'Confirmed') { label = 'Completed'; p = RM_PILL['Confirmed']; }
+    else if (st !== 'Cancelled') { label = 'Past · Needs attention'; p = ['#ffe9d6', '#b36b00']; }
+  }
+  const rep = (m.recurrence && m.recurrence !== 'One-time') ? ' · 🔁 ' + auEsc(m.recurrence) : '';
+  const when = auEsc(m.date) + ' · ' + auEsc(m.time) + (m.duration ? ' · ' + auEsc(m.duration) : '');
+  const who = auEsc(m.guestName || '—') + (m.guestOrg ? ' · ' + auEsc(m.guestOrg) : '');
+  const contact = [m.guestEmail ? `<a href="mailto:${auEsc(m.guestEmail)}" style="color:#1c1c1e;">${auEsc(m.guestEmail)}</a>` : '', m.guestPhone ? auEsc(m.guestPhone) : ''].filter(Boolean).join(' · ');
+  const notes = m.notes ? `<div style="${F}font-size:12.5px;color:rgba(60,60,67,0.7);margin-top:8px;white-space:pre-wrap;word-break:break-word;">${auEsc(m.notes)}</div>` : '';
+  const join = (tab !== 'history' && /^https:\/\//.test(m.meetingLink || ''))
+    ? `<a href="${auEsc(m.meetingLink)}" target="_blank" rel="noopener" style="padding:9px 13px;border-radius:12px;background:rgba(255,255,255,0.9);border:1px solid rgba(0,0,0,0.1);color:#1c1c1e;${F}font-size:12.5px;font-weight:600;text-decoration:none;">🎥 Join</a>` : '';
+  let acts = '';
+  if (tab !== 'history') {
+    if (st !== 'Confirmed') acts += rmBtn(`rmSetStatus('${id}','Confirmed')`, st === 'Reschedule Requested' ? 'Confirm new time' : 'Confirm', 'primary');
+    if (st === 'Requested') acts += rmBtn(`rmSetStatus('${id}','Reviewing')`, 'Review');
+    acts += rmBtn(`rmOpenReschedule('${id}')`, 'Reschedule');
+    acts += rmBtn(`rmSetStatus('${id}','Cancelled')`, 'Cancel', 'danger');
+  } else if (st !== 'Cancelled' && st !== 'Confirmed') {
+    acts += rmBtn(`rmOpenReschedule('${id}')`, 'Reschedule');
+    acts += rmBtn(`rmSetStatus('${id}','Cancelled')`, 'Cancel', 'danger');
+  }
+  return `<div style="background:rgba(255,255,255,0.72);border-radius:18px;padding:15px 16px;margin-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+      <div style="min-width:0;">
+        <div style="${F}font-size:14.5px;font-weight:700;color:#1c1c1e;">${id} · ${when}</div>
+        <div style="${F}font-size:12.5px;color:rgba(60,60,67,0.6);margin-top:3px;word-break:break-word;">${who} · ${auEsc(m.type)} · ${auEsc(m.location)}${rep}</div>
+        <div style="${F}font-size:12.5px;color:rgba(60,60,67,0.6);margin-top:3px;word-break:break-word;">${contact}</div>
+      </div>
+      <span style="flex-shrink:0;${F}font-size:11px;font-weight:700;padding:5px 9px;border-radius:999px;background:${p[0]};color:${p[1]};white-space:nowrap;">${auEsc(label)}</span>
+    </div>
+    ${notes}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">${join}${rmAddBtn(m)}${acts}</div>
+  </div>`;
+}
+
+function rmTabBody() {
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const list = _rmMeetings.filter(m => rmBucket(m) === rmTab);
+  const asc = rmTab !== 'history';
+  list.sort((a, b) => asc ? rmStartMs(a) - rmStartMs(b) : rmStartMs(b) - rmStartMs(a));
+  if (!list.length) {
+    const msg = { requested: 'No pending requests.', upcoming: 'No confirmed meetings coming up.', history: 'No past or cancelled meetings yet.' }[rmTab];
+    return `<div style="${F}font-size:13.5px;color:rgba(60,60,67,0.4);text-align:center;padding:48px 12px;">${msg}</div>`;
+  }
+  return list.map(m => rmCardHtml(m, rmTab)).join('');
+}
+
+/* reschedule: pick a new date/time, then status becomes "Reschedule Requested" */
+function rmOpenReschedule(id) {
+  const m = _rmMeetings.find(x => x.meetingId === id); if (!m) return;
+  haptic('light');
+  const k = mtgDateToKey(m.date), min = todayKey();
+  auMakeSheet('rmReschedOverlay', 'Reschedule', `
+    <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-6px 2px 14px;">${auEsc(m.meetingId)} · ${auEsc(m.guestName || '')}. It stays under Requested until the new time is confirmed.</div>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;"><div class="am-field-label" style="margin-top:0;">New date</div><input type="date" class="am-input" id="rmReDate" min="${min}" max="${dateKey(CAL_MAX_DATE())}" value="${k && k >= min ? k : min}"/></div>
+      <div style="flex:1;"><div class="am-field-label" style="margin-top:0;">New time</div><input type="time" class="am-input" id="rmReTime" value="${mtgTimeTo24(m.time)}"/></div>
+    </div>
+    <div class="am-actions">
+      <button class="am-btn am-btn-cancel" onclick="closeAuGenericModal('rmReschedOverlay')">Cancel</button>
+      <button class="am-btn am-btn-submit" id="rmReBtn" onclick="rmSubmitReschedule('${auEsc(id)}')">Request Reschedule</button>
+    </div>`);
+}
+
+async function rmSubmitReschedule(id) {
+  if (_rmBusy) return;
+  const m = _rmMeetings.find(x => x.meetingId === id); if (!m) return;
+  const d = document.getElementById('rmReDate')?.value, t = document.getElementById('rmReTime')?.value;
+  if (!d || !t) { haptic('error'); showToast('Pick a date and time', 'error'); return; }
+  if (new Date(d + 'T' + t + ':00').getTime() <= Date.now()) { haptic('error'); showToast('Pick a future time', 'error'); return; }
+  if (d === mtgDateToKey(m.date) && t === mtgTimeTo24(m.time)) { haptic('error'); showToast('Pick a different date or time', 'neutral'); return; }
+  if (!rmToken()) { rmExpired(); return; }
+  _rmBusy = true;
+  const btn = document.getElementById('rmReBtn');
+  if (btn) { btn.textContent = 'Saving…'; btn.style.pointerEvents = 'none'; btn.style.opacity = '.6'; }
+  let edited = false;
+  try {
+    await apiPost('ownerEditMeeting', { token: rmToken(), meetingId: id, name: m.guestName || 'Meeting', type: m.type, date: mtgKeyToDate(d), time: mtgTo12(t) });
+    edited = true;
+    await apiPost('ownerUpdateMeetingStatus', { token: rmToken(), meetingId: id, status: 'Reschedule Requested' });
+  } catch (e) {
+    _rmBusy = false;
+    if (/session|sign in/i.test(String(e && e.message))) { rmExpired(); return; }
+    haptic('error');
+    showToast(edited ? 'Time changed, but status was not updated. Refreshing' : String((e && e.message) || "Couldn't reschedule"), 'error');
+    if (edited) { closeAuGenericModal('rmReschedOverlay'); await loadRequestManager(); loadMeetings(); }
+    else if (btn) { btn.textContent = 'Request Reschedule'; btn.style.pointerEvents = ''; btn.style.opacity = ''; }
+    return;
+  }
+  _rmBusy = false;
+  haptic('success');
+  closeAuGenericModal('rmReschedOverlay');
+  showToast('Reschedule requested', 'success');
+  await loadRequestManager();
+  loadMeetings();
+}
+/* === END: REQUEST MANAGER TABS === */
+
 function renderRequestManager() {
   const list = document.getElementById('rmList'); if (!list) return;
   const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
-  list.innerHTML = _rmMeetings.length
-    ? _rmMeetings.map(rmCardHtml).join('')
-    : `<div style="${F}font-size:13.5px;color:rgba(60,60,67,0.4);text-align:center;padding:48px 12px;">No meeting requests yet.</div>`;
+  list.innerHTML = rmTabsHtml() + rmTabBody();
 }
 
 async function loadRequestManager() {
@@ -11252,6 +11344,7 @@ async function rmApplyStatus(id, status) {
     haptic(status === 'Cancelled' ? 'error' : 'success');
     showToast(status === 'Confirmed' ? 'Meeting confirmed' : status === 'Cancelled' ? 'Meeting cancelled' : 'Status updated', 'success');
     await loadRequestManager();
+    loadMeetings(); /* keep Calendar List/Calendar views in sync */
   } catch (e) {
     if (/session|sign in/i.test(String(e && e.message))) { _rmBusy = false; rmExpired(); return; }
     haptic('error'); showToast(String((e && e.message) || 'Could not update'), 'error');
@@ -13540,7 +13633,6 @@ async function dcOpen(view) {
   if (!_auDragInit) { _auDragInit = true; initSheetDragHandle('auHandle', 'auSheet', 'auOverlay', () => {}); }
   await dcLoad();
   dcQuery = ''; dcView = view || 'discover';
-  closeAuMenu();
   dcRender();
   const ov = document.getElementById('auOverlay');
   document.body.appendChild(ov);
@@ -13719,6 +13811,7 @@ function dcRunQuery() {
 /* rotating placeholder: humihinto kapag may tinitype o wala na ang input */
 let _dcRotTimer = null, _dcRotIdx = 0;
 function dcAskRotate() {
+  return; /* static placeholder: rotation disabled */
   clearInterval(_dcRotTimer);
   const inp = document.getElementById('dcQuery'); if (!inp) return;
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -13771,7 +13864,7 @@ function dcAskBar() {
   return `<div class="dc-ask">
     <label for="dcQuery" style="display:block;${F}font-size:15px;font-weight:700;color:#1c1c1e;margin:0 2px 8px;">Who are you looking for?</label>
     <div style="display:flex;gap:10px;align-items:center;">
-      <input id="dcQuery" class="dc-in" type="text" value="" placeholder="${auEsc(DC_PROMPTS[0])}" autocomplete="off" enterkeyhint="go" style="border-radius:24px;padding:0 18px;" oninput="dcAskInput(this)" onkeydown="if(event.key==='Enter')dcRunQuery()">
+      <input id="dcQuery" class="dc-in" type="text" value="" placeholder="VEX AI will find your perfect match" autocomplete="off" enterkeyhint="go" style="border-radius:24px;padding:0 18px;" oninput="dcAskInput(this)" onkeydown="if(event.key==='Enter')dcRunQuery()">
       <button type="button" id="dcGoBtn" aria-label="Find someone" onclick="dcRunQuery()" style="width:48px;height:48px;flex-shrink:0;border-radius:50%;border:none;background:#1c1c1e;color:#ECE4D6;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
       </button>
@@ -13878,21 +13971,9 @@ function dcRunQuery() {
     if (!el || reduce() || !el.animate) return;
     el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 280, easing: 'ease-out' });
   }, true);
-
-  /* header buttons: replace their one-off inline handlers with the shared language */
-  document.querySelectorAll('#auOverlay button[aria-label="Menu"]').forEach(b => {
-    b.removeAttribute('onpointerdown'); b.removeAttribute('onpointerup'); b.removeAttribute('onpointerleave');
-    b.style.transition = ''; b.dataset.fx = 'light';
-  });
 })();
 /* === END: DISCOVER INTERACTION LANGUAGE === */
 
-/* menu label: About AU → How Discover Works */
-(function dcChrome() {
-  document.querySelectorAll('#auMenuDropdown button').forEach(b => b.childNodes.forEach(n => {
-    if (n.nodeType === 3 && n.nodeValue.indexOf('About AU') > -1) n.nodeValue = n.nodeValue.replace('About AU', 'How Discover Works');
-  }));
-})();
 dcLoad();
 /* === START: DISCOVER MODAL LAYERS (L2 sheets + L4 confirms) === */
 (function () {

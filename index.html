@@ -1896,7 +1896,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <span class="os-row-value" id="osAddressPreview"></span>
           <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div class="os-row" id="osAgentsRow" onclick="switchOSTab('agents')" style="display:none;cursor:pointer;">
+       <div class="os-row" id="osAgentsRow" onclick="switchOSTab('agents')" style="cursor:pointer;">
           <div class="os-row-icon" style="background:#1c1c1e;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.2 4.5 2 4.5 5.3"/></svg></div>
           <div class="os-row-text"><div class="os-row-title">Agents</div></div>
           <span class="os-row-value">28</span>
@@ -6124,7 +6124,7 @@ function fillConnectPreview() {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
       const agRow = document.getElementById('osAgentsRow');
-      if (agRow) agRow.style.display = currentEntry.athid === 'ARTICARD-000000' ? '' : 'none'; /* palitan ng ATH ID mo */
+     if (agRow) agRow.style.display = '';
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');

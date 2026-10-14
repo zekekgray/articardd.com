@@ -6131,8 +6131,8 @@ function fillConnectPreview() {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
       const agRow = document.getElementById('osAgentsRow');
-     const AG_OWNERS = ['ARTICARD-000000']; /* ilagay dito ang totoong articardd ID mo */
-if (agRow) agRow.style.display = (AG_OWNERS.includes(String(currentEntry.athid || '').toUpperCase()) && !document.body.classList.contains('public-mode')) ? '' : 'none';
+     agSyncRow();
+/* agents row: handled by agSyncRow() */
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');
@@ -6163,7 +6163,7 @@ if (agRow) agRow.style.display = (AG_OWNERS.includes(String(currentEntry.athid |
     if (tabId === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     currentOSPane = tabId;
     document.getElementById('osBackBtn')?.classList.toggle('os-back-home', tabId === 'home');
-    if (tabId === 'home') requestAnimationFrame(handleOsBodyScroll);
+    if (tabId === 'home') { agSyncRow(); requestAnimationFrame(handleOsBodyScroll); }
   }
 
   const AGENTS = [
@@ -6452,6 +6452,16 @@ function renderAgents() {
         <div class="os-row-text"><div class="os-row-title">${auEsc(a[1])}</div><div class="os-row-sub">${auEsc(a[2])}</div></div>
         <span class="os-row-value" style="font-size:11px;">Planned</span></div>`).join('') + '</div>'
     : '<div class="ab-empty-search">No agents match your search.</div>';
+}
+
+/* ilagay dito ang articardd ID at/o Card ID mo (makikita sa Account → Card ID / articardd ID) */
+const AG_OWNERS = ['ARTICARD-000000', 'C-BY5FK3' /*, 'ARTICARD-XXXXXX', 'C-XXXXXX' */];
+function agSyncRow() {
+  const row = document.getElementById('osAgentsRow'); if (!row) return;
+  const e = currentEntry || {};
+  const ids = [e.athid, e.cardId].map(v => String(v || '').toUpperCase());
+  const ok = !document.body.classList.contains('public-mode') && !!rmToken() && AG_OWNERS.some(id => ids.includes(id));
+  row.style.display = ok ? '' : 'none';
 }
 
 function osBackTapped() {
@@ -12266,6 +12276,7 @@ function copyPIAthId() {
     else { const sb = document.getElementById('acctSub'); if (sb) sb.textContent = currentEntry.pos || ''; }
     const op = document.getElementById('osProfileName'); if (op) op.textContent = currentEntry.name;
     const os = document.getElementById('osProfileSub'); if (os) os.textContent = (currentEntry.pos || '') + ' · ' + (currentEntry.athid || '');
+    agSyncRow();
     renderAddressBookProfileCard();
     applyAvatarEverywhere();
   }
@@ -13235,6 +13246,7 @@ function applyRemoteCard(d, owner, fromCache) {
     if (owner) { savePI(); try { window.storage.set(EP_STORE_KEY, JSON.stringify(X), false); } catch (e) {} }
     if (!owner) publicConnectSync(); /* PUBLIC AUTO-OPEN */
     if (owner) loadMeetings(); /* UNIFIED MEETINGS: kunin sa Meetings sheet pagka-login/boot */
+    agSyncRow();
     if (owner) abCloudPull().then(function () { setTimeout(syncLeads, 300); });
     if (!fromCache) cardCacheWrite(d, owner);
     return true;

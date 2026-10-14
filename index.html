@@ -6102,7 +6102,7 @@ function fillConnectPreview() {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
       const agRow = document.getElementById('osAgentsRow');
-      if (agRow) agRow.style.display = currentEntry.athid === 'ARTICARD-000000' ? '' : 'none'; /* palitan ng ATH ID mo */
+      if (agRow) agRow.style.display = ''; /* TEMP: visible sa lahat, i-gate ulit pagkatapos */
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');

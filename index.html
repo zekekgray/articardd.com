@@ -6131,7 +6131,8 @@ function fillConnectPreview() {
       document.getElementById('osProfileName').textContent = currentEntry.name;
       document.getElementById('osProfileSub').textContent = currentEntry.pos + ' · ' + currentEntry.athid;
       const agRow = document.getElementById('osAgentsRow');
-      if (agRow) agRow.style.display = currentEntry.athid === 'ARTICARD-000000' ? '' : 'none'; /* palitan ng ATH ID mo */
+     const AG_OWNERS = ['ARTICARD-000000']; /* ilagay dito ang totoong articardd ID mo */
+if (agRow) agRow.style.display = (AG_OWNERS.includes(String(currentEntry.athid || '').toUpperCase()) && !document.body.classList.contains('public-mode')) ? '' : 'none';
     }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');

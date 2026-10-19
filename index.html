@@ -714,9 +714,9 @@ body.public-mode .back-mascot-btn{display:none !important;}
   }
 
   /* ── PILL AVATAR ── */
-  .glass-pill { padding: 0 44px 0 75px; align-items: flex-start; }
+  .glass-pill { padding: 0 44px 0 82px; align-items: flex-start; }
   .glass-pill .pill-name, .glass-pill .pill-pos { text-align: left; width: 100%; }
-  .pill-avatar { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:56px; height:56px; border-radius:50%; background:#8E8E93; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; pointer-events:all; z-index:3; transition:transform .12s, opacity .12s; -webkit-tap-highlight-color:transparent; }
+  .pill-avatar { position:absolute; left:2px; top:50%; transform:translateY(-50%); width:68px; height:68px; border-radius:50%; background:#8E8E93; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; pointer-events:all; z-index:3; transition:transform .12s, opacity .12s; -webkit-tap-highlight-color:transparent; }
   .pill-avatar svg { flex-shrink:0; }
   .pill-avatar:active { transform:translateY(-50%) scale(0.90); opacity:.8; }
   .pill-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
@@ -789,7 +789,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
 /* old moving gold TAP & HOLD: permanently off (coach pill replaces it) */
 .hold-pulse,.hold-hint{display:none !important;}
 /* === START: COACH PILL (static, opacity-only) === */
-.coach-pill{position:absolute;left:50%;top:342px;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:17px;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.10);color:#1c1c1e;font:700 10px -apple-system,'SF Pro Text','Helvetica Neue',sans-serif;letter-spacing:.16em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .25s ease;}
+.coach-pill{position:absolute;left:50%;top:442px;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:17px;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.10);color:#1c1c1e;font:700 10px -apple-system,'SF Pro Text','Helvetica Neue',sans-serif;letter-spacing:.16em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .25s ease;}
 .coach-pill:active{opacity:.7;}
 .coach-pill.hide{opacity:0;pointer-events:none;}
 .coach-pill svg{flex-shrink:0;}
@@ -1407,7 +1407,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <!-- FRONT -->
         <div class="face face-front" style="overflow:hidden;display:flex;flex-direction:column;">
           <div class="card-top-line"></div>
-          <button type="button" id="holdOpenBtn" class="hold-open" aria-label="Hold to open" style="position:absolute;left:170px;top:290px;transform:translate(-50%,-50%);z-index:6;border-radius:50%;width:72px;height:72px;min-width:0;padding:0;box-shadow:none;display:flex;align-items:center;justify-content:center;overflow:visible;background:transparent;border:none;">
+          <button type="button" id="holdOpenBtn" class="hold-open" aria-label="Hold to open" style="position:absolute;left:170px;top:520.2px;transform:translate(-50%,-50%);z-index:6;border-radius:50%;width:72px;height:72px;min-width:0;padding:0;box-shadow:none;display:flex;align-items:center;justify-content:center;overflow:visible;background:transparent;border:none;">
             <span class="hold-open-fill" style="display:none;"></span>
             <div id="holdQrRing" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:68px;height:68px;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);border-radius:50%;box-sizing:border-box;pointer-events:none;"></div>
             <div id="holdQr" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;background:#fff;padding:3px;box-sizing:border-box;border-radius:4px;pointer-events:none;"></div>
@@ -1425,7 +1425,8 @@ body.public-mode .back-mascot-btn{display:none !important;}
               </svg>
             </span>
           </button>
-          <!-- === START: HOLD HINT === -->
+          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:28px;top:148px;width:284px;height:284px;z-index:3;pointer-events:none;"></canvas>
+<!-- === START: HOLD HINT === -->
 <span class="hold-pulse" aria-hidden="true"></span>
 <div class="hold-hint" aria-hidden="true">
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3" fill="#E8CC7A" stroke="none"/><circle cx="12" cy="12" r="8"/></svg>
@@ -1831,7 +1832,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
             </g>
             <rect x="0" y="0" width="340" height="580" fill="url(#skyFade)"/>
             <!-- KEY -->
-            <g transform="translate(170,69.20) scale(0.9027) translate(-88, 24.6)">
+            <g display="none" transform="translate(170,69.20) scale(0.9027) translate(-88, 24.6)">
               <g transform="translate(88,220) scale(1.725) translate(-88,-220)">
               <path fill-rule="evenodd" fill="url(#gGold)" d="M 0 220 A 88 88 0 1 0 176 220 A 88 88 0 1 0 0 220 Z M 16 220 A 72 72 0 1 0 160 220 A 72 72 0 1 0 16 220 Z"/>
               <path fill-rule="evenodd" fill="url(#gBow)" d="M 0 220 A 88 88 0 1 0 176 220 A 88 88 0 1 0 0 220 Z M 16 220 A 72 72 0 1 0 160 220 A 72 72 0 1 0 16 220 Z"/>
@@ -1859,12 +1860,12 @@ body.public-mode .back-mascot-btn{display:none !important;}
               <text id="bottomLabel" x="170" y="572" text-anchor="middle" font-family="-apple-system,'SF Pro Text','Helvetica Neue',sans-serif" font-size="8.5" letter-spacing="1.1" fill="#d0d0d0"><tspan font-weight="700" fill="#ffffff">articardd.</tspan><tspan dx="4" font-weight="300" opacity="0.75">connect differently.</tspan></text>
             </g>
             <!-- Bottom pill 1: ArtiCard Account (Contacts), Calendar, Cash -->
-            <g id="navPill">
-              <circle cx="170" cy="529.2" r="25" fill="#F3EDE4"/>
-              <circle cx="170" cy="529.2" r="25" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
-              <circle cx="170" cy="529.2" r="22" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
-              <rect x="161" y="520.2" width="18" height="18" rx="5" fill="none" stroke="#1c1c1e" stroke-width="1.8"/>
-              <circle cx="170" cy="529.2" r="25" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('address');"/>
+            <g id="navPill" display="none">
+              <circle cx="170" cy="520.2" r="34" fill="#F3EDE4"/>
+              <circle cx="170" cy="520.2" r="34" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.6"/>
+              <circle cx="170" cy="520.2" r="31" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="1"/>
+              <rect x="158" y="508.2" width="24" height="24" rx="7" fill="none" stroke="#1c1c1e" stroke-width="2.2"/>
+              <circle cx="170" cy="520.2" r="34" fill="transparent" style="cursor:pointer;" onclick="event.stopPropagation();enterOS('address');"/>
 
               <!-- === START: DISCOVER MOVED TO CONTACTS TAB === -->
               <!-- (bottom-pill Discover button removed) -->
@@ -1885,10 +1886,10 @@ body.public-mode .back-mascot-btn{display:none !important;}
               <button type="button" class="back-mascot-btn" aria-label="Choose mascot" onclick="event.stopPropagation();haptic('light');openMascotPicker();"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d0d0d0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#d0d0d0"/><circle cx="15" cy="10" r="1" fill="#d0d0d0"/><path d="M8.5 15c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/></svg></button>
             </div>
             <button type="button" id="backShareBtn" aria-label="Share my card" onclick="event.stopPropagation();haptic('light');shareCard();"
-              style="position:absolute;left:145px;top:504.2px;width:50px;height:50px;padding:0;border-radius:50%;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;"
+              style="position:absolute;left:136px;top:486.2px;width:68px;height:68px;padding:0;border-radius:50%;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;"
               onpointerdown="this.style.transform='scale(0.92)';this.style.opacity='.8'" onpointerup="this.style.transform='';this.style.opacity=''" onpointerleave="this.style.transform='';this.style.opacity=''">
               <span style="position:absolute;inset:3px;border-radius:50%;border:1px solid rgba(0,0,0,0.14);pointer-events:none;"></span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
             <div style="position:absolute;left:32px;top:569px;width:52px;height:1px;background:#fff;opacity:.22;z-index:5;pointer-events:none;"></div>
             <div style="position:absolute;left:256px;top:569px;width:52px;height:1px;background:#fff;opacity:.22;z-index:5;pointer-events:none;"></div>
@@ -5252,7 +5253,11 @@ function fillConnectPreview() {
         openConnectForm();
       }, HOLD);
     };
-    const cancel = () => { clearTimeout(t); t = null; btn.classList.remove('holding'); };
+    const cancel = (e) => {
+      const wasHolding = t !== null;
+      clearTimeout(t); t = null; btn.classList.remove('holding');
+      if (wasHolding && e && e.type === 'pointerup' && !document.body.classList.contains('public-mode')) enterOS('address');
+    };
     btn.addEventListener('pointerdown', start);
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, cancel));
     btn.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); });
@@ -5291,7 +5296,7 @@ function fillConnectPreview() {
     el.style.whiteSpace = 'nowrap';
     el.style.letterSpacing = '3px';
 
-    const maxW = pill.clientWidth - 119;
+    const maxW = pill.clientWidth - 126;
     // only shrink letter-spacing, never font-size
     let spacing = 3;
     while (el.scrollWidth > maxW && spacing > 0.5) {
@@ -10267,6 +10272,15 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
       const old = qrOverlay.querySelector('canvas');
       if (old) old.replaceWith(copy); else qrOverlay.appendChild(copy);
     }
+    const liveRbc = document.getElementById('rbcCv');
+    const cloneRbc = faceFrontClone.querySelector('#rbcCv');
+    if (liveRbc && cloneRbc) {
+      const cp = document.createElement('canvas');
+      cp.width = liveRbc.width; cp.height = liveRbc.height;
+      cp.style.cssText = cloneRbc.style.cssText;
+      cp.getContext('2d').drawImage(liveRbc, 0, 0);
+      cloneRbc.replaceWith(cp);
+    }
     // back face is irrelevant for sharing — keep it out of the capture pass
     faceBackClone.style.visibility = 'hidden';
 
@@ -10959,6 +10973,8 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
       c.style.backgroundColor = activeTheme.bg;
       c.style.transform = isBack ? 'rotateY(180deg)' : 'none';
       const mb = c.querySelector('.back-mascot-btn'); if (mb) mb.style.display = 'none';
+      const lc = document.getElementById('rbcCv'), nc = c.querySelector('.rbc-cv');
+      if (lc && nc) { const cp = document.createElement('canvas'); cp.width = lc.width; cp.height = lc.height; cp.style.cssText = nc.style.cssText; cp.className = 'rbc-cv'; cp.getContext('2d').drawImage(lc, 0, 0); nc.replaceWith(cp); }
       return c;
     };
     wrap.innerHTML = '';
@@ -15820,6 +15836,112 @@ function openRewardTerms() {
 /* (hide block removed, Discover icon shows again) */
 /* === END: DISCOVER ICON VISIBLE === */
 
+/* === START: RBC PARTICLE SPHERE (from Protocol, as is) === */
+try{(function(){
+  const cv=document.getElementById("rbcCv");if(!cv||!cv.getContext)return;
+  const cx=cv.getContext("2d"),TAU=Math.PI*2,N=78000,NH=2,NA=0,NS=78000,NC=0;
+  const rbcZ=p=>{const q=(p/2.2)*(p/2.2);return 1.1*Math.sqrt(Math.max(0,1-4*q))*(.2072+2.0026*q-1.1228*q*q)};
+  const RBC_M=4000,RBC_C=new Float32Array(RBC_M+1);
+  (()=>{let s=0,pz=rbcZ(0);for(let j=1;j<=RBC_M;j++){const p0=1.1*(j-1)/RBC_M,p1=1.1*j/RBC_M,z1=rbcZ(p1);s+=2*Math.PI*((p0+p1)/2)*Math.hypot(p1-p0,z1-pz);pz=z1;RBC_C[j]=s}for(let j=0;j<=RBC_M;j++)RBC_C[j]/=s})();
+  const rbcRho=()=>{const t=Math.random();let lo=0,hi=RBC_M;while(hi-lo>1){const m=(lo+hi)>>1;if(RBC_C[m]<t)lo=m;else hi=m}return 1.1*(lo+(t-RBC_C[lo])/((RBC_C[hi]-RBC_C[lo])||1))/RBC_M};
+  const P=new Float32Array(N*3),TG=new Float32Array(N*3),BN=new Float32Array(N*3);
+  const CY=new Float32Array(N),HB=new Uint8Array(N),SP=new Float32Array(N),PH=new Float32Array(N),TR=new Uint8Array(N),LN=new Float32Array(N),GE=new Float32Array(N),RR=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const rho=rbcRho(),zz=(Math.random()<.5?-1:1)*rbcZ(rho),ph=Math.random()*TAU,L=Math.hypot(rho,zz);
+    const nx=rho/L*Math.cos(ph),ny=zz/L,nz=rho/L*Math.sin(ph);
+    let tr,r;
+    if(i<NA){tr=3;r=.86+Math.random()*.14}
+    else if(i<NA+NS){tr=0;r=.988+Math.random()*.012}
+    else if(i<NA+NS+NC){tr=2;r=Math.pow(Math.random(),1.8)*.6}
+    else{tr=1;r=.58+Math.cbrt(Math.random())*.36}
+    TR[i]=tr;LN[i]=[0,.013,.009,.028][tr];GE[i]=Math.random();
+    let wx=Math.random()-.5,wy=Math.random()-.5,wz=Math.random()-.5;
+    const d=wx*nx+wy*ny+wz*nz;wx-=d*nx;wy-=d*ny;wz-=d*nz;
+    const l=Math.hypot(wx,wy,wz)||1;wx/=l;wy/=l;wz/=l;
+    const k=i*3;
+    P[k]=nx*r;P[k+1]=ny*r;P[k+2]=nz*r;
+    TG[k]=wx;TG[k+1]=wy;TG[k+2]=wz;
+    BN[k]=ny*wz-nz*wy;BN[k+1]=nz*wx-nx*wz;BN[k+2]=nx*wy-ny*wx;
+    HB[i]=Math.random()<Math.max(0,Math.min(1,.5+(P[k+1]+P[k+2])*.6))?0:1;
+    SP[i]=(Math.random()<.5?-1:1)*(.4+Math.random()*1.4);
+    PH[i]=Math.random()*TAU;
+    {const sy=Math.abs(ny),sx=Math.sqrt(1-ny*ny);let lo=0,hi=1.2;for(let it=0;it<28;it++){const m=(lo+hi)/2,p=m*sx,u=(p/2.2)*(p/2.2),ins=4*u<1&&m*sy<=1.1*Math.sqrt(1-4*u)*(.2072+2.0026*u-1.1228*u*u);if(ins)lo=m;else hi=m}CY[i]=lo/1.1}
+    RR[i]=Math.min(1,Math.hypot(P[k],P[k+2])*CY[i]/1.1);
+  }
+  const COL=[];
+  const HUES=[335,185],ACOL=[];
+  const TA=[[.3,.75],[.32,.85],[.3,.6]];
+  HUES.forEach(h=>{const row=[];TA.forEach(a=>{row.push("hsla("+h+",100%,54%,"+a[0]+")","hsla("+h+",100%,58%,"+a[1]+")")});COL.push(row);ACOL.push(["hsla("+h+",100%,70%,.2)","hsla("+h+",100%,82%,1)"])});
+  const DB=9,COLD=HUES.map(h=>TA.map(a=>Array.from({length:DB},(_,b)=>{const t=b/(DB-1),al=a[0]+(a[1]-a[0])*t;return "hsla("+h+",100%,"+(54+4*t)+"%,"+al.toFixed(3)+")"})));
+  const tilt=.38,ct=Math.cos(tilt),st=Math.sin(tilt);
+  let ry=0,tm=0,last=performance.now(),boost=1,tgt=1;
+  function draw(now){
+    const dpr=Math.min(1.5,window.devicePixelRatio||1),w=cv.clientWidth;
+    if(!w)return;
+    const px=Math.round(w*dpr);
+    if(cv.width!==px){cv.width=px;cv.height=px}
+    const dt=Math.min(80,Math.max(0,now-last))/1000;last=now;
+    boost+=(tgt-boost)*(1-Math.exp(-dt*5));
+    ry=(ry+.34*boost*dt)%TAU;tm+=dt;
+    const cr=Math.cos(ry),sr=Math.sin(ry),c=w/2,R=w/2*.97,t=now/1000,tl=0,ct=1,st=0,fc=Math.cos(1.5708),fs=Math.sin(1.5708),mo=1;
+    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,w,w);
+    const paths=[],ap=[];for(let k=0;k<NH*3*DB;k++)paths.push(new Path2D());for(let k=0;k<NH;k++)ap.push(new Path2D());const br=1+.012*Math.sin(tm*1.1);const gb=[0,1,2,3,4].map(()=>new Path2D()),gp=[new Path2D(),new Path2D(),new Path2D()],tp=[new Path2D(),new Path2D()];
+    for(let i=0;i<N;i++){
+      const k=i*3,th=tm*SP[i]*.7+PH[i],cc=Math.cos(th)*LN[i],ss=Math.sin(th)*LN[i];
+      const ox=TG[k]*cc+BN[k]*ss,oy=TG[k+1]*cc+BN[k+1]*ss,oz=TG[k+2]*cc+BN[k+2]*ss;
+      const bs=(TR[i]===2?br:1)*(1+(CY[i]-1)*mo),x=P[k]*bs,y=P[k+1]*bs,z=P[k+2]*bs;
+      const xa=x*fc-y*fs,ya=x*fs+y*fc,x1=xa*cr+z*sr,z1=-xa*sr+z*cr,y2=ya*ct-z1*st,z2=ya*st+z1*ct;
+      const oxa=ox*fc-oy*fs,oya=ox*fs+oy*fc,a1=oxa*cr+oz*sr,c1=-oxa*sr+oz*cr,b2=oya*ct-c1*st;
+      const tr=TR[i],fr=z2>0?1:0,db=Math.max(0,Math.min(DB-1,Math.round((z2+1)*.5*(DB-1))));
+      if(tr===3&&!fr)continue;
+      let p;
+      if(tr===0){
+        const rr=RR[i],gw=1,ge=GE[i],pg=0,gbi=Math.min(4,Math.floor(rr/.08));
+        let gi=-1;
+        if(ge<pg)gi=fr?10+gbi:0;
+        else if(0)gi=fr?1:0;
+        const tw=0;
+        if(gi>=10)p=gb[gi-10];else if(gi>=0)p=gp[gi];
+        else if(0)p=tp[fr];
+        else p=paths[HB[i]*3*DB+db];
+      }else p=tr===3?ap[HB[i]]:paths[(HB[i]*3+tr)*DB+db];
+      p.moveTo(c+(x1+a1)*R,c+(y2+b2)*R);
+      p.lineTo(c+(x1+a1)*R+.01,c+(y2+b2)*R);
+    }
+    cx.lineWidth=1.3;cx.lineCap="round";
+    for(let b=0;b<DB;b++){cx.lineWidth=.6+.6*b/(DB-1);for(let h=0;h<NH;h++)for(let tr=0;tr<3;tr++){cx.strokeStyle=COLD[h][tr][b];cx.stroke(paths[(h*3+tr)*DB+b])}}
+    cx.globalCompositeOperation="source-atop";cx.globalAlpha=0;
+    let g=cx.createRadialGradient(w*.34,w*.28,0,w*.34,w*.28,w*1.05);
+    g.addColorStop(0,"rgba(255,232,205,.30)");g.addColorStop(.35,"rgba(255,232,205,0)");g.addColorStop(.45,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.28)");
+    cx.fillStyle=g;cx.fillRect(0,0,w,w);
+    g=cx.createRadialGradient(w*.86,w*.84,0,w*.86,w*.84,w*.4);
+    g.addColorStop(0,"rgba(64,224,208,.18)");g.addColorStop(1,"rgba(64,224,208,0)");
+    cx.fillStyle=g;cx.fillRect(0,0,w,w);
+    cx.globalCompositeOperation="source-over";cx.globalAlpha=1;
+    cx.lineCap="round";
+    cx.lineWidth=1.3;cx.strokeStyle="hsla(43,85%,50%,.35)";cx.stroke(gp[0]);
+    cx.lineWidth=1.5;cx.strokeStyle="hsla(43,90%,58%,.85)";cx.stroke(gp[1]);for(let b=0;b<5;b++){const f=1-b/5;cx.lineWidth=1.2+1.6*f;cx.strokeStyle="hsla(45,100%,"+(62+22*f)+"%,"+(.12+.88*f*f).toFixed(3)+")";cx.stroke(gb[b]);}
+    cx.lineWidth=4.2;cx.strokeStyle="hsla(45,100%,70%,.22)";cx.stroke(gp[2]);
+    cx.lineWidth=2.4;cx.strokeStyle="hsla(45,100%,78%,1)";cx.stroke(gp[2]);
+    cx.lineWidth=1.3;cx.strokeStyle="hsla(174,70%,48%,.35)";cx.stroke(tp[0]);
+    cx.lineWidth=1.5;cx.strokeStyle="hsla(174,75%,56%,.9)";cx.stroke(tp[1]);
+    for(let h=0;h<NH;h++){cx.lineWidth=2.6;cx.strokeStyle=ACOL[h][0];cx.stroke(ap[h]);cx.lineWidth=1.5;cx.strokeStyle=ACOL[h][1];cx.stroke(ap[h])}
+  }
+  /* pressing the QR button speeds up the spin (same as the entrance orb) */
+  const go=document.getElementById("holdOpenBtn");
+  if(go){
+    ["pointerdown"].forEach(ev=>go.addEventListener(ev,()=>{tgt=2}));
+    ["pointerup","pointerleave","pointercancel"].forEach(ev=>go.addEventListener(ev,()=>{tgt=1}));
+  }
+  if(matchMedia("(prefers-reduced-motion:reduce)").matches){draw(performance.now());return}
+  const cardEl=document.getElementById("card"),osEl=document.getElementById("screenOS"),gateEl=document.getElementById("screenGate");
+  (function frame(now){
+    const hidden=document.hidden||(cardEl&&cardEl.classList.contains("flipped"))||(osEl&&osEl.classList.contains("active"))||(gateEl&&gateEl.classList.contains("show"));
+    if(!hidden)draw(now);
+    requestAnimationFrame(frame);
+  })(performance.now());
+})()}catch(e){console.error("RBC sphere failed",e)}
+/* === END: RBC PARTICLE SPHERE === */
 /* === START: READY FLAG === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */

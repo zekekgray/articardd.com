@@ -12592,7 +12592,7 @@ function copyPIAthId() {
     function closeTop() {
       const el = active; if (!el) return;
       if (typeof auMenuOpen !== 'undefined' && auMenuOpen) { closeAuMenu(); return; }
-      if (typeof auPlusMenuOpen !== 'undefined' && auPlusMenuOpen) { closeAuPlusMenu(); return; }}
+            if (typeof auPlusMenuOpen !== 'undefined' && auPlusMenuOpen) { closeAuPlusMenu(); return; }
       if (el.id === 'contactDetailScreen') {
         const ed = document.getElementById('cdfs-notes-editor');
         if (ed && ed.style.display === 'block') { cancelInlineNotesEdit(); return; }

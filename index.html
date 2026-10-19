@@ -15927,6 +15927,31 @@ try{(function(){
     cx.lineWidth=1.5;cx.strokeStyle="hsla(174,75%,56%,.9)";cx.stroke(tp[1]);
     for(let h=0;h<NH;h++){cx.lineWidth=2.6;cx.strokeStyle=ACOL[h][0];cx.stroke(ap[h]);cx.lineWidth=1.5;cx.strokeStyle=ACOL[h][1];cx.stroke(ap[h])}
   }
+  /* === START: SPHERE → PROTOCOL === */
+  (function(){
+    const URL_P="https://protocol.artibytte.com/#setup";
+    const hop=cv.closest("button,a,[role=button]")||cv;
+    if(hop.id==="holdOpenBtn")return;            /* huwag galawin ang QR hold button */
+    hop.style.cursor="pointer";
+    if(!hop.matches("button,a")){hop.setAttribute("role","link");hop.tabIndex=0;}
+    hop.setAttribute("aria-label","Open ArtiBytte Protocol");
+    let going=false,veil=null;
+    function go(e){
+      if(going||document.body.classList.contains("public-mode"))return;   /* owner lang, hindi ang visitors */
+      going=true; if(e&&e.preventDefault)e.preventDefault();
+      if(typeof haptic==="function")haptic("medium");
+      if(matchMedia("(prefers-reduced-motion:reduce)").matches){location.assign(URL_P);return}
+      veil=document.createElement("div");
+      veil.style.cssText="position:fixed;inset:0;z-index:100000;background:#ECE4D6;opacity:0;transition:opacity .35s ease;pointer-events:all";
+      document.body.appendChild(veil);
+      requestAnimationFrame(()=>{veil.style.opacity="1"});
+      setTimeout(()=>location.assign(URL_P),360);
+    }
+    hop.addEventListener("click",go);
+    hop.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!hop.matches("button,a")){go(e)}});
+    window.addEventListener("pageshow",e=>{if(e.persisted){going=false;if(veil){veil.remove();veil=null}}});   /* back button */
+  })();
+  /* === END: SPHERE → PROTOCOL === */
   /* pressing the QR button speeds up the spin (same as the entrance orb) */
   const go=document.getElementById("holdOpenBtn");
   if(go){

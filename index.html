@@ -979,6 +979,8 @@ body.public-mode .back-mascot-btn{display:none !important;}
   .dc-lnk{background:none;border:none;color:#1c1c1e;font-size:14px;font-weight:700;cursor:pointer;min-height:44px;padding:0 4px;margin:0 0 4px -4px;-webkit-tap-highlight-color:transparent;}
   .dc-in{flex:1;min-width:0;height:48px;box-sizing:border-box;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:0 14px;font-size:16px;background:#fff;color:#1c1c1e;outline:none;}
   .dc-ask{position:sticky;bottom:0;margin:0 -20px;padding:10px 20px max(14px,env(safe-area-inset-bottom));background:rgba(236,228,214,0.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:0.6px solid rgba(0,0,0,0.08);}
+  #auBody > .dc-ask{margin-top:auto;flex-shrink:0;}
+  #auBody > .dc-card,#auBody > .dc-opt{flex-shrink:0;}
   .dc-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;box-sizing:border-box;padding:10px 14px;margin-bottom:8px;background:rgba(255,255,255,0.72);border:1px solid rgba(0,0,0,0.08);border-radius:14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;}
   .dc-opt.on{border:2px solid #1c1c1e;}
   .dc-opt:disabled{opacity:.45;cursor:default;}
@@ -2103,14 +2105,9 @@ body.public-mode .back-mascot-btn{display:none !important;}
 
     <!-- UPCOMING -->
     <div class="os-pane" data-pane="upcoming">
-      <div class="up-pane-header">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div class="os-title" style="padding:6px 0 0;">Calendar</div>
-          <div class="up-toggle">
-            <button class="up-toggle-btn active" id="upViewListBtn" onclick="switchUpcomingView('list')">List</button>
-            <button class="up-toggle-btn" id="upViewCalBtn" onclick="switchUpcomingView('calendar')">Calendar</button>
-            <button class="up-toggle-btn" id="upViewReqBtn" onclick="switchUpcomingView('requests')">Requests</button>
-          </div>
+      <div class="up-pane-header" style="margin:0 0 14px;">
+        <div style="display:flex;align-items:baseline;">
+          <div class="os-title" style="padding:6px 0 0 4px;">Calendar</div>
         </div>
         <button class="up-add-btn"
           onpointerdown="haptic('light');this.style.transition='transform .08s cubic-bezier(0.34,1.56,0.64,1),opacity .08s';this.style.transform='scale(0.88)';this.style.opacity='.65';"
@@ -2120,11 +2117,15 @@ body.public-mode .back-mascot-btn{display:none !important;}
       </div>
 
       <!-- LIST VIEW -->
-      <div class="ab-seg" role="tablist" aria-label="Workspace sections">
+      <div class="ab-seg" role="tablist" aria-label="Contacts sections">
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
         <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Calendar</button>
-        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+      </div>
+      <div class="up-toggle" style="margin-bottom:12px;">
+        <button class="up-toggle-btn active" id="upViewListBtn" onclick="switchUpcomingView('list')">List</button>
+        <button class="up-toggle-btn" id="upViewCalBtn" onclick="switchUpcomingView('calendar')">Calendar</button>
+        <button class="up-toggle-btn" id="upViewReqBtn" onclick="switchUpcomingView('requests')">Requests</button>
       </div>
       <div id="upListView">
         <div class="up-section-label">Today's Meetings</div>
@@ -13630,7 +13631,7 @@ if (sh) {
   const _dm = document.getElementById('dcMsg'), _draft = (keep && _dm) ? _dm.value : '';
   body.innerHTML = V[v]();
   if (_draft) { const _n = document.getElementById('dcMsg'); if (_n) _n.value = _draft; }
-  body.style.display = chat ? 'flex' : 'block';
+  body.style.display = (chat || v === 'discover') ? 'flex' : 'block';
   body.style.flexDirection = 'column';
   body.style.minHeight = '0';
   body.style.overflowY = chat ? 'hidden' : 'auto';

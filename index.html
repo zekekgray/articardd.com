@@ -15932,7 +15932,7 @@ try{(function(){
     const URL_P="https://protocol.artibytte.com/#setup";
     const hop=cv.closest("button,a,[role=button]")||cv;
     if(hop.id==="holdOpenBtn")return;            /* huwag galawin ang QR hold button */
-    hop.style.cursor="pointer";
+    hop.style.cursor="pointer";hop.style.pointerEvents="auto";
     if(!hop.matches("button,a")){hop.setAttribute("role","link");hop.tabIndex=0;}
     hop.setAttribute("aria-label","Open ArtiBytte Protocol");
     let going=false,veil=null;
@@ -15947,7 +15947,13 @@ try{(function(){
       requestAnimationFrame(()=>{veil.style.opacity="1"});
       setTimeout(()=>location.assign(URL_P),360);
     }
-    hop.addEventListener("click",go);
+    hop.addEventListener("click",function(e){
+      if(document.body.classList.contains("public-mode"))return;   /* visitors: normal flip pa rin */
+      var r=cv.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+      if(Math.hypot(dx,dy)>r.width/2*0.97)return;                  /* labas ng bilog = flip lang */
+      e.stopPropagation();                                          /* huwag umabot sa #card flipCard() */
+      go(e);
+    });
     hop.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!hop.matches("button,a")){go(e)}});
     window.addEventListener("pageshow",e=>{if(e.persisted){going=false;if(veil){veil.remove();veil=null}}});   /* back button */
   })();

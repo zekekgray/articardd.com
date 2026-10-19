@@ -789,10 +789,9 @@ body.public-mode .back-mascot-btn{display:none !important;}
 /* old moving gold TAP & HOLD: permanently off (coach pill replaces it) */
 .hold-pulse,.hold-hint{display:none !important;}
 /* === START: QR BUTTON OUTER RING (AssistiveTouch style) === */
-#holdOpenBtn::before,#backShareBtn::before{content:'';position:absolute;left:50%;top:50%;width:86px;height:86px;border-radius:50%;transform:translate(-50%,-50%);border:1.5px solid rgba(255,255,255,.26);background:rgba(255,255,255,.05);box-shadow:0 0 0 5px rgba(255,255,255,.04);pointer-events:none;z-index:0;box-sizing:border-box;transition:transform .45s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s,box-shadow .2s;}
+#holdOpenBtn::before{content:'';position:absolute;left:50%;top:50%;width:86px;height:86px;border-radius:50%;transform:translate(-50%,-50%);border:1.5px solid rgba(255,255,255,.26);background:rgba(255,255,255,.05);box-shadow:0 0 0 5px rgba(255,255,255,.04);pointer-events:none;z-index:0;box-sizing:border-box;transition:transform .45s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s,box-shadow .2s;}
 #holdOpenBtn.holding::before{transform:translate(-50%,-50%) scale(1.1);border-color:rgba(232,204,122,.75);background:rgba(232,204,122,.10);box-shadow:0 0 0 6px rgba(232,204,122,.10);}
-#backShareBtn:active::before{transform:translate(-50%,-50%) scale(1.1);border-color:rgba(232,204,122,.75);background:rgba(232,204,122,.10);box-shadow:0 0 0 6px rgba(232,204,122,.10);}
-@media (prefers-reduced-motion:reduce){#holdOpenBtn::before,#backShareBtn::before{transition:none;}}
+@media (prefers-reduced-motion:reduce){#holdOpenBtn::before{transition:none;}}
 /* === END: QR BUTTON OUTER RING === */
 /* === START: COACH PILL (static, opacity-only) === */
 .coach-pill{position:absolute;left:50%;top:442px;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:17px;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.10);color:#1c1c1e;font:700 10px -apple-system,'SF Pro Text','Helvetica Neue',sans-serif;letter-spacing:.16em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .25s ease;}

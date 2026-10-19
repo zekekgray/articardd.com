@@ -996,59 +996,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
   .dc-demo{display:inline-block;background:#1c1c1e;color:#E8CC7A;font-size:10.5px;font-weight:700;letter-spacing:.1em;padding:6px 12px;border-radius:12px;margin-bottom:6px;}
   /* === END: DISCOVER CSS === */
 
-  /* === START: AGENTS COMPOSER === */
-  .ag-comp{display:flex;align-items:center;gap:6px;position:relative;margin:10px 0 14px;padding:5px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:30px;box-shadow:0 2px 10px rgba(0,0,0,.05);transition:border-color .2s,box-shadow .2s;}
-  .ag-comp:focus-within{border-color:rgba(28,28,30,.55);box-shadow:0 0 0 3px rgba(232,204,122,.35),0 2px 10px rgba(0,0,0,.05);}
-  .ag-plus,.ag-send{width:44px;height:44px;flex-shrink:0;border:none;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .2s,color .2s,opacity .2s;}
-  .ag-plus{background:rgba(0,0,0,.06);color:#1c1c1e;}
-  .ag-plus svg{transition:transform .3s cubic-bezier(.34,1.56,.64,1),stroke .2s;}
-  .ag-plus.open{background:#1c1c1e;}
-  .ag-plus.open svg{transform:rotate(45deg);stroke:#ECE4D6;}
-  .ag-send{background:rgba(0,0,0,.07);color:rgba(60,60,67,.35);}
-  .ag-send.ready{background:#1c1c1e;color:#ECE4D6;transform:scale(1.04);}
-  .ag-send.busy{background:#1c1c1e;color:#ECE4D6;cursor:default;}
-  .ag-send.busy svg{opacity:0;}
-  .ag-send.busy::after{content:'';position:absolute;width:18px;height:18px;border:2px solid rgba(236,228,214,.3);border-top-color:#ECE4D6;border-radius:50%;animation:spin .8s linear infinite;}
-  .ag-plus:active,.ag-send:active{transform:scale(.92);}
-  .ag-send:disabled{opacity:.35;cursor:default;}
-  .ag-in{flex:1;min-width:0;height:44px;border:none;background:transparent;outline:none;padding:0 6px;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:16px;color:#1c1c1e;}
-  .ag-in::placeholder{color:rgba(60,60,67,.4);}
-  .ag-comp .ag-in:focus-visible{outline:none !important;}
-  @media (prefers-reduced-motion:reduce){.ag-send.busy::after{animation-duration:1.2s !important;animation-iteration-count:infinite !important;}}
-  /* === END: AGENTS COMPOSER === */
-
-  /* === START: AGENTS PLUS MENU === */
-  .ag-menu{position:absolute;left:0;bottom:calc(100% + 10px);width:min(300px,100%);max-height:min(46vh,340px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:rgba(255,255,255,.96);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:.6px solid rgba(0,0,0,.08);border-radius:18px;box-shadow:0 14px 36px rgba(0,0,0,.18);padding:6px;z-index:30;transform-origin:bottom left;}
-  .ag-menu.show{animation:agMenuIn .22s cubic-bezier(.34,1.56,.64,1);}
-  @keyframes agMenuIn{from{opacity:0;transform:translateY(6px) scale(.97);}to{opacity:1;transform:none;}}
-  .ag-mi{display:flex;align-items:center;gap:12px;width:100%;padding:10px;border:none;background:none;border-radius:12px;cursor:pointer;text-align:left;font-family:-apple-system,'SF Pro Text',sans-serif;-webkit-tap-highlight-color:transparent;transition:background .12s;}
-  .ag-mi:active{background:rgba(0,0,0,.06);}
-  .ag-mi[disabled]{opacity:.4;cursor:default;}
-  .ag-mi-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .ag-mi-tx{flex:1;min-width:0;}
-  .ag-mi-t{display:block;font-size:14px;font-weight:600;color:#1c1c1e;}
-  .ag-mi-s{display:block;font-size:11.5px;color:rgba(60,60,67,.55);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .ag-msep{height:1px;background:rgba(0,0,0,.07);margin:4px 8px;}
-  .ag-mhead{position:sticky;top:0;z-index:2;background:rgba(255,255,255,.98);border-radius:12px;}
-  @media (prefers-reduced-motion:reduce){.ag-menu.show{animation:none;}}
-  /* === END: AGENTS PLUS MENU === */
-  /* === START: AGENTS FIXED LAYOUT === */
-#osBody:has(.os-pane[data-pane="agents"].active){overflow:hidden;}
-#agChatView{display:flex;flex-direction:column;height:calc(100dvh - 235px - env(safe-area-inset-bottom));min-height:320px;}
-#agChatView .ag-comp{flex-shrink:0;margin-bottom:0;}
-.os-pane[data-pane="agents"] .ab-pane-header > div:first-child{flex:1;min-width:0;}
-.ag-viewall{margin-left:auto;background:none;border:none;padding:6px 2px;cursor:pointer;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:14px;font-weight:700;color:#1c1c1e;-webkit-tap-highlight-color:transparent;}
-.ag-viewall:active{opacity:.5;}
-/* === END: AGENTS FIXED LAYOUT === */
-.au-back-row{display:flex;align-items:center;gap:8px;padding:2px 4px 10px;cursor:pointer;color:#B5583A;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13.5px;font-weight:600;-webkit-tap-highlight-color:transparent;}
-  /* ── AU LAUNCHER GRID (Apple-style tiles — each opens its own clean modal) ── */
-  .au-tile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 10px;padding:8px 2px 10px;}
-  .au-tile{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;}
-  .au-tile:active{transform:scale(0.92);opacity:.75;}
-  .au-tile-icon{position:relative;width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
-  .au-tile-label{font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11px;font-weight:500;color:rgba(60,60,67,0.7);text-align:center;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64px;}
-  .au-tile-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#FF453A;color:#fff;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #ECE4D6;z-index:2;}
-
   /* ── GLOBAL FLOATING AI BUTTON — persistent across the entire app ── */
   /* ── GLOBAL BOTTOM NAV — single system-level entry point for Gold ── */
   .global-bottom-nav{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));z-index:9200;display:flex;align-items:center;justify-content:center;pointer-events:none;}
@@ -1984,7 +1931,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <button type="button" role="tab" id="abSegMine" class="on" aria-selected="true" onclick="abSegSelect('mine')">My Contacts</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
         <button type="button" role="tab" id="abSegDiscover" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
-        <button type="button" role="tab" id="abSegAgents" aria-selected="false" hidden onclick="abSegSelect('agents')">Agents</button>
       </div>
       <!-- === END: CONTACTS SUB-TABS === -->
 <div class="ab-quickbar">
@@ -2179,7 +2125,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
         <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Calendar</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
-        <button type="button" role="tab" id="upSegAgents" aria-selected="false" hidden onclick="abSegSelect('agents')">Agents</button>
       </div>
       <div id="upListView">
         <div class="up-section-label">Today's Meetings</div>
@@ -2209,50 +2154,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
         </div>
         <div class="up-section-label" id="upCalSelectedLabel">—</div>
         <div id="upCalSelectedWrap"></div>
-      </div>
-    </div>
-
-    <!-- AGENTS -->
-    <div class="os-pane" data-pane="agents">
-      <div class="ab-pane-header">
-        <div style="display:flex;align-items:baseline;">
-          <div class="os-title" style="padding:6px 0 0 4px;">Agents</div>
-          <span class="ab-count" id="agCount"></span>
-<button type="button" class="ag-viewall" onclick="agToggleDir()">View all</button>
-        </div>
-      </div>
-      <div class="ab-seg" role="tablist" aria-label="Contacts sections">
-        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
-        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
-        <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Agents</button>
-      </div>
-      <div id="agChatView">
-        <div id="agWelcome" style="text-align:center;padding:18px 6px 6px;flex-shrink:0;">
-          <div style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:22px;font-weight:700;color:#1c1c1e;">What would you like to get done?</div>
-          <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13px;color:rgba(60,60,67,0.55);margin-top:6px;line-height:1.5;">Ask anything. Your AI team will help you plan, execute, and track the work.</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;">
-            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Plan my business')">Plan my business</button>
-            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Review my tasks')">Review my tasks</button>
-            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Check my progress')">Check my progress</button>
-            <button type="button" class="dc-tag" style="border:none;cursor:pointer;padding:9px 14px;" onclick="agSend('Founder briefing')">Founder briefing</button>
-          </div>
-        </div>
-        <div id="agMeter" style="display:none;margin:8px 0 4px;flex-shrink:0;"></div>
-<div id="agMsgs" style="display:flex;flex-direction:column;gap:10px;padding:8px 0;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
-        <div id="agChips" style="display:none;flex-wrap:wrap;gap:6px;margin:8px 0 0;flex-shrink:0;"></div>
-<input type="file" id="agFilePhoto" accept="image/*" multiple hidden onchange="agPickFiles(this)">
-<input type="file" id="agFileCam" accept="image/*" capture="environment" hidden onchange="agPickFiles(this)">
-<input type="file" id="agFileDoc" accept=".csv,.txt,.json,.md" multiple hidden onchange="agPickFiles(this)">
-<div class="ag-comp" id="agComposer">
-  <div id="agPlusMenu" class="ag-menu" role="menu" aria-label="Attachments and agents" style="display:none;"></div>
-  <button type="button" id="agPlusBtn" class="ag-plus" aria-label="Attach or choose agent" aria-haspopup="true" aria-expanded="false" onclick="agToggleMenu()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-          <input id="agInput" class="ag-in" type="text" placeholder="Message your AI team…" aria-label="Message your AI team" autocomplete="off" enterkeyhint="send" oninput="agSyncSend()" onkeydown="if(event.key==='Enter'&&!event.isComposing)agSend()">
-          <button type="button" id="agSendBtn" class="ag-send" aria-label="Send message" aria-disabled="true" onclick="agSend()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
-        </div>
-        <div id="agDir" style="display:none;margin-top:12px;max-height:45%;overflow-y:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;">
-          <input class="ab-search" id="agSearch" type="text" placeholder="Search agents" oninput="renderAgents()"/>
-          <div id="agList"></div>
-        </div>
       </div>
     </div>
 
@@ -3274,7 +3175,6 @@ body.public-mode .back-mascot-btn{display:none !important;}
       <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
       <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
       <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Discover</button>
-      <button type="button" role="tab" id="auSegAgents" aria-selected="false" hidden onclick="abSegSelect('agents')">Agents</button>
     </div>
     <div id="auBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 30px;"></div>
     <div id="auSearchBarWrap" style="flex-shrink:0;padding:8px 16px max(8px,env(safe-area-inset-bottom));background:rgba(236,228,214,0.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:0.6px solid rgba(0,0,0,0.08);">
@@ -6183,13 +6083,6 @@ function fillConnectPreview() {
     if (scrubber) scrubber.style.display = pane === 'address' ? 'flex' : 'none';
     if (pane === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (pane === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
-    if (currentEntry) {
-      /* home removed */
-      /* home removed */
-      const agRow = document.getElementById('osAgentsRow');
-     agSyncRow();
-/* agents row: handled by agSyncRow() */
-    }
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('active', 'entering');
     setTimeout(() => osScreen.classList.remove('entering'), 440);
@@ -6197,7 +6090,6 @@ function fillConnectPreview() {
   }
 
   function exitOS() {
-    agToggleMenu(false);
     haptic('light');
     const osScreen = document.getElementById('screenOS');
     osScreen.classList.add('leaving');
@@ -6218,390 +6110,11 @@ function fillConnectPreview() {
     if (scrubber) scrubber.style.display = tabId === 'address' ? 'flex' : 'none';
     if (tabId === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (tabId === 'tag') renderNotes();
-    if (tabId !== 'agents') agToggleMenu(false);
-    if (tabId === 'agents') renderAgents();
     if (tabId === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     currentOSPane = tabId;
     document.getElementById('osBackBtn')?.classList.toggle('os-back-home', tabId === 'home');
-    if (tabId === 'home') { agSyncRow(); requestAnimationFrame(handleOsBodyScroll); }
+    if (tabId === 'home') { requestAnimationFrame(handleOsBodyScroll); }
   }
-
-  const AGENTS = [
-  ['A-01','Strategy Officer','Long-term direction, priorities, opportunity cost'],
-  ['A-02','Chief of Staff','Orchestrates agents, owners, deadlines, briefings'],
-  ['A-03','Product Officer','Product value, roadmap, scope discipline'],
-  ['A-04','Technology Officer','Architecture, reliability, technical debt'],
-  ['A-05','Security Officer','Threats, access control, incident response'],
-  ['A-06','Design Officer','Usability, accessibility, design consistency'],
-  ['A-07','Finance Officer','Cash flow, runway, pricing, budget controls'],
-  ['A-08','Operations Officer','Workflows, service standards, bottlenecks'],
-  ['A-09','Marketing Officer','Positioning, acquisition, campaigns'],
-  ['A-10','Revenue Officer','Monetization, pricing, funnels, conversion'],
-  ['A-11','Customer Officer','Customer friction, onboarding, retention'],
-  ['A-12','Legal & Compliance Adviser','Regulatory, contracts, IP, privacy'],
-  ['A-13','People & Organization Officer','Org structure, roles, hiring priorities'],
-  ['A-14','Data & Intelligence Officer','Metrics, data quality, reporting'],
-  ['A-15','AI & Automation Architect','Automation, agent workflows, human checkpoints'],
-  ['A-16','Procurement & Vendor Manager','Vendors, contracts, lock-in, exit plans'],
-  ['A-17','Quality & Release Director','Acceptance tests, release readiness'],
-  ['A-18','Enterprise Risk Officer','Operational, financial, legal, reputational risk'],
-  ['A-19','Investment & Capital Strategist','Funding, dilution, capital allocation'],
-  ['A-20','Ethics & Trust Officer','Privacy, fairness, user harm, conflicts'],
-  ['A-21',"Devil's Advocate",'Challenges the preferred plan and assumptions'],
-  ['A-22','Milestone & Continuity Director','Milestone register, next verifiable step'],
-  ['A-23','Revenue Execution Officer','Pipeline, closes, revenue reporting'],
-  ['A-24','Execution Officer','Drives approved tasks to completion'],
-  ['A-25','Closing Officer','Asks for the sale, handles objections'],
-  ['A-26','Field Operations Officer','In-person meetings, demos, field intelligence'],
-  ['A-27','Compensation & Payroll Officer','Compensation, payroll, statutory contributions'],
-  ['A-28','Market Intelligence Officer','Competitors, market shifts, threats, opportunities']
-];
-let agChat = [], agBusy = false;
-const AG_TOKEN_LIMIT = 1000000, AG_WARN = .70, AG_SNAP = .85, AG_STOP = .95; /* i-adjust ang limit ayon sa model mo */
-let agBrief = '', agNextBrief = '', agSnapDone = false, agSessionId = agNewId();
-const AG_BRIEF_MAX = 5000;   /* hard cap ng buong brief, sa characters (~1.5K tokens) */
-const AG_RECENT_DAYS = 7;    /* rolling window ng L3 */
-const AG_ARCHIVE_KEEP = 30;  /* ilang snapshot ang iiwang buo sa storage */
-function agNewId() { return new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(Date.now() % 1000).padStart(3, '0'); }
-let agUsed = 0; /* totoong total_tokens ng pinakahuling DeepSeek call = laman ng context ngayon */
-function agTokens() {
-  if (agUsed > 0) return agUsed;
-  /* fallback estimate habang wala pang unang response */
-  return Math.ceil((agBrief.length + agChat.reduce((n, x) => n + String(x.content || '').length, 0)) / 3.5);
-}
-function agBuildBrief() {
-  const asks = agChat.filter(x => x.role === 'user').slice(-5).map(x => '- ' + String(x.content).slice(0, 140));
-  const last = [...agChat].reverse().find(x => x.data), d = last ? last.data : {};
-  const L = (t, a) => (a && a.length) ? t + ':\n' + a.map(i => '- ' + String(i).slice(0, 160)).join('\n') + '\n' : '';
-  const me = (currentEntry && currentEntry.name) ? currentEntry.name : '';
-  /* L1 Identity: maliit at pareho palagi */
-  const l1 = 'IDENTITY: ' + me + ' · ' + ((currentEntry && currentEntry.pos) || '') + ' · articardd owner\n';
-  /* L2 Current state: galing sa pinakahuling plan, hindi sa buong chat */
-  const l2 = 'CURRENT STATE:\n' + (d.plan ? String(d.plan).slice(0, 500) + '\n' : '(no plan yet)\n')
-    + L('Needs approval', d.approvals) + L('Blockers', d.blockers) + L('Next steps', d.next_steps);
-  /* L3 Recent: huling 5 request lang */
-  const l3 = 'RECENT REQUESTS:\n' + asks.join('\n') + '\n';
-  /* Rolling: dala lang ang HULING bahagi ng nakaraang brief, hindi nag-iipon */
-  const carry = agBrief ? 'EARLIER (condensed): ' + agBrief.replace(/\s+/g, ' ').slice(-400) + '\n' : '';
-  const ref = 'ARCHIVE: older sessions are stored, not loaded. Ask the owner if you need them.\n';
-  const head = 'CONTINUATION BRIEF (session ' + agSessionId + ')\n';
-  return (head + l1 + l2 + l3 + carry + ref).slice(0, AG_BRIEF_MAX);
-}
-async function agPruneSnaps() {
-  try {
-    const r = await window.storage.list('ag-snap:', false);
-    const keys = ((r && r.keys) || []).sort();           /* ang session ID ay nagsisimula sa petsa, kaya sorted = pinakaluma muna */
-    for (const k of keys.slice(0, Math.max(0, keys.length - AG_ARCHIVE_KEEP))) { try { await window.storage.delete(k, false); } catch (e) {} }
-  } catch (e) {}
-}
-async function agSnapshot(auto) {
-  if (!agChat.length) return false;
-  if (agSnapDone && auto) return true;
-  agSnapDone = true; /* guard laban sa double-trigger */
-  const snap = { id: agSessionId, at: new Date().toISOString(), tokens: agTokens(), chat: agChat.slice(-60), brief: agBuildBrief() };
-  let ok = false;
-  try { ok = !!(await window.storage.set('ag-snap:' + agSessionId, JSON.stringify(snap), false)); } catch (e) {}
-  if (!ok) { agSnapDone = false; if (!auto) { haptic('error'); showToast("Couldn't save snapshot", 'error'); } return false; }
-  agNextBrief = snap.brief;
-  agPruneSnaps();
-  try { await window.storage.set('ag-last-brief', snap.brief, false); } catch (e) {}
-  /* OPTIONAL Operating Record: kailangan ng 'ownerSaveSnapshot' case sa backend. Safe kahit wala pa. */
-  if (rmToken()) apiPost('ownerSaveSnapshot', { token: rmToken(), snapshot: snap }).catch(function () {});
-  if (!auto) { haptic('success'); showToast('Snapshot saved', 'success'); }
-  agMeter();
-  return true;
-}
-function agMeter() {
-  const el = document.getElementById('agMeter'); if (!el) return;
-  const inp = document.getElementById('agInput'), btn = document.getElementById('agSendBtn');
-  if (!agChat.length && !agBrief) { el.style.display = 'none'; return; }
-  const ratio = agTokens() / AG_TOKEN_LIMIT, pct = Math.min(100, Math.round(ratio * 100));
-  if (ratio >= AG_SNAP && !agSnapDone && agChat.length) agSnapshot(true);
-  const full = ratio >= AG_STOP;
-  if (inp) inp.disabled = full; if (btn) btn.disabled = full;
-  const color = ratio >= AG_SNAP ? '#FF453A' : ratio >= AG_WARN ? '#FF9F0A' : '#34C759';
-  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
-  let msg = '';
-  if (full) msg = 'Session full. Start a new session to continue.';
-  else if (ratio >= AG_SNAP) msg = (agSnapDone ? 'Snapshot saved. ' : 'Saving snapshot… ') + 'Recommended: start a new session.';
-  else if (ratio >= AG_WARN) msg = 'Session ' + pct + '% full. Save a snapshot soon.';
-  const btnS = 'padding:8px 12px;border-radius:11px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.9);color:#1c1c1e;' + F + 'font-size:12.5px;font-weight:600;cursor:pointer;';
-  el.style.display = 'block';
-  el.innerHTML = `<div style="${F}display:flex;justify-content:space-between;font-size:11px;color:rgba(60,60,67,0.55);margin-bottom:5px;"><span>Session ${auEsc(agSessionId)}${agBrief ? ' · brief loaded' : ''}</span><span style="font-weight:700;color:${color};">${pct}%</span></div>
-    <div style="height:5px;border-radius:3px;background:rgba(0,0,0,0.08);overflow:hidden;"><div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width .3s;"></div></div>
-    ${msg ? `<div style="${F}font-size:12.5px;color:#1c1c1e;margin-top:8px;">${msg}</div>
-    <div style="display:flex;gap:8px;margin-top:8px;"><button type="button" style="${btnS}" onclick="agSnapshot(false)">Save Snapshot</button><button type="button" style="${btnS}background:#1c1c1e;color:#ECE4D6;border:none;" onclick="agNewSession()">New Session</button></div>` : ''}`;
-}
-async function agSearchArchive(term) {   /* tawagin sa console o i-hook sa button mo: agSearchArchive('pricing') */
-  term = String(term || '').toLowerCase().trim(); if (!term) return [];
-  const hits = [];
-  try {
-    const r = await window.storage.list('ag-snap:', false);
-    for (const k of ((r && r.keys) || []).sort().reverse()) {
-      const v = await window.storage.get(k, false);
-      const s = v && v.value ? JSON.parse(v.value) : null;
-      if (s && JSON.stringify(s.chat).toLowerCase().includes(term)) hits.push({ id: s.id, at: s.at, brief: s.brief });
-      if (hits.length >= 5) break;                        /* maximum 5, para hindi ma-bloat ang context */
-    }
-  } catch (e) {}
-  return hits;
-}
-async function agNewSession() {
-  if (agBusy) return;
-if (agTokens() / AG_TOKEN_LIMIT >= AG_STOP) { haptic('error'); showToast('Session full. Start a new session.', 'error'); agMeter(); return; }
-  haptic('medium');
-  if (agChat.length && !agSnapDone) await agSnapshot(false);
-  agBrief = agNextBrief || agBuildBrief();
-  agNextBrief = '';
-  agChat = []; agSnapDone = false; agSessionId = agNewId(); agUsed = 0;
-  agRender();
-  showToast('New session started with continuation brief', 'success');
-}
-let agFiles = [], agTarget = '';
-const AG_MAX_FILES = 4, AG_TEXT_MAX = 20000;
-const AG_PLUGINS = { /* 'A-07': ['Revenue Sheet (DS-01)'] — idagdag mo kapag may totoong plug-in per agent */ };
-
-function agMenuOutside(e) {
-  const m = document.getElementById('agPlusMenu'), b = document.getElementById('agPlusBtn');
-  if (m && !m.contains(e.target) && !(b && b.contains(e.target))) agToggleMenu(false);
-}
-function agToggleMenu(force) {
-  const m = document.getElementById('agPlusMenu'); if (!m) return;
-  const on = force === undefined ? m.style.display === 'none' : !!force;
-  haptic('light');
-  document.removeEventListener('click', agMenuOutside);
-  if (on) { agMenuHome(); setTimeout(() => document.addEventListener('click', agMenuOutside), 10); }
-  m.style.display = on ? 'block' : 'none';
-  const pb = document.getElementById('agPlusBtn');
-  if (pb) { pb.classList.toggle('open', on); pb.setAttribute('aria-expanded', String(on)); }
-}
-function agMenuRow(ic, t, s, js) {
-  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
-  return `<button type="button" onclick="${js}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:none;background:none;border-radius:12px;cursor:pointer;text-align:left;${F}"><span style="font-size:18px;width:24px;text-align:center;">${ic}</span><span style="flex:1;min-width:0;"><span style="display:block;font-size:14px;font-weight:600;color:#1c1c1e;">${t}</span>${s ? `<span style="display:block;font-size:11.5px;color:rgba(60,60,67,0.55);margin-top:1px;">${s}</span>` : ''}</span></button>`;
-}
-function agMenuHome() {
-  const m = document.getElementById('agPlusMenu'); if (!m) return;
-  const tg = AGENTS.find(a => a[0] === agTarget);
-  m.innerHTML = agMenuRow('🖼️', 'Photo', 'From your gallery', "agPick('agFilePhoto')")
-    + agMenuRow('📷', 'Camera', 'Take a photo', "agPick('agFileCam')")
-    + agMenuRow('📎', 'Files', 'CSV, TXT, JSON', "agPick('agFileDoc')")
-    + agMenuRow('🧩', 'Plug-ins', tg ? 'Sending to: ' + auEsc(tg[1]) : 'Optional · pick an agent', 'agMenuPlugins()');
-}
-function agMenuPlugins() {
-  const m = document.getElementById('agPlusMenu'); if (!m) return;
-  haptic('light');
-  m.innerHTML = agMenuRow('‹', 'Back', '', 'agMenuHome()')
-    + agMenuRow('✨', 'Auto (any agent)', 'Default routing', "agSetTarget('')")
-    + AGENTS.map(a => { const n = (AG_PLUGINS[a[0]] || []).length; return agMenuRow('🧩', auEsc(a[1]), n ? n + ' plug-in' + (n > 1 ? 's' : '') : 'Route to this agent', "agSetTarget('" + a[0] + "')"); }).join('');
-}
-function agSetTarget(id) {
-  agTarget = id; agToggleMenu(false); agRenderChips();
-  const a = AGENTS.find(x => x[0] === id);
-  showToast(a ? 'Sending to ' + a[1] : 'Auto routing', 'neutral');
-}
-function agPick(id) { agToggleMenu(false); const el = document.getElementById(id); if (el) el.click(); }
-
-/* === START: AGENTS PLUS MENU (overrides older versions above) === */
-const AG_ICS = 'width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
-const AG_IC = {
-  photo:  `<svg ${AG_ICS}><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5.5-5.5a1.5 1.5 0 0 0-2.1 0L5 19"/></svg>`,
-  camera: `<svg ${AG_ICS}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
-  doc:    `<svg ${AG_ICS}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/></svg>`,
-  agent:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.2 4.5 2 4.5 5.3"/></svg>`,
-  auto:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5l2.9 6.6 7.1.6-5.4 4.8 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.7l7.1-.6z"/></svg>`,
-  chev:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.35)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>`,
-  check:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`,
-  back:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>`
-};
-
-function agMi(ic, bg, t, s, js, o) {
-  o = o || {};
-  return `<button type="button" role="menuitem" class="ag-mi" ${o.off ? 'disabled aria-disabled="true"' : ''} onclick="${js}"><span class="ag-mi-ic" style="background:${bg};">${ic}</span><span class="ag-mi-tx"><span class="ag-mi-t">${t}</span>${s ? `<span class="ag-mi-s">${s}</span>` : ''}</span>${o.check ? AG_IC.check : ''}${o.chev ? AG_IC.chev : ''}</button>`;
-}
-
-function agMenuOutside(e) {
-  const m = document.getElementById('agPlusMenu'), b = document.getElementById('agPlusBtn');
-  if (m && !m.contains(e.target) && !(b && b.contains(e.target))) agToggleMenu(false);
-}
-
-function agToggleMenu(force) {
-  const m = document.getElementById('agPlusMenu'); if (!m) return;
-  const was = m.style.display === 'block';
-  const on = force === undefined ? !was : !!force;
-  if (on === was) return;
-  haptic('light');
-  document.removeEventListener('pointerdown', agMenuOutside, true);
-  const pb = document.getElementById('agPlusBtn');
-  if (pb) { pb.classList.toggle('open', on); pb.setAttribute('aria-expanded', String(on)); }
-  if (!on) { m.style.display = 'none'; m.classList.remove('show'); return; }
-  agMenuHome();
-  m.style.display = 'block';
-  m.classList.remove('show'); void m.offsetWidth; m.classList.add('show');
-  document.addEventListener('pointerdown', agMenuOutside, true);
-  requestAnimationFrame(() => m.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
-}
-
-function agMenuHome() {
-  const m = document.getElementById('agPlusMenu'); if (!m) return;
-  const full = agFiles.length >= AG_MAX_FILES;
-  const lim = full ? 'Max ' + AG_MAX_FILES + ' attachments' : '';
-  const tg = AGENTS.find(a => a[0] === agTarget);
-  m.innerHTML =
-    agMi(AG_IC.photo,  '#FF9F0A', 'Photo',    lim || 'From your gallery',           "agPick('agFilePhoto')", { off: full })
-  + agMi(AG_IC.camera, '#8E8E93', 'Camera',   lim || 'Take a photo',                "agPick('agFileCam')",   { off: full })
-  + agMi(AG_IC.doc,    '#4A9DE0', 'Document', lim || 'CSV, TXT, JSON or Markdown',  "agPick('agFileDoc')",   { off: full })
-  + '<div class="ag-msep"></div>'
-  + agMi(AG_IC.agent,  '#1c1c1e', 'Choose agent', tg ? auEsc(tg[1]) : 'Auto · best agent for the task', 'agMenuAgents()', { chev: 1 });
-  m.scrollTop = 0;
-}
-
-function agMenuAgents() {
-  const m = document.getElementById('agPlusMenu'); if (!m) return;
-  haptic('light');
-  m.innerHTML =
-    `<button type="button" role="menuitem" class="ag-mi ag-mhead" onclick="haptic('light');agMenuHome()"><span class="ag-mi-ic" style="background:rgba(0,0,0,.06);">${AG_IC.back}</span><span class="ag-mi-tx"><span class="ag-mi-t">Choose agent</span></span></button>`
-  + agMi(AG_IC.auto, 'rgba(232,204,122,.4)', 'Auto', 'Best agent for the task', "agSetTarget('')", { check: !agTarget })
-  + '<div class="ag-msep"></div>'
-  + AGENTS.map(a => agMi(`<span style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11px;font-weight:700;color:#E8CC7A;">${a[0].slice(2)}</span>`, '#1c1c1e', auEsc(a[1]), auEsc(a[2]), "agSetTarget('" + a[0] + "')", { check: agTarget === a[0] })).join('');
-  m.scrollTop = 0;
-}
-/* === END: AGENTS PLUS MENU === */
-
-function agImgToB64(file) {
-  return new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onerror = rej;
-    fr.onload = () => {
-      const im = new Image();
-      im.onerror = rej;
-      im.onload = () => {
-        const s = Math.min(1, 1280 / Math.max(im.width, im.height));
-        const c = document.createElement('canvas');
-        c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
-        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-        res(c.toDataURL('image/jpeg', 0.72));
-      };
-      im.src = fr.result;
-    };
-    fr.readAsDataURL(file);
-  });
-}
-async function agPickFiles(inp) {
-  const list = [...(inp.files || [])]; inp.value = '';
-  for (const f of list) {
-    if (agFiles.length >= AG_MAX_FILES) { showToast('Max ' + AG_MAX_FILES + ' attachments', 'neutral'); break; }
-    try {
-      if (/^image\//i.test(f.type) || /\.(jpe?g|png|webp|heic)$/i.test(f.name)) {
-        agFiles.push({ name: f.name, type: 'image', data: await agImgToB64(f) });
-      } else if (/\.(csv|txt|json|md)$/i.test(f.name)) {
-        agFiles.push({ name: f.name, type: 'text', text: (await f.text()).slice(0, AG_TEXT_MAX) });
-      } else {
-        showToast('PDF/Excel/Word: hindi pa nababasa ng app. Gamitin ang CSV, TXT o image.', 'neutral');
-      }
-    } catch (e) { haptic('error'); showToast("Couldn't read " + f.name, 'error'); }
-  }
-  haptic('light'); agRenderChips();
-}
-function agRenderChips() {
-  const el = document.getElementById('agChips'); if (!el) return;
-  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
-  const chip = (label, js, dark) => `<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 11px;border-radius:14px;background:${dark ? '#1c1c1e' : 'rgba(255,255,255,0.85)'};color:${dark ? '#ECE4D6' : '#1c1c1e'};border:1px solid rgba(0,0,0,0.08);${F}font-size:12px;font-weight:600;max-width:100%;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${label}</span><button type="button" aria-label="Remove" onclick="${js}" style="border:none;background:none;color:inherit;opacity:.6;cursor:pointer;padding:0 2px;font-size:15px;line-height:1;">×</button></span>`;
-  const tg = AGENTS.find(a => a[0] === agTarget);
-  const h = (tg ? chip('→ ' + auEsc(tg[1]), "agSetTarget('')", true) : '')
-    + agFiles.map((f, i) => chip((f.type === 'image' ? '🖼️ ' : '📄 ') + auEsc(f.name), 'agRemoveFile(' + i + ')')).join('');
-  el.innerHTML = h; el.style.display = h ? 'flex' : 'none';
-  agSyncSend();
-}
-function agSyncSend() {
-  const inp = document.getElementById('agInput'), b = document.getElementById('agSendBtn');
-  if (!b) return;
-  const has = !!((inp && inp.value.trim()) || agFiles.length);
-  b.classList.toggle('ready', has && !agBusy);
-  b.classList.toggle('busy', !!agBusy);
-  b.setAttribute('aria-disabled', String(!has || !!agBusy));
-  b.setAttribute('aria-label', agBusy ? 'Sending' : 'Send message');
-}
-function agRemoveFile(i) { agFiles.splice(i, 1); haptic('light'); agRenderChips(); }
-
-function agToggleDir() {
-  haptic('light');
-  const d = document.getElementById('agDir'); if (!d) return;
-  const on = d.style.display === 'none';
-  d.style.display = on ? 'block' : 'none';
-  if (on) renderAgents();
-}
-function agRender() {
-  const w = document.getElementById('agWelcome'), m = document.getElementById('agMsgs'); if (!m) return;
-  if (w) w.style.display = agChat.length ? 'none' : 'block';
-  const roleName = id => { const a = AGENTS.find(z => z[0] === id); return a ? a[1] : id; };
-  m.innerHTML = agChat.map(x => {
-    if (x.role === 'user') return `<div class="dc-bub me" style="max-width:88%;white-space:pre-wrap;">${auEsc(x.content)}</div>`;
-    const d = x.data;
-    if (!d) return `<div class="dc-bub th" style="max-width:88%;white-space:pre-wrap;">${auEsc(x.content)}</div>`;
-    const lst = (t, a) => (a && a.length) ? `<div class="dc-note" style="font-weight:700;color:#1c1c1e;margin:10px 0 4px;">${t}</div>` + a.map(i => `<div style="font-size:13.5px;line-height:1.5;">• ${auEsc(i)}</div>`).join('') : '';
-    return `<div class="dc-bub th" style="max-width:94%;">
-      <div class="dc-note" style="margin-bottom:6px;">Contributed by: ${(d.roles || []).map(r => auEsc(roleName(r))).join(' · ')}</div>
-      <div style="font-size:14px;line-height:1.55;white-space:pre-wrap;">${auEsc(d.plan || x.content)}</div>
-      ${lst('Needs your approval', d.approvals)}${lst('Blockers', d.blockers)}${lst('Next steps', d.next_steps)}
-      ${(d.sections && d.sections.length) ? `<details style="margin-top:10px;"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;">See each role's input</summary>${d.sections.map(s => `<div style="margin-top:8px;"><div class="dc-note" style="font-weight:700;color:#1c1c1e;">${auEsc(s.role)} · ${auEsc(s.title)}</div><div style="font-size:13px;line-height:1.5;white-space:pre-wrap;">${auEsc(s.body)}</div></div>`).join('')}</details>` : ''}
-    </div>`;
-  }).join('') + (agBusy ? '<div class="dc-bub th" style="opacity:.6;">Routing to the right roles…</div>' : '');
-  m.lastElementChild && m.lastElementChild.scrollIntoView({ block: 'end', behavior: 'smooth' });
-  agSyncSend();
-agMeter();
-}
-async function agSend(text) {
-  if (agBusy) return;
-  const inp = document.getElementById('agInput');
-  const t = String(text || (inp && inp.value) || '').trim();
-  if (!t && !agFiles.length) { haptic('error'); return; }
-  if (!rmToken()) { rmExpired(); return; }
-  haptic('light');
-  if (inp) inp.value = '';
-  agChat.push({ role: 'user', content: (t || 'Please review the attached file(s).') + (agFiles.length ? '\n📎 ' + agFiles.map(f => f.name).join(', ') : '') });
-  agBusy = true; agRender();
-  try {
-    const msgs = agChat.slice(-20).map(x => ({ role: x.role, content: x.content }));
-if (agBrief) {
-  if (msgs.length && msgs[0].role === 'user') msgs[0].content = agBrief + '\n\n---\n' + msgs[0].content;
-  else msgs.unshift({ role: 'user', content: agBrief });
-}
-const att = agFiles.map(f => f.type === 'image' ? { name: f.name, type: 'image', mime: 'image/jpeg', data: f.data } : { name: f.name, type: 'text', text: f.text });
-agFiles = []; agRenderChips();
-const r = await apiPost('ownerAskProtocol', { token: rmToken(), messages: msgs, target: agTarget || undefined, attachments: att.length ? att : undefined });
-const u = r && r.usage;
-if (u) { const t = Number(u.total_tokens || u.total) || 0; if (t > 0) agUsed = t; }
-    agChat.push({ role: 'assistant', content: String((r && (r.plan || r.reply)) || 'No reply.'), data: (r && r.plan) ? r : null });
-    haptic('success');
-  } catch (e) {
-    if (/session|sign in/i.test(String(e && e.message))) { agChat.pop(); agBusy = false; rmExpired(); return; }
-    agChat.push({ role: 'assistant', content: 'Could not reach your AI team: ' + String((e && e.message) || 'not connected yet') });
-    haptic('error');
-  }
-  agBusy = false; agRender();
-}
-function renderAgents() {
-  const q = (document.getElementById('agSearch')?.value || '').trim().toLowerCase();
-  const list = AGENTS.filter(a => !q || (a[0] + ' ' + a[1] + ' ' + a[2]).toLowerCase().includes(q));
-  const _c = document.getElementById('agCount'); if (_c) _c.textContent = '(' + list.length + ')';
-  const _l = document.getElementById('agList'); if (!_l) return;
-  _l.innerHTML = list.length
-    ? '<div class="ab-section-group">' + list.map(a => `<div class="os-row">
-        <div class="os-row-icon" style="background:#1c1c1e;"><span style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:12px;font-weight:700;color:#E8CC7A;">${a[0].slice(2)}</span></div>
-        <div class="os-row-text"><div class="os-row-title">${auEsc(a[1])}</div><div class="os-row-sub">${auEsc(a[2])}</div></div>
-        <span class="os-row-value" style="font-size:11px;">Planned</span></div>`).join('') + '</div>'
-    : '<div class="ab-empty-search">No agents match your search.</div>';
-}
-
-/* ilagay dito ang articardd ID at/o Card ID mo (makikita sa Account → Card ID / articardd ID) */
-const AG_OWNERS = ['ARTICARD-000000', 'C-BY5FK3' /*, 'ARTICARD-XXXXXX', 'C-XXXXXX' */];
-function agSyncRow() {
-  const segBtns = ['abSegAgents', 'auSegAgents', 'upSegAgents'].map(id => document.getElementById(id)).filter(Boolean);
-  const e = currentEntry || {};
-  const ids = [e.athid, e.cardId].map(v => String(v || '').toUpperCase());
-  const ok = !document.body.classList.contains('public-mode') && !!rmToken() && AG_OWNERS.some(id => ids.includes(id));
-  segBtns.forEach(b => { b.hidden = !ok; });
-}
 
 function osBackTapped() {
     haptic('light');
@@ -7460,7 +6973,7 @@ function osBackTapped() {
   }
   function abSegSelect(which) {
     haptic('light');
-    if (which === 'agents' || which === 'calendar') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab(which === 'calendar' ? 'upcoming' : 'agents'); return; }
+    if (which === 'calendar') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab('upcoming'); return; }
     if (currentOSPane !== 'address') switchOSTab('address');
     if (which === 'discover') { openAuSearch(); return; }
     abSegSync('mine');
@@ -11574,8 +11087,9 @@ const RM_PILL = {
 let _rmMeetings = [], _rmBusy = false;
 
 function wantsRM() { return new URLSearchParams(location.search).get('requests') === '1'; }
-function rmToken() { return sessionStorage.getItem('athna-owner-token') || ''; }
+function rmToken() { return document.body.classList.contains('public-mode') ? '' : (sessionStorage.getItem('athna-owner-token') || ''); }
 function rmExpired() {
+  if (document.body.classList.contains('public-mode')) return;
   window.forgetDevice && window.forgetDevice();
   sessionStorage.removeItem('athna-owner-session'); sessionStorage.removeItem('athna-owner-token');
   document.getElementById('requestMgrScreen')?.remove();
@@ -12428,7 +11942,6 @@ function copyPIAthId() {
     else { const sb = document.getElementById('acctSub'); if (sb) sb.textContent = currentEntry.pos || ''; }
     const op = document.getElementById('osProfileName'); if (op) op.textContent = currentEntry.name;
     const os = document.getElementById('osProfileSub'); if (os) os.textContent = (currentEntry.pos || '') + ' · ' + (currentEntry.athid || '');
-    agSyncRow();
     renderAddressBookProfileCard();
     applyAvatarEverywhere();
   }
@@ -13079,9 +12592,7 @@ function copyPIAthId() {
     function closeTop() {
       const el = active; if (!el) return;
       if (typeof auMenuOpen !== 'undefined' && auMenuOpen) { closeAuMenu(); return; }
-      if (typeof auPlusMenuOpen !== 'undefined' && auPlusMenuOpen) { closeAuPlusMenu(); return; }
-      const _agm = document.getElementById('agPlusMenu');
-      if (_agm && _agm.style.display === 'block') { agToggleMenu(false); const _pb = document.getElementById('agPlusBtn'); if (_pb) _pb.focus(); return; }
+      if (typeof auPlusMenuOpen !== 'undefined' && auPlusMenuOpen) { closeAuPlusMenu(); return; }}
       if (el.id === 'contactDetailScreen') {
         const ed = document.getElementById('cdfs-notes-editor');
         if (ed && ed.style.display === 'block') { cancelInlineNotesEdit(); return; }
@@ -13400,7 +12911,6 @@ function applyRemoteCard(d, owner, fromCache) {
     if (owner) { savePI(); try { window.storage.set(EP_STORE_KEY, JSON.stringify(X), false); } catch (e) {} }
     if (!owner) publicConnectSync(); /* PUBLIC AUTO-OPEN */
     if (owner) loadMeetings(); /* UNIFIED MEETINGS: kunin sa Meetings sheet pagka-login/boot */
-    agSyncRow();
     if (owner) abCloudPull().then(function () { setTimeout(syncLeads, 300); });
     if (!fromCache) cardCacheWrite(d, owner);
     return true;
@@ -13450,6 +12960,7 @@ window.forgetDevice = function () { try { localStorage.removeItem('athna-owner-r
 (function () {
   try {
     if (sessionStorage.getItem('athna-owner-token')) return;
+    if (/[?&](c|id)=/.test(location.search) || /\/c\/[A-Za-z0-9-]+/.test(location.pathname)) return;   /* public link: walang owner session */
     var r = JSON.parse(localStorage.getItem('athna-owner-remember') || 'null');
     if (r && r.token && Date.parse(r.expiresAt) > Date.now()) {
       sessionStorage.setItem('athna-owner-token', r.token);
@@ -14417,6 +13928,22 @@ function dcRunQuery() {
   }, 1100);
 }
 /* === END: DISCOVER LIVE ASK === */
+
+/* === START: UNIFIED BOTTOM PILL (same as Contacts search bar) === */
+function dcAskBar() {
+  return `<div class="dc-ask" style="padding-top:8px;padding-bottom:max(8px,env(safe-area-inset-bottom));">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;display:flex;align-items:center;gap:9px;background:#fff;border-radius:26px;padding:0 16px;height:52px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.45)" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="dcQuery" type="text" value="" aria-label="Who are you looking for?" placeholder="Who are you looking for?" autocomplete="off" enterkeyhint="go" oninput="dcAskInput(this)" onkeydown="if(event.key==='Enter')dcRunQuery()" style="flex:1;min-width:0;height:auto;padding:0;border:none;border-radius:0;background:none;outline:none;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:17px;color:#1c1c1e;">
+      </div>
+      <button type="button" id="dcGoBtn" aria-label="Find someone" onclick="dcRunQuery()" style="width:52px;height:52px;flex-shrink:0;background:#fff;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#1c1c1e;box-shadow:0 2px 8px rgba(0,0,0,0.06);-webkit-tap-highlight-color:transparent;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+/* === END: UNIFIED BOTTOM PILL === */
 
 /* === START: DISCOVER INTERACTION LANGUAGE (rest → press → spring → release) === */
 (function () {

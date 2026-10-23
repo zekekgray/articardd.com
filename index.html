@@ -786,12 +786,37 @@ body.public-mode .back-mascot-btn{display:none !important;}
   .hold-open.holding{opacity:.7;}
 }
 /* === END: HOLD TO OPEN === */
+/* === START: RBC SPHERE MATERIAL (from Protocol) === */
+.rbc-shade{position:absolute;left:40.9px;top:160.9px;width:258.2px;height:258.2px;border-radius:50%;z-index:3;pointer-events:none;
+background-image:
+radial-gradient(ellipse 34% 22% at 32% 22%,rgba(255,244,228,.22),transparent 70%),
+radial-gradient(circle at 50% 50%,transparent 62%,rgba(150,170,255,.14) 92%,rgba(190,205,255,.28) 100%),
+radial-gradient(circle at 84% 86%,rgba(120,150,255,.13),transparent 40%),
+radial-gradient(circle at 74% 82%,rgba(0,0,0,.35),transparent 55%),
+url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .16 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+background-size:auto,auto,auto,auto,140px 140px;
+background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,repeat;
+box-shadow:inset 1.2px 1.4px 0 rgba(226,180,130,.60),inset 3px 4px 8px -2px rgba(190,135,90,.22),inset -1px -1.2px 0 rgba(178,198,255,.22),inset 0 0 0 1px rgba(255,255,255,.05);}
+/* === END: RBC SPHERE MATERIAL === */
 /* old moving gold TAP & HOLD: permanently off (coach pill replaces it) */
 .hold-pulse,.hold-hint{display:none !important;}
 /* === START: QR BUTTON OUTER RING (AssistiveTouch style) === */
-#holdOpenBtn::before{content:'';position:absolute;left:50%;top:50%;width:86px;height:86px;border-radius:50%;transform:translate(-50%,-50%);border:1.5px solid rgba(255,255,255,.26);background:rgba(255,255,255,.05);box-shadow:0 0 0 5px rgba(255,255,255,.04);pointer-events:none;z-index:0;box-sizing:border-box;transition:transform .45s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s,box-shadow .2s;}
-#holdOpenBtn.holding::before{transform:translate(-50%,-50%) scale(1.1);border-color:rgba(232,204,122,.75);background:rgba(232,204,122,.10);box-shadow:0 0 0 6px rgba(232,204,122,.10);}
-@media (prefers-reduced-motion:reduce){#holdOpenBtn::before{transition:none;}}
+@property --qrp{syntax:"<angle>";inherits:false;initial-value:0deg}
+/* idle: pink + blue glitter ring */
+#holdOpenBtn::before{content:'';position:absolute;left:50%;top:50%;width:86px;height:86px;border-radius:50%;transform:translate(-50%,-50%);
+background:repeating-conic-gradient(from 0deg,#FF2D9B 0 5deg,transparent 5deg 9deg,#4DA3FF 9deg 14deg,transparent 14deg 18deg);
+-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));
+opacity:.7;pointer-events:none;z-index:0;animation:qrGlitter 2.2s ease-in-out infinite;transition:transform .45s cubic-bezier(.34,1.56,.64,1);}
+@keyframes qrGlitter{0%,100%{opacity:.45;filter:brightness(1)}50%{opacity:.95;filter:brightness(1.35)}}
+/* pressed: gradient runs around and fills the ring */
+#holdOpenBtn::after{content:'';position:absolute;left:50%;top:50%;width:86px;height:86px;border-radius:50%;transform:translate(-50%,-50%);
+background:conic-gradient(from -90deg,#FF2D9B 0,#4DA3FF var(--qrp),transparent var(--qrp));
+-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));
+opacity:0;pointer-events:none;z-index:1;}
+#holdOpenBtn.holding::before{transform:translate(-50%,-50%) scale(1.1);}
+#holdOpenBtn.holding::after{opacity:1;transform:translate(-50%,-50%) scale(1.1);animation:qrFill var(--hold-ms,800ms) linear forwards;}
+@keyframes qrFill{from{--qrp:0deg}to{--qrp:360deg}}
+@media (prefers-reduced-motion:reduce){#holdOpenBtn::before{animation:none;transition:none;}#holdOpenBtn.holding::after{animation:none;--qrp:360deg;}}
 /* === END: QR BUTTON OUTER RING === */
 /* === START: COACH PILL (static, opacity-only) === */
 .coach-pill{position:absolute;left:50%;top:442px;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:17px;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.10);color:#1c1c1e;font:700 10px -apple-system,'SF Pro Text','Helvetica Neue',sans-serif;letter-spacing:.16em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .25s ease;}
@@ -1380,6 +1405,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
             </span>
           </button>
           <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:28px;top:148px;width:284px;height:284px;z-index:3;pointer-events:none;"></canvas>
+          <div class="rbc-shade" aria-hidden="true"></div>
 <!-- === START: HOLD HINT === -->
 <span class="hold-pulse" aria-hidden="true"></span>
 <div class="hold-hint" aria-hidden="true">
@@ -1837,7 +1863,7 @@ body.public-mode .back-mascot-btn{display:none !important;}
           <div class="back-fol-wrap" style="margin-bottom:84px;">
               <img id="backMascot" class="back-mascot" alt="" decoding="async"/>
               <button type="button" id="mascotLimitedBtn" class="mascot-limited" onclick="event.stopPropagation();haptic('light');openMascotLore();">LIMITED EDITION <i>Details ›</i></button>
-              <button type="button" class="back-mascot-btn" aria-label="Choose mascot" onclick="event.stopPropagation();haptic('light');openMascotPicker();"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/></svg></button>
+              <button type="button" class="back-mascot-btn" aria-label="Choose mascot" onclick="event.stopPropagation();haptic('light');openMascotPicker();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#fff"/><circle cx="15" cy="10" r="1" fill="#fff"/><path d="M8.5 15c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/></svg></button>
             </div>
             <button type="button" id="backShareBtn" aria-label="Share my card" onclick="event.stopPropagation();haptic('light');shareCard();"
               style="position:absolute;left:146px;top:496.2px;width:48px;height:48px;padding:0;border-radius:50%;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;"
@@ -15377,6 +15403,7 @@ try{(function(){
   const RBC_M=4000,RBC_C=new Float32Array(RBC_M+1);
   (()=>{let s=0,pz=rbcZ(0);for(let j=1;j<=RBC_M;j++){const p0=1.1*(j-1)/RBC_M,p1=1.1*j/RBC_M,z1=rbcZ(p1);s+=2*Math.PI*((p0+p1)/2)*Math.hypot(p1-p0,z1-pz);pz=z1;RBC_C[j]=s}for(let j=0;j<=RBC_M;j++)RBC_C[j]/=s})();
   const rbcRho=()=>{const t=Math.random();let lo=0,hi=RBC_M;while(hi-lo>1){const m=(lo+hi)>>1;if(RBC_C[m]<t)lo=m;else hi=m}return 1.1*(lo+(t-RBC_C[lo])/((RBC_C[hi]-RBC_C[lo])||1))/RBC_M};
+  const NV=new Uint8Array(N);
   const P=new Float32Array(N*3),TG=new Float32Array(N*3),BN=new Float32Array(N*3);
   const CY=new Float32Array(N),HB=new Uint8Array(N),SP=new Float32Array(N),PH=new Float32Array(N),TR=new Uint8Array(N),LN=new Float32Array(N),GE=new Float32Array(N),RR=new Float32Array(N);
   for(let i=0;i<N;i++){
@@ -15398,6 +15425,7 @@ try{(function(){
     HB[i]=Math.random()<Math.max(0,Math.min(1,.5+(P[k+1]+P[k+2])*.6))?0:1;
     SP[i]=(Math.random()<.5?-1:1)*(.4+Math.random()*1.4);
     PH[i]=Math.random()*TAU;
+    NV[i]=(ny>0&&nz>0&&Math.abs(nx)<.12)?1:0;
     {const sy=Math.abs(ny),sx=Math.sqrt(1-ny*ny);let lo=0,hi=1.2;for(let it=0;it<28;it++){const m=(lo+hi)/2,p=m*sx,u=(p/2.2)*(p/2.2),ins=4*u<1&&m*sy<=1.1*Math.sqrt(1-4*u)*(.2072+2.0026*u-1.1228*u*u);if(ins)lo=m;else hi=m}CY[i]=lo/1.1}
     RR[i]=Math.min(1,Math.hypot(P[k],P[k+2])*CY[i]/1.1);
   }
@@ -15415,10 +15443,10 @@ try{(function(){
     if(cv.width!==px){cv.width=px;cv.height=px}
     const dt=Math.min(80,Math.max(0,now-last))/1000;last=now;
     boost+=(tgt-boost)*(1-Math.exp(-dt*5));
-    ry=(ry+.34*boost*dt)%TAU;tm+=dt;
+    ry=(ry+.442*boost*dt)%TAU;tm+=dt;
     const cr=Math.cos(ry),sr=Math.sin(ry),c=w/2,R=w/2*.97,t=now/1000,tl=0,ct=1,st=0,fc=Math.cos(1.5708),fs=Math.sin(1.5708),mo=1;
     cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,w,w);
-    const paths=[],ap=[];for(let k=0;k<NH*3*DB;k++)paths.push(new Path2D());for(let k=0;k<NH;k++)ap.push(new Path2D());const br=1+.012*Math.sin(tm*1.1);const gb=[0,1,2,3,4].map(()=>new Path2D()),gp=[new Path2D(),new Path2D(),new Path2D()],tp=[new Path2D(),new Path2D()];
+    const paths=[],ap=[];for(let k=0;k<NH*3*DB;k++)paths.push(new Path2D());for(let k=0;k<NH;k++)ap.push(new Path2D());const br=1+.012*Math.sin(tm*1.1);const gb=[0,1,2,3,4].map(()=>new Path2D()),gp=[new Path2D(),new Path2D(),new Path2D()],tp=[new Path2D(),new Path2D()],nv=[new Path2D(),new Path2D()];
     for(let i=0;i<N;i++){
       const k=i*3,th=tm*SP[i]*.7+PH[i],cc=Math.cos(th)*LN[i],ss=Math.sin(th)*LN[i];
       const ox=TG[k]*cc+BN[k]*ss,oy=TG[k+1]*cc+BN[k+1]*ss,oz=TG[k+2]*cc+BN[k+2]*ss;
@@ -15427,6 +15455,7 @@ try{(function(){
       const oxa=ox*fc-oy*fs,oya=ox*fs+oy*fc,a1=oxa*cr+oz*sr,c1=-oxa*sr+oz*cr,b2=oya*ct-c1*st;
       const tr=TR[i],fr=z2>0?1:0,db=Math.max(0,Math.min(DB-1,Math.round((z2+1)*.5*(DB-1))));
       if(tr===3&&!fr)continue;
+      if(NV[i]){const q=nv[fr];q.moveTo(c+(x1+a1)*R,c+(y2+b2)*R);q.lineTo(c+(x1+a1)*R+.01,c+(y2+b2)*R);continue}
       let p;
       if(tr===0){
         const rr=RR[i],gw=1,ge=GE[i],pg=0,gbi=Math.min(4,Math.floor(rr/.08));
@@ -15456,6 +15485,8 @@ try{(function(){
     cx.lineWidth=1.5;cx.strokeStyle="hsla(43,90%,58%,.85)";cx.stroke(gp[1]);for(let b=0;b<5;b++){const f=1-b/5;cx.lineWidth=1.2+1.6*f;cx.strokeStyle="hsla(45,100%,"+(62+22*f)+"%,"+(.12+.88*f*f).toFixed(3)+")";cx.stroke(gb[b]);}
     cx.lineWidth=4.2;cx.strokeStyle="hsla(45,100%,70%,.22)";cx.stroke(gp[2]);
     cx.lineWidth=2.4;cx.strokeStyle="hsla(45,100%,78%,1)";cx.stroke(gp[2]);
+    cx.lineWidth=1.6;cx.strokeStyle="hsla(224,75%,26%,.55)";cx.stroke(nv[0]);
+    cx.lineWidth=1.9;cx.strokeStyle="hsla(224,80%,30%,.9)";cx.stroke(nv[1]);
     cx.lineWidth=1.3;cx.strokeStyle="hsla(174,70%,48%,.35)";cx.stroke(tp[0]);
     cx.lineWidth=1.5;cx.strokeStyle="hsla(174,75%,56%,.9)";cx.stroke(tp[1]);
     for(let h=0;h<NH;h++){cx.lineWidth=2.6;cx.strokeStyle=ACOL[h][0];cx.stroke(ap[h]);cx.lineWidth=1.5;cx.strokeStyle=ACOL[h][1];cx.stroke(ap[h])}

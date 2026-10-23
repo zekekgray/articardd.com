@@ -970,6 +970,7 @@ opacity:0;pointer-events:none;z-index:1;}
   .au-other-label{font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:18px 4px 8px;}
   /* === START: DISCOVER CSS === */
   #auSearchBarWrap{display:none !important;}
+#dcAskDock .dc-ask{position:static;margin:0;padding:8px 16px max(8px,env(safe-area-inset-bottom));}
   /* Discover = full-screen page na kapareho ng Contacts layout */
   #auOverlay{background:#ECE4D6 !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;transition:none !important;align-items:stretch !important;}
   #auSheet{height:100dvh !important;max-height:100dvh !important;width:100% !important;max-width:none !important;border-radius:0 !important;background:#ECE4D6 !important;animation:none !important;}
@@ -3208,6 +3209,7 @@ opacity:0;pointer-events:none;z-index:1;}
       <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Discover</button>
     </div>
     <div id="auBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 30px;"></div>
+<div id="dcAskDock" style="flex-shrink:0;"></div>
     <div id="auSearchBarWrap" style="flex-shrink:0;padding:8px 16px max(8px,env(safe-area-inset-bottom));background:rgba(236,228,214,0.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:0.6px solid rgba(0,0,0,0.08);">
       <div style="display:flex;align-items:center;gap:8px;">
         <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:9px 12px;">
@@ -13975,7 +13977,29 @@ function dcAskBar() {
   </div>`;
 }
 /* === END: UNIFIED BOTTOM PILL === */
-
+/* === START: DISCOVER ASK DOCK (pill pinned at the bottom) === */
+function dcVDiscover() {
+  if (dcLoading) return dcVFinding();
+  const list = dcMatches(), n = list.length;
+  if (!n) return dcVEmpty();
+  const head = (dcQuery && dcFound) ? `<div class="dc-h1" style="font-size:22px;margin:2px 0 10px;">${n} ${n === 1 ? 'person' : 'people'} you should meet</div>` : '';
+  const q = dcQuery ? `<div class="dc-note" style="margin:0 2px 10px;">Looking for “${auEsc(dcQuery)}” · <button type="button" class="dc-lnk" style="min-height:0;margin:0;font-size:13px;" onclick="dcClearQ()">Clear</button></div>` : '';
+  const mine = (typeof dcMine === 'function') ? dcMine() : '';
+  return head + q + mine + list.map(dcCard).join('');
+}
+function dcDockSync() {
+  const d = document.getElementById('dcAskDock'); if (!d) return;
+  if (dcView !== 'discover') { d.innerHTML = ''; d.style.display = 'none'; return; }
+  d.style.display = '';
+  if (!d.firstChild) d.innerHTML = dcAskBar();      /* built once, so focus and typing survive re-renders */
+  const i = document.getElementById('dcQuery');
+  if (i && document.activeElement !== i && !dcLoading) { i.value = dcQuery; dcAskInput(i); }
+}
+(function () {
+  const base = dcRender;
+  dcRender = function () { base.apply(this, arguments); dcDockSync(); };
+})();
+/* === END: DISCOVER ASK DOCK === */
 /* === START: DISCOVER INTERACTION LANGUAGE (rest → press → spring → release) === */
 (function () {
   const SEL = '#auOverlay .dc-btn,#auOverlay .dc-opt,#auOverlay .dc-lnk,#auOverlay #dcGoBtn,#auOverlay #auPlusBtn,#auOverlay #auMicBtn,#auOverlay [data-fx]';

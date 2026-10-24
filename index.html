@@ -1405,7 +1405,7 @@ opacity:0;pointer-events:none;z-index:1;}
               </svg>
             </span>
           </button>
-          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:28px;top:148px;width:284px;height:284px;z-index:3;pointer-events:none;"></canvas>
+          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:0;top:100px;width:340px;height:380px;z-index:3;pointer-events:none;"></canvas>
 <!-- === START: HOLD HINT === -->
 <span class="hold-pulse" aria-hidden="true"></span>
 <div class="hold-hint" aria-hidden="true">
@@ -15418,148 +15418,632 @@ function openRewardTerms() {
 /* (hide block removed, Discover icon shows again) */
 /* === END: DISCOVER ICON VISIBLE === */
 
-/* === START: RBC PARTICLE SPHERE (from Protocol, as is) === */
-try{(function(){
-  const cv=document.getElementById("rbcCv");if(!cv||!cv.getContext)return;
-  const cx=cv.getContext("2d"),TAU=Math.PI*2,N=78000,NH=2,NA=0,NS=78000,NC=0;
-  const rbcZ=p=>{const q=(p/2.2)*(p/2.2);return 1.1*Math.sqrt(Math.max(0,1-4*q))*(.2072+2.0026*q-1.1228*q*q)};
-  const RBC_M=4000,RBC_C=new Float32Array(RBC_M+1);
-  (()=>{let s=0,pz=rbcZ(0);for(let j=1;j<=RBC_M;j++){const p0=1.1*(j-1)/RBC_M,p1=1.1*j/RBC_M,z1=rbcZ(p1);s+=2*Math.PI*((p0+p1)/2)*Math.hypot(p1-p0,z1-pz);pz=z1;RBC_C[j]=s}for(let j=0;j<=RBC_M;j++)RBC_C[j]/=s})();
-  const rbcRho=()=>{const t=Math.random();let lo=0,hi=RBC_M;while(hi-lo>1){const m=(lo+hi)>>1;if(RBC_C[m]<t)lo=m;else hi=m}return 1.1*(lo+(t-RBC_C[lo])/((RBC_C[hi]-RBC_C[lo])||1))/RBC_M};
-  const NV=new Uint8Array(N);
-  const P=new Float32Array(N*3),TG=new Float32Array(N*3),BN=new Float32Array(N*3);
-  const CY=new Float32Array(N),HB=new Uint8Array(N),SP=new Float32Array(N),PH=new Float32Array(N),TR=new Uint8Array(N),LN=new Float32Array(N),GE=new Float32Array(N),RR=new Float32Array(N);
-  for(let i=0;i<N;i++){
-    const rho=rbcRho(),zz=(Math.random()<.5?-1:1)*rbcZ(rho),ph=Math.random()*TAU,L=Math.hypot(rho,zz);
-    const nx=rho/L*Math.cos(ph),ny=zz/L,nz=rho/L*Math.sin(ph);
-    let tr,r;
-    if(i<NA){tr=3;r=.86+Math.random()*.14}
-    else if(i<NA+NS){tr=0;r=.988+Math.random()*.012}
-    else if(i<NA+NS+NC){tr=2;r=Math.pow(Math.random(),1.8)*.6}
-    else{tr=1;r=.58+Math.cbrt(Math.random())*.36}
-    TR[i]=tr;LN[i]=[0,.013,.009,.028][tr];GE[i]=Math.random();
-    let wx=Math.random()-.5,wy=Math.random()-.5,wz=Math.random()-.5;
-    const d=wx*nx+wy*ny+wz*nz;wx-=d*nx;wy-=d*ny;wz-=d*nz;
-    const l=Math.hypot(wx,wy,wz)||1;wx/=l;wy/=l;wz/=l;
-    const k=i*3;
-    P[k]=nx*r;P[k+1]=ny*r;P[k+2]=nz*r;
-    TG[k]=wx;TG[k+1]=wy;TG[k+2]=wz;
-    BN[k]=ny*wz-nz*wy;BN[k+1]=nz*wx-nx*wz;BN[k+2]=nx*wy-ny*wx;
-    HB[i]=Math.random()<Math.max(0,Math.min(1,.5+(P[k+1]+P[k+2])*.6))?0:1;
-    SP[i]=(Math.random()<.5?-1:1)*(.4+Math.random()*1.4);
-    PH[i]=Math.random()*TAU;
-    NV[i]=(ny>0&&nz>0&&Math.abs(nx)<.12)?1:0;
-    {const sy=Math.abs(ny),sx=Math.sqrt(1-ny*ny);let lo=0,hi=1.2;for(let it=0;it<28;it++){const m=(lo+hi)/2,p=m*sx,u=(p/2.2)*(p/2.2),ins=4*u<1&&m*sy<=1.1*Math.sqrt(1-4*u)*(.2072+2.0026*u-1.1228*u*u);if(ins)lo=m;else hi=m}CY[i]=lo/1.1}
-    RR[i]=Math.min(1,Math.hypot(P[k],P[k+2])*CY[i]/1.1);
+/* === START: HUMANOID ROBOT (replaces RBC sphere) === */
+(function () {
+  const cv = document.getElementById('rbcCv');
+  if (!cv || !cv.getContext) return;
+  const ctx = cv.getContext('2d');
+  const N = 400000;                       /* bawasan (hal. 200000) kung lag sa mababang phone */
+  const capEl = {}, capBase = '';         /* walang caption sa card */
+
+  function start() { try {
+  /* ---------- seeded random ---------- */
+  let seed = 2049;
+  const rnd = () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+  const gauss = () => Math.sqrt(-2 * Math.log(Math.max(1e-9, rnd()))) * Math.cos(6.2831853 * rnd());
+  const mix = (a,b,t) => a + (b-a)*t;
+
+  const G = 0, P = 1, S = 2, W = 3;
+  const PAL = [[1.00,.62,.58],[1.00,.45,.72],[.45,.80,1.00],[.85,.97,1.00]];
+
+  /* ---------- surface primitives ---------- */
+  const prims = [];
+  const marks = [[0,0,0]];
+  const mark = id => marks.push([prims.length, LN.length, id]);
+  const o = [0,0,0,0,0,0];
+
+  function ell(c, r, op = {}) {
+    const p = 1.6075, [a,b,cc] = r, keep = op.keep;
+    const area = 4*Math.PI*Math.pow((Math.pow(a*b,p)+Math.pow(a*cc,p)+Math.pow(b*cc,p))/3, 1/p);
+    prims.push({ w: area*(op.frac||1)*(op.dm||1), op, sample() {
+      let dx = 0, dy = 1, dz = 0;
+      for (let t = 0; t < 400; t++) {
+        dx = gauss(); dy = gauss(); dz = gauss();
+        const l = Math.hypot(dx,dy,dz) || 1; dx /= l; dy /= l; dz /= l;
+        if (!keep || keep(dx,dy,dz)) break;
+      }
+      o[0] = c[0]+a*dx; o[1] = c[1]+b*dy; o[2] = c[2]+cc*dz;
+      const nx = dx/a, ny = dy/b, nz = dz/cc, nl = Math.hypot(nx,ny,nz) || 1;
+      o[3] = nx/nl; o[4] = ny/nl; o[5] = nz/nl;
+    }});
   }
-  const COL=[];
-  const HUES=[335,185],ACOL=[];
-  const TA=[[.3,.75],[.32,.85],[.3,.6]];
-  HUES.forEach(h=>{const row=[];TA.forEach(a=>{row.push("hsla("+h+",100%,54%,"+a[0]+")","hsla("+h+",100%,58%,"+a[1]+")")});COL.push(row);ACOL.push(["hsla("+h+",100%,70%,.2)","hsla("+h+",100%,82%,1)"])});
-  const DB=9,COLD=HUES.map(h=>TA.map(a=>Array.from({length:DB},(_,b)=>{const t=b/(DB-1),al=a[0]+(a[1]-a[0])*t;return "hsla("+h+",100%,"+(54+4*t)+"%,"+al.toFixed(3)+")"})));
-  const tilt=.38,ct=Math.cos(tilt),st=Math.sin(tilt);
-  let ry=0,tm=0,last=performance.now(),boost=1,tgt=1;
-  function draw(now){
-    const dpr=Math.min(1.5,window.devicePixelRatio||1),w=cv.clientWidth;
-    if(!w)return;
-    const px=Math.round(w*dpr);
-    if(cv.width!==px){cv.width=px;cv.height=px}
-    const dt=Math.min(80,Math.max(0,now-last))/1000;last=now;
-    boost+=(tgt-boost)*(1-Math.exp(-dt*5));
-    ry=(ry+.442*boost*dt)%TAU;tm+=dt;
-    const cr=Math.cos(ry),sr=Math.sin(ry),c=w/2,R=w/2*.97,t=now/1000,tl=0,ct=1,st=0,fc=Math.cos(1.5708),fs=Math.sin(1.5708),mo=1;
-    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,w,w);
-    const paths=[],ap=[];for(let k=0;k<NH*3*DB;k++)paths.push(new Path2D());for(let k=0;k<NH;k++)ap.push(new Path2D());const br=1+.012*Math.sin(tm*1.1);const gb=[0,1,2,3,4].map(()=>new Path2D()),gp=[new Path2D(),new Path2D(),new Path2D()],tp=[new Path2D(),new Path2D()],nv=[new Path2D(),new Path2D()];
-    for(let i=0;i<N;i++){
-      const k=i*3,th=tm*SP[i]*.7+PH[i],cc=Math.cos(th)*LN[i],ss=Math.sin(th)*LN[i];
-      const ox=TG[k]*cc+BN[k]*ss,oy=TG[k+1]*cc+BN[k+1]*ss,oz=TG[k+2]*cc+BN[k+2]*ss;
-      const bs=(TR[i]===2?br:1)*(1+(CY[i]-1)*mo),x=P[k]*bs,y=P[k+1]*bs,z=P[k+2]*bs;
-      const xa=x*fc-y*fs,ya=x*fs+y*fc,x1=xa*cr+z*sr,z1=-xa*sr+z*cr,y2=ya*ct-z1*st,z2=ya*st+z1*ct;
-      const oxa=ox*fc-oy*fs,oya=ox*fs+oy*fc,a1=oxa*cr+oz*sr,c1=-oxa*sr+oz*cr,b2=oya*ct-c1*st;
-      const tr=TR[i],fr=z2>0?1:0,db=Math.max(0,Math.min(DB-1,Math.round((z2+1)*.5*(DB-1))));
-      if(tr===3&&!fr)continue;
-      if(NV[i]){const q=nv[fr];q.moveTo(c+(x1+a1)*R,c+(y2+b2)*R);q.lineTo(c+(x1+a1)*R+.01,c+(y2+b2)*R);continue}
-      let p;
-      if(tr===0){
-        const rr=RR[i],gw=1,ge=GE[i],pg=0,gbi=Math.min(4,Math.floor(rr/.08));
-        let gi=-1;
-        if(ge<pg)gi=fr?10+gbi:0;
-        else if(0)gi=fr?1:0;
-        const tw=0;
-        if(gi>=10)p=gb[gi-10];else if(gi>=0)p=gp[gi];
-        else if(0)p=tp[fr];
-        else p=paths[HB[i]*3*DB+db];
-      }else p=tr===3?ap[HB[i]]:paths[(HB[i]*3+tr)*DB+db];
-      p.moveTo(c+(x1+a1)*R,c+(y2+b2)*R);
-      p.lineTo(c+(x1+a1)*R+.01,c+(y2+b2)*R);
-    }
-    cx.lineWidth=1.3;cx.lineCap="round";
-    for(let b=0;b<DB;b++){cx.lineWidth=.6+.6*b/(DB-1);for(let h=0;h<NH;h++)for(let tr=0;tr<3;tr++){cx.strokeStyle=COLD[h][tr][b];cx.stroke(paths[(h*3+tr)*DB+b])}}
-    cx.globalCompositeOperation="source-atop";cx.globalAlpha=0;
-    let g=cx.createRadialGradient(w*.34,w*.28,0,w*.34,w*.28,w*1.05);
-    g.addColorStop(0,"rgba(255,232,205,.30)");g.addColorStop(.35,"rgba(255,232,205,0)");g.addColorStop(.45,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.28)");
-    cx.fillStyle=g;cx.fillRect(0,0,w,w);
-    g=cx.createRadialGradient(w*.86,w*.84,0,w*.86,w*.84,w*.4);
-    g.addColorStop(0,"rgba(64,224,208,.18)");g.addColorStop(1,"rgba(64,224,208,0)");
-    cx.fillStyle=g;cx.fillRect(0,0,w,w);
-    cx.globalCompositeOperation="source-over";cx.globalAlpha=1;
-    cx.lineCap="round";
-    cx.lineWidth=1.3;cx.strokeStyle="hsla(43,85%,50%,.35)";cx.stroke(gp[0]);
-    cx.lineWidth=1.5;cx.strokeStyle="hsla(43,90%,58%,.85)";cx.stroke(gp[1]);for(let b=0;b<5;b++){const f=1-b/5;cx.lineWidth=1.2+1.6*f;cx.strokeStyle="hsla(45,100%,"+(62+22*f)+"%,"+(.12+.88*f*f).toFixed(3)+")";cx.stroke(gb[b]);}
-    cx.lineWidth=4.2;cx.strokeStyle="hsla(45,100%,70%,.22)";cx.stroke(gp[2]);
-    cx.lineWidth=2.4;cx.strokeStyle="hsla(45,100%,78%,1)";cx.stroke(gp[2]);
-    cx.lineWidth=1.6;cx.strokeStyle="hsla(224,75%,26%,.55)";cx.stroke(nv[0]);
-    cx.lineWidth=1.9;cx.strokeStyle="hsla(224,80%,30%,.9)";cx.stroke(nv[1]);
-    cx.lineWidth=1.3;cx.strokeStyle="hsla(174,70%,48%,.35)";cx.stroke(tp[0]);
-    cx.lineWidth=1.5;cx.strokeStyle="hsla(174,75%,56%,.9)";cx.stroke(tp[1]);
-    for(let h=0;h<NH;h++){cx.lineWidth=2.6;cx.strokeStyle=ACOL[h][0];cx.stroke(ap[h]);cx.lineWidth=1.5;cx.strokeStyle=ACOL[h][1];cx.stroke(ap[h])}
+
+  function cap(a, b, r0, r1, op = {}) {
+    const ax = b[0]-a[0], ay = b[1]-a[1], az = b[2]-a[2], L = Math.hypot(ax,ay,az);
+    const ux = ax/L, uy = ay/L, uz = az/L;
+    let vx = 0, vy = 1, vz = 0;
+    if (Math.abs(uy) > .9) { vx = 1; vy = 0; }
+    const dd = ux*vx+uy*vy+uz*vz; vx -= ux*dd; vy -= uy*dd; vz -= uz*dd;
+    const vl = Math.hypot(vx,vy,vz); vx /= vl; vy /= vl; vz /= vl;
+    const wx = uy*vz-uz*vy, wy = uz*vx-ux*vz, wz = ux*vy-uy*vx;
+    const aSide = Math.PI*(r0+r1)*Math.hypot(L, r0-r1), a0 = 2*Math.PI*r0*r0, a1 = 2*Math.PI*r1*r1;
+    const tot = aSide + a0 + a1;
+    prims.push({ w: tot*(op.dm||1), op, sample() {
+      const q = rnd()*tot;
+      if (q < aSide) {
+        const t = rnd(), r = r0+(r1-r0)*t, th = rnd()*6.2831853, cs = Math.cos(th), sn = Math.sin(th);
+        const nx = cs*vx+sn*wx, ny = cs*vy+sn*wy, nz = cs*vz+sn*wz;
+        o[0] = a[0]+ax*t+r*nx; o[1] = a[1]+ay*t+r*ny; o[2] = a[2]+az*t+r*nz;
+        o[3] = nx; o[4] = ny; o[5] = nz;
+      } else {
+        const end = q < aSide+a0 ? 0 : 1, r = end ? r1 : r0, base = end ? b : a, sg = end ? 1 : -1;
+        let dx = gauss(), dy = gauss(), dz = gauss();
+        const l = Math.hypot(dx,dy,dz) || 1; dx /= l; dy /= l; dz /= l;
+        if ((dx*ux+dy*uy+dz*uz)*sg < 0) { dx = -dx; dy = -dy; dz = -dz; }
+        o[0] = base[0]+r*dx; o[1] = base[1]+r*dy; o[2] = base[2]+r*dz;
+        o[3] = dx; o[4] = dy; o[5] = dz;
+      }
+    }});
   }
-  /* === START: SPHERE → PROTOCOL === */
-  (function(){
-    const URL_P="https://protocol.artibytte.com/#setup";
-    const hop=cv.closest("button,a,[role=button]")||cv;
-    if(hop.id==="holdOpenBtn")return;            /* huwag galawin ang QR hold button */
-    hop.style.cursor="pointer";hop.style.pointerEvents="auto";
-    if(!hop.matches("button,a")){hop.setAttribute("role","link");hop.tabIndex=0;}
-    hop.setAttribute("aria-label","Open ArtiBytte Protocol");
-    let going=false,veil=null;
-    function go(e){
-      if(going||document.body.classList.contains("public-mode"))return;   /* owner lang, hindi ang visitors */
-      going=true; if(e&&e.preventDefault)e.preventDefault();
-      if(typeof haptic==="function")haptic("medium");
-      if(matchMedia("(prefers-reduced-motion:reduce)").matches){location.assign(URL_P);return}
-      veil=document.createElement("div");
-      veil.style.cssText="position:fixed;inset:0;z-index:100000;background:#ECE4D6;opacity:0;transition:opacity .35s ease;pointer-events:all";
-      document.body.appendChild(veil);
-      requestAnimationFrame(()=>{veil.style.opacity="1"});
-      setTimeout(()=>location.assign(URL_P),360);
+
+  function box(c, h, op = {}) {
+    const [hx,hy,hz] = h;
+    const fa = [4*hy*hz, 4*hy*hz, 4*hx*hz, 4*hx*hz, 4*hx*hy, 4*hx*hy];
+    const tot = fa.reduce((s,v) => s+v, 0);
+    prims.push({ w: tot*(op.dm||1), op, sample() {
+      let q = rnd()*tot, f = 0;
+      while (f < 5 && q > fa[f]) { q -= fa[f]; f++; }
+      const u = rnd()*2-1, v = rnd()*2-1, sg = f % 2 ? -1 : 1, ax = f >> 1;
+      let x, y, z, nx = 0, ny = 0, nz = 0;
+      if (ax === 0) { x = sg*hx; y = u*hy; z = v*hz; nx = sg; }
+      else if (ax === 1) { y = sg*hy; x = u*hx; z = v*hz; ny = sg; }
+      else { z = sg*hz; x = u*hx; y = v*hy; nz = sg; }
+      o[0] = c[0]+x; o[1] = c[1]+y; o[2] = c[2]+z; o[3] = nx; o[4] = ny; o[5] = nz;
+    }});
+  }
+
+  /* ---------- line primitives ---------- */
+  const LN = [];
+  const line = (a, b, w, j, col) => LN.push([a[0],a[1],a[2],b[0],b[1],b[2],w,j,col]);
+  const chain = (pts, w, j, col) => { for (let i = 0; i < pts.length-1; i++) line(pts[i], pts[i+1], w, j, col); };
+
+  function ring(c, ax, r, w, col, M = 32, j = .12) {
+    const l = Math.hypot(ax[0],ax[1],ax[2]), ux = ax[0]/l, uy = ax[1]/l, uz = ax[2]/l;
+    let vx = 0, vy = 1, vz = 0;
+    if (Math.abs(uy) > .9) { vx = 1; vy = 0; }
+    const dd = ux*vx+uy*vy+uz*vz; vx -= ux*dd; vy -= uy*dd; vz -= uz*dd;
+    const vl = Math.hypot(vx,vy,vz); vx /= vl; vy /= vl; vz /= vl;
+    const wx = uy*vz-uz*vy, wy = uz*vx-ux*vz, wz = ux*vy-uy*vx;
+    const pts = [];
+    for (let i = 0; i <= M; i++) {
+      const t = i/M*6.2831853, cs = Math.cos(t)*r, sn = Math.sin(t)*r;
+      pts.push([c[0]+cs*vx+sn*wx, c[1]+cs*vy+sn*wy, c[2]+cs*vz+sn*wz]);
     }
-    hop.addEventListener("click",function(e){
-      if(document.body.classList.contains("public-mode"))return;   /* visitors: normal flip pa rin */
-      var r=cv.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
-      if(Math.hypot(dx,dy)>r.width/2*0.97)return;                  /* labas ng bilog = flip lang */
-      e.stopPropagation();                                          /* huwag umabot sa #card flipCard() */
-      go(e);
-    });
-    hop.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!hop.matches("button,a")){go(e)}});
-    window.addEventListener("pageshow",e=>{if(e.persisted){going=false;if(veil){veil.remove();veil=null}}});   /* back button */
+    chain(pts, w, j, col);
+  }
+  function ellRing(c, r, ny, w, col, infl = 1.02, M = 56, j = .1) {
+    const k = Math.sqrt(Math.max(0, 1-ny*ny)), pts = [];
+    for (let i = 0; i <= M; i++) {
+      const t = i/M*6.2831853;
+      pts.push([c[0]+r[0]*infl*k*Math.sin(t), c[1]+r[1]*infl*ny, c[2]+r[2]*infl*k*Math.cos(t)]);
+    }
+    chain(pts, w, j, col);
+  }
+  function ellMer(c, r, phi, t0, t1, w, col, infl = 1.02, M = 28, j = .1) {
+    const pts = [];
+    for (let i = 0; i <= M; i++) {
+      const t = mix(t0, t1, i/M);
+      pts.push([c[0]+r[0]*infl*Math.sin(t)*Math.sin(phi), c[1]+r[1]*infl*Math.cos(t), c[2]+r[2]*infl*Math.sin(t)*Math.cos(phi)]);
+    }
+    chain(pts, w, j, col);
+  }
+  function limbRings(a, b, r0, r1, ts, w, col) {
+    const ax = [b[0]-a[0], b[1]-a[1], b[2]-a[2]];
+    for (const t of ts) ring([a[0]+ax[0]*t, a[1]+ax[1]*t, a[2]+ax[2]*t], ax, (r0+(r1-r0)*t)*1.045, w, col);
+  }
+  const norm3 = v => { const l = Math.hypot(v[0],v[1],v[2]) || 1; return [v[0]/l, v[1]/l, v[2]/l]; };
+
+  /* ===================== THE ROBOT (y up, ~197 tall, faces +z) ===================== */
+  mark(1);
+  const HC = [0,174,0], HR = [10,12,11];
+  ell(HC, HR, { col: G, dm: 1.3 });
+  ell([0,166,3.2], [6.6,3.2,6.6], { col: G, dm: 1.3 });
+  ell([0,174.5,0], [10.4,12.4,11.4], { col: S, dm: 3.4, frac: .09, keep: (x,y,z) => z > .45 && Math.abs(y) < .26 });
+  for (const s of [-1,1]) {
+    ell([s*4.6,175,10.4], [2.5,1.3,1.2], { col: W, dm: 7, gain: 1.25, pulse: 1 });
+    ell([s*10.7,174,0], [2.6,5.6,5.6], { col: P, dm: 2.2 });
+    ring([s*13.3,174,0], [1,0,0], 4.2, 1.2, S, 28, .1);
+  }
+  cap([0,185,-2], [0,195,-4], .8, .5, { col: S, dm: 2 });
+  ell([0,196.2,-4.2], [1.5,1.5,1.5], { col: W, dm: 6, gain: 1.2, pulse: 1 });
+  ellRing(HC, HR, .62, 1.0, S, 1.015);
+  ellRing(HC, HR, -.5, .8, P, 1.015);
+  ellMer(HC, HR, 0, .3, 1.15, .9, P, 1.02);
+
+  mark(6);
+  cap([0,157,0], [0,164.5,0], 4.3, 4.0, { col: P, dm: 1.6 });
+  ring([0,159,0], [0,1,0], 4.6, 1.2, S, 24);
+  ring([0,162,0], [0,1,0], 4.5, 1.2, S, 24);
+
+  const CC = [0,140,0], CR_ = [21,19,12];
+  ell(CC, CR_, { col: G, dm: 1.25 });
+  ell([0,141,.5], [21.7,19.5,12.7], { col: G, dm: 2.4, frac: .32, keep: (x,y,z) => z > .2 && y > -.55 });
+  ell([0,141.5,11.4], [4.8,4.8,3.2], { col: P, dm: 5, pulse: 1 });
+  ell([0,141.5,11.8], [2.7,2.7,1.9], { col: W, dm: 9, gain: 1.3, pulse: 1 });
+  ring([0,141.5,12.6], [0,0,1], 6.6, 1.6, S, 40, .08);
+  ring([0,141.5,12.4], [0,0,1], 8.8, 1.2, P, 48, .08);
+  ellRing(CC, CR_, .72, 1.2, P, 1.03);
+  ellRing(CC, CR_, -.56, 1.3, P, 1.03);
+  ellMer(CC, CR_, 0, .45, 2.35, 1.0, S, 1.03);
+  ellMer(CC, CR_, .72, .7, 2.1, .9, S, 1.03);
+  ellMer(CC, CR_, -.72, .7, 2.1, .9, S, 1.03);
+
+  const AB = [0,116,0], AR = [12.6,11,8.6];
+  ell(AB, AR, { col: P, dm: 1.5 });
+  for (const ny of [-.62,-.22,.18,.58]) ellRing(AB, AR, ny, 1.1, S, 1.03);
+
+  const PC = [0,100,0], PR = [16.6,9.6,10.6];
+  ell(PC, PR, { col: G, dm: 1.35 });
+  ellRing([0,103,0], PR, .5, 1.5, P, 1.03);
+  ell([0,101.5,10.2], [4.2,3.2,1.9], { col: S, dm: 3.4 });
+  ellMer(PC, PR, 0, 1.4, 2.5, 1.0, S, 1.03, 14);
+
+  box([0,142,-15], [11,13,3.6], { col: G, dm: 1.5 });
+  for (let k = -2; k <= 2; k++) line([-8,142+k*4.4,-18.8], [8,142+k*4.4,-18.8], 1, .1, S);
+  for (const s of [-1,1]) {
+    cap([s*6.2,130,-20.5], [s*6.2,112,-20.5], 3.7, 3.7, { col: P, dm: 1.6 });
+    ell([s*6.2,111.2,-20.5], [2.8,1.1,2.8], { col: S, dm: 7, gain: 1.15, pulse: 1 });
+    ring([s*6.2,114,-20.5], [0,1,0], 3.9, 1.1, S, 20);
+  }
+
+  /* --- arms --- */
+  for (const s of [-1,1]) {
+    const SH = [s*24,152,0], EL = [s*30,124,3], WR = [s*31.5,98,10];
+    mark(s > 0 ? 2 : 4);
+    ell(SH, [7.2,7.2,7.2], { col: P, dm: 1.7 });
+    ell([s*27.5,155,0], [10,8.2,10.6], { col: G, dm: 2, frac: .55, keep: (x,y,z) => y > -.25 });
+    ellRing([s*27.5,155,0], [10,8.2,10.6], .35, 1.1, S, 1.03, 40);
+    cap(SH, EL, 5.7, 4.7, { col: G, dm: 1.35 });
+    limbRings(SH, EL, 5.7, 4.7, [.3,.58,.84], 1.1, S);
+    ell(EL, [5.7,5.7,5.7], { col: P, dm: 1.8 });
+    mark(s > 0 ? 3 : 5);
+    cap(EL, WR, 4.9, 3.7, { col: G, dm: 1.35 });
+    limbRings(EL, WR, 4.9, 3.7, [.3,.55,.8], 1.1, S);
+    limbRings(EL, WR, 4.9, 3.7, [.93], 1.5, P);
+    ell(WR, [3.9,3.9,3.9], { col: P, dm: 1.8 });
+
+    const d = norm3([WR[0]-EL[0], WR[1]-EL[1], WR[2]-EL[2]]);
+    const pc = [WR[0]+d[0]*4.8, WR[1]+d[1]*4.8, WR[2]+d[2]*4.8];
+    ell(pc, [3.5,4.7,2.3], { col: G, dm: 1.7 });
+    const lens = [5.6,6.4,5.8,4.6], xo = [-2.1,-.7,.7,2.1];
+    for (let k = 0; k < 4; k++) {
+      const base = [pc[0]+xo[k]+d[0]*3.4, pc[1]+d[1]*3.4, pc[2]+d[2]*3.4];
+      const dir = norm3([d[0]+xo[k]*.05, d[1], d[2]+.38]);
+      const mid = [base[0]+dir[0]*lens[k]*.55, base[1]+dir[1]*lens[k]*.55, base[2]+dir[2]*lens[k]*.55];
+      const dir2 = norm3([dir[0], dir[1]*.7, dir[2]+.55]);
+      const end = [mid[0]+dir2[0]*lens[k]*.45, mid[1]+dir2[1]*lens[k]*.45, mid[2]+dir2[2]*lens[k]*.45];
+      cap(base, mid, 1.0, .85, { col: S, dm: 2.4 });
+      cap(mid, end, .85, .7, { col: S, dm: 2.4 });
+    }
+    const tb = [pc[0]-s*3.2, pc[1]+1.2, pc[2]+1], td = norm3([-s*.25,-.5,.8]);
+    cap(tb, [tb[0]+td[0]*5.4, tb[1]+td[1]*5.4, tb[2]+td[2]*5.4], 1.05, .75, { col: S, dm: 2.4 });
+  }
+
+  /* --- legs --- */
+  for (const s of [-1,1]) {
+    const HP = [s*10.5,98,0], KN = [s*11.5,54,4], AN = [s*11.5,11,0];
+    mark(s > 0 ? 7 : 9);
+    ell(HP, [7.6,7.6,7.6], { col: P, dm: 1.7 });
+    cap(HP, KN, 8.5, 6.3, { col: G, dm: 1.35 });
+    limbRings(HP, KN, 8.5, 6.3, [.3,.58,.86], 1.2, P);
+    ell(KN, [6.5,6.5,6.5], { col: P, dm: 1.8 });
+    ell([s*11.5,72,-4], [5,13,5], { col: G, dm: 1.2 });
+    mark(s > 0 ? 8 : 10);
+    ell([s*11.5,54,9], [5.6,6.7,3.3], { col: G, dm: 2.3, frac: .5, keep: (x,y,z) => z > 0 });
+    ring([s*11.5,54,10.8], [0,0,1], 4.4, 1, S, 24);
+    cap(KN, AN, 6.3, 4.5, { col: G, dm: 1.35 });
+    ell([s*11.5,32,3], [4.3,18,3.3], { col: G, dm: 2, frac: .5, keep: (x,y,z) => z > 0 });
+    limbRings(KN, AN, 6.3, 4.5, [.25,.5,.75], 1.1, S);
+    ell(AN, [5.1,5.1,5.1], { col: P, dm: 1.8 });
+    box([s*11.5,4.2,6], [5.7,4.2,11.5], { col: G, dm: 1.6 });
+    ell([s*11.5,4.4,17], [5.7,4.2,4.2], { col: G, dm: 1.7, frac: .6, keep: (x,y,z) => z > 0 });
+    ell([s*11.5,5,-4.8], [5.1,4.6,4.2], { col: G, dm: 1.5 });
+    line([s*11.5-5.8,8.5,-5], [s*11.5-5.8,8.5,17], 1, .1, S);
+    line([s*11.5+5.8,8.5,-5], [s*11.5+5.8,8.5,17], 1, .1, S);
+  }
+
+  /* --- stool --- */
+  mark(11);
+  box([0,43,0], [16,2,14], { col: S, dm: 1.6 });
+  for (const sx of [-1,1]) for (const sz of [-1,1])
+    cap([sx*12,41,sz*10], [sx*12,0,sz*10], 1.8, 1.6, { col: P, dm: 1.6 });
+  /* --- zzz --- */
+  mark(12);
+  for (const [zx, zy, zs] of [[16,200,3],[22,209,4.5],[29,219,6]]) {
+    chain([[zx,zy+zs,0],[zx+zs,zy+zs,0],[zx,zy,0],[zx+zs,zy,0]], 5, .25, W);
+  }
+  mark(0);
+
+  /* --- floor rings --- */
+  for (const r of [34,56,80,106,134]) ring([0,.3,0], [0,1,0], r, .9, r === 56 ? P : S, 120, .2);
+
+  /* ---------- allocate and sample the dots ---------- */
+  const X = new Float32Array(N), Y = new Float32Array(N), Z = new Float32Array(N);
+  const NX = new Float32Array(N), NY = new Float32Array(N), NZ = new Float32Array(N);
+  const CR = new Float32Array(N), CG = new Float32Array(N), CB = new Float32Array(N);
+  const HN = new Uint8Array(N), PUL = new Uint8Array(N), BN = new Uint8Array(N);
+
+  const nFloor = Math.round(N*.04), nLine = Math.round(N*.18), nSurf = N - nFloor - nLine;
+  let p = 0;
+  const colorize = (i, col, gain, amp) => {
+    const c = PAL[col];
+    CR[i] = amp*gain*c[0]; CG[i] = amp*gain*c[1]; CB[i] = amp*gain*c[2];
+  };
+
+  const boneP = new Uint8Array(prims.length), boneL = new Uint8Array(LN.length);
+  marks.forEach((m, k) => {
+    const nxt = marks[k+1];
+    boneP.fill(m[2], m[0], nxt ? nxt[0] : prims.length);
+    boneL.fill(m[2], m[1], nxt ? nxt[1] : LN.length);
+  });
+  let wSum = 0; for (const q of prims) wSum += q.w;
+  const counts = prims.map(q => Math.floor(nSurf*q.w/wSum));
+  let left = nSurf - counts.reduce((s,v) => s+v, 0);
+  for (let k = 0; left > 0; k++, left--) counts[k % counts.length]++;
+  prims.forEach((q, qi) => {
+    const op = q.op, gain = op.gain || 1;
+    for (let k = 0; k < counts[qi]; k++, p++) {
+      q.sample();
+      X[p] = o[0]; Y[p] = o[1]; Z[p] = o[2];
+      NX[p] = o[3]; NY[p] = o[4]; NZ[p] = o[5]; HN[p] = 1;
+      PUL[p] = op.pulse ? 1 : 0;
+      BN[p] = boneP[qi];
+      colorize(p, op.col, gain, 210*(.6 + .4*rnd()));
+    }
+  });
+
+  const nSeg = LN.length, cum = new Float64Array(nSeg);
+  let lt = 0;
+  for (let i = 0; i < nSeg; i++) {
+    const s = LN[i];
+    lt += Math.hypot(s[3]-s[0], s[4]-s[1], s[5]-s[2]) * s[6];
+    cum[i] = lt;
+  }
+  for (let k = 0; k < nLine; k++, p++) {
+    const r = rnd()*lt;
+    let lo = 0, hi = nSeg-1;
+    while (lo < hi) { const mid = (lo+hi) >> 1; if (cum[mid] < r) lo = mid+1; else hi = mid; }
+    const s = LN[lo], t = rnd(), j = s[7]*.6;
+    BN[p] = boneL[lo];
+    X[p] = s[0]+(s[3]-s[0])*t + gauss()*j;
+    Y[p] = s[1]+(s[4]-s[1])*t + gauss()*j;
+    Z[p] = s[2]+(s[5]-s[2])*t + gauss()*j;
+    colorize(p, s[8], 1.15, 215*(.65 + .35*rnd()));
+  }
+  for (let k = 0; k < nFloor; k++, p++) {
+    const a = rnd()*6.2831853, r = 26 + Math.pow(rnd(), .65)*130;
+    X[p] = Math.cos(a)*r; Z[p] = Math.sin(a)*r; Y[p] = -.2 + (rnd()-.5)*.5;
+    const u = (r-26)/130, amp = 170*(1-r/165)*(.45 + .55*rnd());
+    CR[p] = amp; CG[p] = amp*mix(.62,.45,u); CB[p] = amp*mix(.55,.72,u);
+  }
+
+  /* ---------- renderer (transparent bg, z-buffered, lit dots) ---------- */
+  let cw = 0, ch = 0, dpr = 1, img, d, sz = 1, sh = 0, zw = 0, zh = 0, zb;
+  const PIX = new Int32Array(N), ZBI = new Int32Array(N), ZZ = new Float32Array(N);
+
+  function resize(wCss, hCss) {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cw = Math.floor(wCss*dpr); ch = Math.floor(hCss*dpr);
+    cv.width = cw; cv.height = ch;
+    sz = dpr >= 2 ? 2 : 1; sh = sz === 2 ? 1 : 0;
+    zw = ((cw-1) >> sh) + 1; zh = ((ch-1) >> sh) + 1;
+    zb = new Float32Array(zw*zh);
+    img = ctx.createImageData(cw, ch);
+    d = img.data;
+  }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const speed = (Math.PI*2/18) * (reduce ? .25 : 1);
+  let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
+
+  /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
+  const hb = document.getElementById('holdOpenBtn');
+  if (hb) {
+    hb.addEventListener('pointerdown', () => { tgt = 2; });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev => hb.addEventListener(ev, () => { tgt = 1; }));
+  }
+
+  const Lv = norm3([-.45,.65,.62]), Hv = norm3([Lv[0], Lv[1], Lv[2]+1]);
+  const D = 900, CY = 98, TOL = 3.2;
+
+  /* ---------- animation: 12 bones ---------- */
+  const BM = new Float32Array(13*12);
+  const PIV = [[0,0,0],[0,160,0],[24,152,0],[30,124,3],[-24,152,0],[-30,124,3],[0,0,0],[10.5,98,0],[11.5,54,4],[-10.5,98,0],[-11.5,54,4],[0,0,0],[0,0,0]];
+  const PAR = [0,6,6,2,6,4,0,6,7,6,9,0,0];
+  function setBone(b, rx, ry, rz) {
+    const cx = Math.cos(rx), sx = Math.sin(rx), cy = Math.cos(ry), sy = Math.sin(ry), cz = Math.cos(rz), sz2 = Math.sin(rz);
+    const l = [cz*cy, cz*sy*sx - sz2*cx, cz*sy*cx + sz2*sx,
+               sz2*cy, sz2*sy*sx + cz*cx, sz2*sy*cx - cz*sx,
+               -sy, cy*sx, cy*cx];
+    const pv = PIV[b];
+    const tl = [pv[0]-(l[0]*pv[0]+l[1]*pv[1]+l[2]*pv[2]),
+                pv[1]-(l[3]*pv[0]+l[4]*pv[1]+l[5]*pv[2]),
+                pv[2]-(l[6]*pv[0]+l[7]*pv[1]+l[8]*pv[2])];
+    const m = b*12, par = PAR[b];
+    if (!par) {
+      for (let i = 0; i < 9; i++) BM[m+i] = l[i];
+      BM[m+9] = tl[0]; BM[m+10] = tl[1]; BM[m+11] = tl[2];
+      return;
+    }
+    const q = par*12;
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++)
+      BM[m+r*3+c] = BM[q+r*3]*l[c] + BM[q+r*3+1]*l[3+c] + BM[q+r*3+2]*l[6+c];
+    for (let r = 0; r < 3; r++)
+      BM[m+9+r] = BM[q+r*3]*tl[0] + BM[q+r*3+1]*tl[1] + BM[q+r*3+2]*tl[2] + BM[q+9+r];
+  }
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x-a)/(b-a))); return t*t*(3-2*t); };
+  const win = (a, b, f, x) => ss(a, a+f, x) * (1 - ss(b-f, b, x));
+
+  const dr = (() => {
+    let s = (Math.random()*4294967296) >>> 0;
+    return () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   })();
-  /* === END: SPHERE → PROTOCOL === */
-  /* pressing the QR button speeds up the spin (same as the entrance orb) */
-  const go=document.getElementById("holdOpenBtn");
-  if(go){
-    ["pointerdown"].forEach(ev=>go.addEventListener(ev,()=>{tgt=2}));
-    ["pointerup","pointerleave","pointercancel"].forEach(ev=>go.addEventListener(ev,()=>{tgt=1}));
+  const ACT = ['wave','head','dance','sing','walk','jump','sit','nap','spin','look','flip','roll'];
+  const ACT_W = [3,2.5,3,3,3,3,2,1.2,2,2.5,2.2,2], ACT_T = ACT_W.reduce((s,v) => s+v, 0);
+  const ACT_D = [4.5,3.8,7,7,8,0,8,14,0,5,0,9];
+  let seg = null, lastAct = -1, FX = 0, FZ = 0, FY = 0, ZM = 1;
+
+  function nextSeg(t0) {
+    let a;
+    do { let r = dr()*ACT_T; for (a = 0; a < ACT_W.length - 1 && r > ACT_W[a]; a++) r -= ACT_W[a]; } while (a === lastAct);
+    lastAct = a;
+    const st = Math.min(3, dr()*4 | 0), tp = Math.min(4, dr()*5 | 0), am = Math.min(4, dr()*5 | 0);
+    const ln = Math.min(4, dr()*5 | 0), sd = dr() < .5 ? -1 : 1;
+    const tf = .7 + .15*tp;
+    let Dd;
+    if (a === 5) Dd = 1.8 + (st+1)*1.6/tf + .5*ln;
+    else if (a === 10) Dd = 2.4 + (st === 3 ? 2 : 1)*((1 + (st === 1 ? .35 : 0))/tf + .5) + .5*ln;
+    else if (a === 8) Dd = 1.6 + (st === 2 ? 2 : 1)*2.4/tf + .5*ln;
+    else Dd = ACT_D[a]*(.75 + .125*ln) + .3 + dr()*.9;
+    return { a, st, tp, am, sd, ln, tf, af: .6 + .2*am, t0, D: Dd };
   }
-  if(matchMedia("(prefers-reduced-motion:reduce)").matches){draw(performance.now());return}
-  const cardEl=document.getElementById("card"),osEl=document.getElementById("screenOS"),gateEl=document.getElementById("screenGate");
-  (function frame(now){
-    const hidden=document.hidden||(cardEl&&cardEl.classList.contains("flipped"))||(osEl&&osEl.classList.contains("active"))||(gateEl&&gateEl.classList.contains("show"));
-    if(!hidden)draw(now);
+
+  function animate(t) {
+    if (!seg) seg = nextSeg(t);
+    while (t >= seg.t0 + seg.D) seg = nextSeg(seg.t0 + seg.D);
+    const A = seg.a, st = seg.st, sd = seg.sd, tf = seg.tf, af = seg.af, Dd = seg.D, u = t - seg.t0;
+    const w = win(0, Dd, Math.min(.6, Dd*.18), u), q = (a, b) => ss(a*Dd, b*Dd, u);
+    let wR = 0, wL = 0, wvf = 1, wam = .45*af, nod = 0, shk = 0, tilt = 0, look = 0, lookX = 0, jolt = 0;
+    let sit = 0, lap = 0, sl = 0, droop = 0, stl = 0, zv = 0, kk = 0;
+    let f1 = 0, f2 = 0, wk = 0, hd = 0, hv = 0, dist = 0, turn = 0, spread = 0, hop = 0, bsw = 0, bz = 0;
+    let dw = 0, sync = false, dTw = .3, dLeg = 1, dBnc = 2.2, sg = 0, hb2 = 1, mR = 0, mL = 0, oR = 0, oL = 0;
+    let ju = 0, air = 0, cr = 0;
+    let lay = 0, rollA = 0, flA = 0, flOn = false, lift = 0, tuck = 0, armUp = 0, hug = 0;
+    const bt = t*7.5*tf, sb = Math.sin(bt);
+
+    if (A === 0) {
+      wR = (st === 3 || sd > 0) ? w : 0; wL = (st === 3 || sd < 0) ? w : 0;
+      if (st === 1) { wvf = 1.5; wam = .55*af; }
+      if (st === 2) tilt = w*.12*Math.sin(t*2*tf);
+    } else if (A === 1) {
+      if (st === 0) nod = w;
+      else if (st === 1) shk = w;
+      else if (st === 2) { const k = q(.5, .56); nod = w*(1-k); shk = w*k; }
+      else tilt = w*.3*af*Math.sin(t*2.4*tf);
+    } else if (A === 2) {
+      dw = w; sync = st === 1;
+      if (st === 2) { dTw = .6; dLeg = .3; }
+      if (st === 3) dBnc = 3.6;
+    } else if (A === 3) {
+      sg = w;
+      if (st === 2) mR = mL = w;
+      else if (sd > 0) { mR = w; if (st < 3) oL = w*(st === 1 ? 1.3 : 1); }
+      else { mL = w; if (st < 3) oR = w*(st === 1 ? 1.3 : 1); }
+      if (st === 1) hb2 = 1.8;
+    } else if (A === 4) {
+      hv = [0, .7, 1.4, 2.1][st]*sd;
+      f1 = q(.1, .42); f2 = q(.52, .84);
+      wk = (win(.1*Dd, .42*Dd, .5, u) + win(.52*Dd, .84*Dd, .5, u))*(.6 + .4*af);
+      turn = Math.PI*(q(.42, .52) + q(.84, .94));
+      hd = hv*(q(0, .08) - q(.94, 1));
+      dist = 12 + 6*seg.am;
+    } else if (A === 5) {
+      const n = st + 1, per = 1.6/tf, jw = ss(.3, .9, u)*(1 - ss(Dd-.8, Dd-.2, u));
+      ju = Math.min(n, Math.max(0, (u - .9)/per));
+      const sn = Math.abs(Math.sin(Math.PI*ju));
+      air = sn*jw*(.6 + .4*af)*(st === 1 ? .55 : 1);
+      cr = Math.pow(1 - sn, 3)*jw;
+      if (st === 3) turn = sd*2*Math.PI*ju;
+    } else if (A === 6) {
+      sit = q(.14, .28) - q(.78, .9); stl = q(.06, .14) - q(.9, .97);
+      lap = st === 2 ? 0 : sit;
+      if (st === 2) { const ww = win(.3*Dd, .76*Dd, .5, u); wR = sd > 0 ? ww : 0; wL = sd < 0 ? ww : 0; }
+      else if (st === 1) nod = sit*.5;
+      else if (st === 3) kk = sit*(.5 + .4*af);
+      else look = sit*.3*Math.sin(t*.9*tf);
+    } else if (A === 7) {
+      sl = q(0, .18) - q(.8, .86);
+      if (st < 3) { sit = q(.2, .3) - q(.84, .92); stl = q(.1, .2) - q(.92, .98); lap = sit; droop = sit*(st === 1 ? .5 : .35); }
+      else { droop = sl*.3; bz = sl*.03*Math.sin(t*1.1*tf); }
+      zv = q(.32, .36) - q(.78, .82);
+      if (st === 2) { jolt = Math.exp(-Math.pow((u/Dd - .55)*24, 2)); hop = jolt*2; }
+    } else if (A === 8) {
+      turn = sd*2*Math.PI*(st === 2 ? 2 : 1)*q(.12, .88);
+      spread = w*[.15, 1, 1, 1.8][st];
+      if (st === 3) hop = w*2*Math.abs(Math.sin(t*8*tf));
+    } else if (A === 10) {
+      const nf = st === 3 ? 2 : 1, tn = st === 1 ? 2 : 1, Tf = (1 + (st === 1 ? .35 : 0))/tf, T = Tf + .5;
+      const jw = ss(.3, .9, u)*(1 - ss(Dd-.8, Dd-.2, u));
+      const r = Math.min(nf, Math.max(0, (u - .9)/T)), k = Math.min(nf - 1, Math.floor(r));
+      const s = Math.min(1, Math.max(0, (r - k)*T/Tf));
+      flOn = true; flA = -2*Math.PI*tn*(k + ss(0, 1, s));
+      lift = (58 + (st === 1 ? 30 : 0))*(.75 + .25*af)*4*s*(1 - s);
+      cr = Math.pow(1 - Math.abs(Math.sin(Math.PI*s)), 3)*jw;
+      tuck = ss(.05, .3, s)*(1 - ss(.65, .9, s));
+      armUp = ss(0, .12, s)*(1 - ss(.18, .35, s));
+      if (st === 2) spread = tuck*1.1; else hug = tuck;
+    } else if (A === 11) {
+      lay = q(.08, .2) - q(.8, .92);
+      const pg = Math.min(1, Math.max(0, (u/Dd - .22)/.56));
+      if (st === 0) rollA = sd*2*Math.PI*2*pg*pg*(3 - 2*pg);
+      else if (st === 1) rollA = sd*2*Math.PI*3*pg*pg*(3 - 2*pg);
+      else if (st === 2) rollA = sd*2.4*Math.sin(4*Math.PI*pg);
+      else rollA = sd*2*Math.PI*(q(.22, .5) - q(.52, .8));
+      lift = lay*Math.sqrt(Math.pow(38*Math.sin(rollA), 2) + Math.pow(19*Math.cos(rollA), 2));
+    } else {
+      look = w*af*(.5*Math.sin(t*1.3*tf) + .35*Math.sin(t*2.9*tf));
+      tilt = w*.12*Math.sin(t*1.7*tf + 1)*(st === 1 ? 1.6 : 1);
+      if (st === 2) lookX = w*.18*af*Math.sin(t*1.6*tf);
+      if (st === 3) { tilt = w*.25*sd; look = w*.5*sd; bz = w*.06*sd; }
+      else bsw = w*.15*Math.sin(t*.8*tf);
+    }
+
+    const wv = t * 6.2831853 * 2.2 * tf * wvf;
+    const ph = (f1 + f2)*dist*.75, sw = Math.sin(ph), cph = Math.cos(ph);
+    const px = dist*(f1 - f2)*Math.sin(hv), pz = dist*(f1 - f2)*Math.cos(hv);
+    FX = px*.8; FZ = pz*.8; ZM = 1 - .5*lay; FY = .5*(lift + 22*air);
+    const dwa = dw*(.6 + .4*af), pL = sync ? sb : -sb, altP = sync ? 0 : Math.PI;
+    const lR = dw*dLeg*Math.max(0, sb), lL = dw*dLeg*Math.max(0, -sb);
+    const kt = t*5*tf, kR = kk*Math.max(0, Math.sin(kt)), kL = kk*Math.max(0, -Math.sin(kt));
+
+    setBone(6, flA - 1.5707963*lay, hd + turn + bsw + dTw*dw*(.6 + .4*af)*Math.sin(bt*.5),
+      .05*dw*sb + bz + sg*.04*af*Math.sin(t*1.6*tf) + rollA);
+    if (flOn) {
+      BM[6*12+9] -= BM[6*12+1]*100; BM[6*12+10] += 100 - BM[6*12+4]*100; BM[6*12+11] -= BM[6*12+7]*100;
+    }
+    BM[6*12+9] += px;
+    BM[6*12+10] += -48.3*(1 - Math.cos(1.5*sit)) - 3.5*Math.abs(sw)*wk - 87*(1 - Math.cos(.5*cr))
+      + dBnc*Math.abs(sb)*dw*(.6 + .4*af) + 22*air + hop + lift;
+    BM[6*12+11] += pz + 98*lay;
+
+    setBone(1, .03*Math.sin(t*.7) + nod*(.1 + .26*af*Math.sin(t*9.4*tf)) + dw*.1*Math.abs(sb)
+      - sg*(.12*hb2 + .05*Math.sin(t*8)) + sl*(.14 + .1*Math.sin(t*1.8*tf)) + droop + lookX - jolt*.5 + .3*tuck,
+      .08*Math.sin(t*.5) + shk*.5*af*Math.sin(t*7.5*tf) + dw*.3*Math.sin(bt*.5) + sg*.25*Math.sin(t*1.6*tf) + look,
+      .05*(wR - wL) + dw*.12*sb + sg*.1*Math.sin(t*1.6*tf + 1) + tilt + (A === 7 ? lap*.12*sd : 0));
+
+    setBone(2, .35*sw*wk - .9*mR - .2*lap - 1.1*hug, -.55*mR,
+      .05 + .02*Math.sin(t*1.1) + wR*1.7 + dwa*(1.1 + .5*sb) + oR*(1 + .15*Math.sin(t*1.6)) + 2*air + 1.3*spread + 3*lay + 2.4*armUp);
+    setBone(3, -.25*(1-wR) - 1.5*mR - .8*lap - 1.3*hug, 0,
+      wR*(1.45 + wam*Math.sin(wv)) + dwa*(.7 + .5*Math.sin(bt+1)) + .4*air);
+    setBone(4, -.35*sw*wk - .9*mL - .2*lap - 1.1*hug, .55*mL,
+      -(.05 + .02*Math.sin(t*1.3+1) + wL*1.7 + dwa*(1.1 + .5*pL) + oL*(1 + .15*Math.sin(t*1.6)) + 2*air + 1.3*spread + 3*lay + 2.4*armUp));
+    setBone(5, -.25*(1-wL) - 1.5*mL - .8*lap - 1.3*hug, 0,
+      -(wL*(1.45 + wam*Math.sin(wv)) + dwa*(.7 + .5*Math.sin(bt+1+altP)) + .4*air));
+
+    setBone(7, -.4*sw*wk - 1.5*sit - .5*cr - .5*lR - .3*air - 1.2*tuck, 0, 0);
+    setBone(8, .7*Math.max(0, cph)*wk + 1.5*sit + cr + .9*lR + .6*air - kR + 1.6*tuck, 0, 0);
+    setBone(9, .4*sw*wk - 1.5*sit - .5*cr - .5*lL - .3*air - 1.2*tuck, 0, 0);
+    setBone(10, .7*Math.max(0, -cph)*wk + 1.5*sit + cr + .9*lL + .6*air - kL + 1.6*tuck, 0, 0);
+
+    const m = 11*12, z = 12*12;
+    BM[m] = 1; BM[m+4] = 1; BM[m+8] = 1;
+    BM[m+10] = stl > 0 ? -160*(1 - Math.min(1, stl)) : -1000;
+    BM[z] = 1; BM[z+4] = 1; BM[z+8] = 1;
+    BM[z+9] = BM[6*12+9]; BM[z+11] = BM[6*12+11];
+    BM[z+10] = zv > 0 ? BM[6*12+10] + 5*Math.sin(t*1.7) : -1000;
+  }
+
+  const cardEl = document.getElementById('card'), osEl = document.getElementById('screenOS'), gateEl = document.getElementById('screenGate');
+
+  function frame(now) {
     requestAnimationFrame(frame);
-  })(performance.now());
-})()}catch(e){console.error("RBC sphere failed",e)}
-/* === END: RBC PARTICLE SPHERE === */
+    const dt = Math.min(.05, (now-last)/1000); last = now;
+    const hidden = document.hidden || (cardEl && cardEl.classList.contains('flipped')) ||
+      (osEl && osEl.classList.contains('active')) || (gateEl && gateEl.classList.contains('show'));
+    if (hidden) return;
+    const wCss = cv.clientWidth, hCss = cv.clientHeight;
+    if (!wCss || !hCss) return;
+    const dprNow = Math.min(window.devicePixelRatio || 1, 2);
+    if (cw !== Math.floor(wCss*dprNow) || ch !== Math.floor(hCss*dprNow)) resize(wCss, hCss);
+
+    boost += (tgt-boost)*(1-Math.exp(-dt*5));
+    ang += speed*boost*dt;
+
+    const ca = Math.cos(ang), sa = Math.sin(ang);
+    const cp = Math.cos(pitch), spn = Math.sin(pitch);
+    const sc = Math.min(ch*.86/200, cw*.92/268)*ZM;     /* fit sa card: taas at floor rings */
+    const cx = cw/2, cy = ch*.5;
+    const pf = .8 + .2*Math.sin(now*.004);
+    animate(now/1000);
+
+    d.fill(0);
+    zb.fill(-1e9);
+
+    for (let i = 0; i < N; i++) {
+      let x = X[i], z0 = Z[i], yc = Y[i];
+      const bn = BN[i];
+      if (bn) {
+        const m = bn*12, x0 = x, y0 = yc, w0 = z0;
+        x = BM[m]*x0 + BM[m+1]*y0 + BM[m+2]*w0 + BM[m+9];
+        yc = BM[m+3]*x0 + BM[m+4]*y0 + BM[m+5]*w0 + BM[m+10];
+        z0 = BM[m+6]*x0 + BM[m+7]*y0 + BM[m+8]*w0 + BM[m+11];
+      }
+      yc -= CY + FY; x -= FX; z0 -= FZ;
+      const xr = x*ca - z0*sa, zr = x*sa + z0*ca;
+      const ys = yc*cp - zr*spn, z2 = zr*cp + yc*spn;
+      const k = D/(D-z2)*sc;
+      const px = (cx + xr*k) | 0, py = (cy - ys*k) | 0;
+      if (px < 0 || py < 0 || px > cw-sz || py > ch-sz) { PIX[i] = -1; continue; }
+      const zi = (py >> sh)*zw + (px >> sh);
+      PIX[i] = py*cw + px; ZBI[i] = zi; ZZ[i] = z2;
+      if (z2 > zb[zi]) zb[zi] = z2;
+    }
+
+    for (let i = 0; i < N; i++) {
+      const pi = PIX[i];
+      if (pi < 0) continue;
+      const z2 = ZZ[i];
+      if (z2 < zb[ZBI[i]] - TOL) continue;
+
+      let shade = .8, spc = 0;
+      if (HN[i]) {
+        let nx = NX[i], ny = NY[i], nz = NZ[i];
+        const bn = BN[i];
+        if (bn) {
+          const m = bn*12, a0 = nx, a1 = ny, a2 = nz;
+          nx = BM[m]*a0 + BM[m+1]*a1 + BM[m+2]*a2;
+          ny = BM[m+3]*a0 + BM[m+4]*a1 + BM[m+5]*a2;
+          nz = BM[m+6]*a0 + BM[m+7]*a1 + BM[m+8]*a2;
+        }
+        const xr = nx*ca - nz*sa, zr = nx*sa + nz*ca;
+        const ys = ny*cp - zr*spn, zn = zr*cp + ny*spn;
+        let nl = xr*Lv[0] + ys*Lv[1] + zn*Lv[2]; if (nl < 0) nl = 0;
+        let nh = xr*Hv[0] + ys*Hv[1] + zn*Hv[2];
+        if (nh > 0) { nh *= nh; nh *= nh; nh *= nh; nh *= nh; spc = nh*.55; }
+        const rr = 1 - Math.abs(zn), rim = rr*rr*rr;
+        shade = .2 + .9*nl + .5*rim;
+      }
+      if (PUL[i]) { if (shade < .95) shade = .95; shade *= pf; }
+      shade *= .86 + z2/420;
+
+      const r = CR[i]*shade + spc*150, gg = CG[i]*shade + spc*150, b = CB[i]*shade + spc*150;
+      for (let yy = 0; yy < sz; yy++) {
+        let idx = (pi + yy*cw)*4;
+        for (let xx = 0; xx < sz; xx++, idx += 4) { d[idx] += r; d[idx+1] += gg; d[idx+2] += b; }
+      }
+    }
+
+    /* additive light → transparent PNG-style: alpha = brightest channel, color un-premultiplied */
+    for (let i = 0, L = d.length; i < L; i += 4) {
+      const r = d[i], g = d[i+1], b = d[i+2];
+      let a = r > g ? r : g; if (b > a) a = b;
+      if (a) { const k = 255/a; d[i+3] = a; d[i] = r*k; d[i+1] = g*k; d[i+2] = b*k; }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  requestAnimationFrame(frame);
+  } catch (e) { console.error('Humanoid failed', e); } }
+
+  /* 400k dots ang i-sample: huwag harangan ang boot ng app */
+  if (window.requestIdleCallback) requestIdleCallback(start, { timeout: 600 }); else setTimeout(start, 60);
+})();
+/* === END: HUMANOID ROBOT === */
 /* === START: READY FLAG === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */

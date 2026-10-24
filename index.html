@@ -1389,8 +1389,8 @@ opacity:0;pointer-events:none;z-index:1;}
           <div class="card-top-line"></div>
           <button type="button" id="holdOpenBtn" class="hold-open" aria-label="Hold to open" style="position:absolute;left:170px;top:520.2px;transform:translate(-50%,-50%);z-index:6;border-radius:50%;width:72px;height:72px;min-width:0;padding:0;box-shadow:none;display:flex;align-items:center;justify-content:center;overflow:visible;background:transparent;border:none;">
             <span class="hold-open-fill" style="display:none;"></span>
-            <div id="holdQrRing" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:68px;height:68px;background:rgba(243,237,228,.28);border:.6px solid rgba(0,0,0,0.08);border-radius:50%;box-sizing:border-box;pointer-events:none;"></div>
-            <div id="holdQr" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;background:transparent;padding:3px;box-sizing:border-box;border-radius:4px;pointer-events:none;"></div>
+            <div id="holdQrRing" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:68px;height:68px;background:rgba(243,237,228,.3);border:.6px solid rgba(0,0,0,0.08);border-radius:50%;box-sizing:border-box;pointer-events:none;"></div>
+            <div id="holdQr" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;background:rgba(255,255,255,.3);padding:3px;box-sizing:border-box;border-radius:4px;pointer-events:none;"></div>
             <span class="hold-open-label" style="display:none;align-items:center;justify-content:center;pointer-events:none;">
               <svg width="37" height="37" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
@@ -5167,7 +5167,7 @@ function fillConnectPreview() {
     const qrBox = document.getElementById('holdQr');
     if (qrBox && window.QRCode) {
       qrBox.innerHTML = '';
-      new QRCode(qrBox, { text: profileLink(), width: 152, height: 152, colorDark: '#000000', colorLight: 'rgba(255,255,255,.55)', correctLevel: QRCode.CorrectLevel.L });
+      new QRCode(qrBox, { text: profileLink(), width: 152, height: 152, colorDark: '#000000', colorLight: 'rgba(255,255,255,.7)', correctLevel: QRCode.CorrectLevel.L });
       qrBox.querySelectorAll('canvas,img').forEach(el => { el.style.width = '100%'; el.style.height = '100%'; });
     }
     if (btn.dataset.bound) return;

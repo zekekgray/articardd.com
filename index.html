@@ -1427,7 +1427,14 @@ opacity:0;pointer-events:none;z-index:1;}
           <div class="glass-pill" id="glassPill">
             <div class="pill-avatar" id="pillAvatar" onclick="event.stopPropagation();haptic('light');triggerPhotoUpload();"></div>
             <div class="pill-name" id="pillName">E. N. TAMBIGA</div>
-            <div class="pill-pos" id="pillPos">CEO | ARTIBYTE APOSTROPHE INC.</div>
+           <div class="pill-pos" id="pillPos">CEO | ARTIBYTE APOSTROPHE INC.</div>
+            <div id="pillClock" aria-hidden="true" style="position:absolute;left:82px;right:44px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:2;">
+              <div style="display:flex;align-items:baseline;gap:6px;line-height:1;">
+                <span id="pcTime" style="font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;color:#1c1c1e;font-variant-numeric:tabular-nums;">--:--</span>
+                <span id="pcAp" style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;color:#1c1c1e;opacity:.6;">--</span>
+              </div>
+              <div id="pcDate" style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1c1c1e;opacity:.6;margin-top:5px;">—</div>
+            </div>
             <div id="pillVisToggleTrack" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:18px;border-radius:9px;background:#1c1c1e;cursor:pointer;z-index:3;pointer-events:all;touch-action:none;">
               <div id="pillVisToggleKnob" style="position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);"></div>
             </div>
@@ -4870,7 +4877,34 @@ function fillConnectPreview() {
     posEl.style.transition = 'opacity .22s ease';
     nameEl.style.opacity = pillInfoVisible ? '1' : '0';
     posEl.style.opacity = pillInfoVisible ? '1' : '0';
+    pillClockSync();  }
+  /* === START: PILL PH CLOCK (lalabas kapag naka-off ang name toggle) === */
+  const PH_TZ = 'Asia/Manila';
+  const _pcFmtT = new Intl.DateTimeFormat('en-US', { timeZone: PH_TZ, hour: 'numeric', minute: '2-digit', hour12: true });
+  const _pcFmtD = new Intl.DateTimeFormat('en-US', { timeZone: PH_TZ, weekday: 'short', month: 'short', day: 'numeric' });
+  let _pcTimer = null;
+  function pillClockTick() {
+    const t = document.getElementById('pcTime'); if (!t) return;
+    const now = new Date();
+    let hh = '', mm = '', ap = '';
+    _pcFmtT.formatToParts(now).forEach(p => {
+      if (p.type === 'hour') hh = p.value;
+      else if (p.type === 'minute') mm = p.value;
+      else if (p.type === 'dayPeriod') ap = p.value.toUpperCase();
+    });
+    const tv = hh + ':' + mm, dv = _pcFmtD.format(now).replace(',', '');
+    if (t.textContent !== tv) t.textContent = tv;
+    const a = document.getElementById('pcAp'); if (a && a.textContent !== ap) a.textContent = ap;
+    const d = document.getElementById('pcDate'); if (d && d.textContent !== dv) d.textContent = dv;
   }
+  function pillClockSync() {
+    const el = document.getElementById('pillClock'); if (!el) return;
+    const on = !pillInfoVisible;
+    el.style.opacity = on ? '1' : '0';
+    clearInterval(_pcTimer); _pcTimer = null;
+    if (on) { pillClockTick(); _pcTimer = setInterval(pillClockTick, 1000); }
+  }
+  /* === END: PILL PH CLOCK === */
   function initPillVisToggle() {
     const track = document.getElementById('pillVisToggleTrack');
     const knob  = document.getElementById('pillVisToggleKnob');
@@ -15482,7 +15516,7 @@ function openRewardTerms() {
   const cv = document.getElementById('rbcCv');
   if (!cv || !cv.getContext) return;
   const ctx = cv.getContext('2d');
-  const N = 480000;
+  const N = 500000;
   const capEl = {}, capBase = '';         /* walang caption sa card */
 
   function start() { try {
@@ -15748,11 +15782,11 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   const HN = new Uint8Array(N), PUL = new Uint8Array(N), BN = new Uint8Array(N);
   const COLI = new Uint8Array(N), AMPG = new Float32Array(N);
 
-  const nFloor = 0, nLine = Math.round(N*.18), nSurf = N - nFloor - nLine;
+  const nFloor = 0, nLine = Math.round(N*.14), nSurf = N - nFloor - nLine;
   let p = 0;
   const colorize = (i, col, gain, amp) => {
     const c = PAL[col];
-    COLI[i] = col; AMPG[i] = amp*gain;
+    COLI[i] = col; amp *= .9 + .2*Math.min(1, Math.max(0, Y[i]/197)); AMPG[i] = amp*gain;
     CR[i] = amp*gain*c[0]; CG[i] = amp*gain*c[1]; CB[i] = amp*gain*c[2];
   };
 
@@ -15762,6 +15796,7 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     boneP.fill(m[2], m[0], nxt ? nxt[0] : prims.length);
     boneL.fill(m[2], m[1], nxt ? nxt[1] : LN.length);
   });
+   for (const q of prims) { const dm = (q.op && q.op.dm) || 1; q.w = q.w / dm * Math.pow(dm, .55); }
   let wSum = 0; for (const q of prims) wSum += q.w;
   const counts = prims.map(q => Math.floor(nSurf*q.w/wSum));
   let left = nSurf - counts.reduce((s,v) => s+v, 0);
@@ -15774,7 +15809,7 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
       NX[p] = o[3]; NY[p] = o[4]; NZ[p] = o[5]; HN[p] = 1;
       PUL[p] = op.pulse ? 1 : 0;
       BN[p] = boneP[qi];
-      colorize(p, op.col, gain, 210*(.6 + .4*rnd()));
+      colorize(p, op.col, gain, 205*(.84 + .16*rnd()));
     }
   });
 
@@ -15794,7 +15829,7 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     X[p] = s[0]+(s[3]-s[0])*t + gauss()*j;
     Y[p] = s[1]+(s[4]-s[1])*t + gauss()*j;
     Z[p] = s[2]+(s[5]-s[2])*t + gauss()*j;
-    colorize(p, s[8], 1.15, 215*(.65 + .35*rnd()));
+    colorize(p, s[8], 1.1, 205*(.82 + .18*rnd()));
   }
   for (let k = 0; k < nFloor; k++, p++) {
     const a = rnd()*6.2831853, r = 26 + Math.pow(rnd(), .65)*130;
@@ -15835,9 +15870,52 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const speed = (Math.PI*2/18) * (reduce ? .25 : 1);
   let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
+  /* === START: ROBOT INTERACTIVE (drag to rotate, auto-face front) === */
+  let drag = false, manYaw = 0, manVel = 0, autoW = 1, holdUntil = 0, dStart = null, lastX = 0, lastT = 0, dragEnd = 0;
+  const ff = document.querySelector('#screenCard .face-front');
+  if (ff) {
+    ff.style.touchAction = 'pan-y';
+    /* capture phase: kasama ang pindot sa QR button, para hindi lumayo ang robot habang hold */
+    ff.addEventListener('pointerdown', e => {
+      holdUntil = performance.now() + 2800;
+      if (e.target.closest('button,.glass-pill,a')) return;
+      dStart = { id: e.pointerId, x: e.clientX, y: e.clientY, yaw: manYaw, on: false };
+      lastX = e.clientX; lastT = performance.now(); manVel = 0;
+    }, true);
+    window.addEventListener('pointermove', e => {
+      if (!dStart || e.pointerId !== dStart.id) return;
+      const dx = e.clientX - dStart.x, dy = e.clientY - dStart.y;
+      if (!dStart.on) {
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { dStart = null; return; }   /* vertical scroll: huwag agawin */
+        if (Math.abs(dx) < 7) return;
+        dStart.on = true; drag = true;
+        try { ff.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+      const n = performance.now(), dts = Math.max(1, n - lastT);
+      manVel = manVel*.6 + ((e.clientX - lastX)*.014/(dts/1000))*.4;
+      lastX = e.clientX; lastT = n;
+      manYaw = dStart.yaw + dx*.014;
+      holdUntil = n + 3500;
+    });
+    const endDrag = e => {
+      if (!dStart || e.pointerId !== dStart.id) return;
+      const was = dStart.on; dStart = null;
+      if (!was) return;
+      drag = false; dragEnd = performance.now(); holdUntil = dragEnd + 4200;
+      manVel = Math.max(-5, Math.min(5, manVel));
+    };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    /* huwag mag-flip ang card pagkatapos ng drag */
+    const cardEl2 = document.getElementById('card');
+    if (cardEl2) cardEl2.addEventListener('click', e => {
+      if (performance.now() - dragEnd < 350) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  }
+  /* === END: ROBOT INTERACTIVE === */
     const hwC = navigator.hardwareConcurrency || 4;
-  let dprCap = hwC >= 6 ? 2 : hwC >= 4 ? 1.5 : 1;
-  let stride = hwC >= 8 ? 1 : hwC >= 6 ? 2 : 3;
+  let dprCap = 2;
+  let stride = 1;
   let fpsAcc = 0, fpsN = 0, fpsWarm = 0, lowN = 0, workMs = 8, govN = 0;
   const QR_S = .8;   /* QR scale on the chest: 72px button x .8 = ~58px */
   /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
@@ -16070,7 +16148,15 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     }
     ang += speed*boost*dt;
 
-    const yaw = Math.sin(ang)*.75;           /* ±43°, front stays readable */
+    const TAU2 = 6.2831853;
+    if (!drag) {
+      manYaw += manVel*dt; manVel *= Math.exp(-dt*5);                          /* inertia */
+      manYaw = ((manYaw + Math.PI) % TAU2 + TAU2) % TAU2 - Math.PI;             /* pinakamalapit na harap */
+      manYaw *= Math.exp(-dt*2.6);                                              /* kusang haharap */
+    }
+    const wantAuto = (drag || now < holdUntil) ? 0 : 1;
+    autoW += (wantAuto - autoW)*(1 - Math.exp(-dt*(wantAuto ? 1.2 : 8)));       /* smooth na balik sa sway */
+    const yaw = manYaw + Math.sin(ang)*.75*autoW;           /* ±43°, front stays readable */
     const ca = Math.cos(yaw), sa = Math.sin(yaw);
     const cp = Math.cos(pitch), spn = Math.sin(pitch);
     /* === START: ROBOT +20% (base height 406 css px, canvas is now 520) === */
@@ -16197,7 +16283,7 @@ if (a) {
     ctx.clearRect(0, 0, cw, ch);
     if (mxX >= mnX) ctx.putImageData(img, 0, 0, mnX, mnY, mxX - mnX + sz, mxY - mnY + sz);
     workMs += ((performance.now() - t0) - workMs) * .08;
-    if (++govN > 90) {                       /* tuwing ~1.5s */
+    if (false) {                       /* tuwing ~1.5s */
       govN = 0;
       if (workMs > 11) {
         if (stride < 4) stride++;
@@ -16252,4 +16338,5 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
+
 

@@ -820,6 +820,7 @@ opacity:0;pointer-events:none;z-index:1;}
 @keyframes qrFill{from{--qrp:0deg}to{--qrp:360deg}}
 @media (prefers-reduced-motion:reduce){#holdOpenBtn::before{animation:none;transition:none;}#holdOpenBtn.holding::after{animation:none;--qrp:360deg;}}
 /* === END: QR BUTTON OUTER RING === */
+#holdOpenBtn{will-change:transform;contain:layout style;}
 /* === START: COACH PILL (static, opacity-only) === */
 .coach-pill{position:absolute;left:50%;top:442px;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:7px;height:34px;padding:0 14px 0 11px;border-radius:17px;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.10);color:#1c1c1e;font:700 10px -apple-system,'SF Pro Text','Helvetica Neue',sans-serif;letter-spacing:.16em;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .25s ease;}
 .coach-pill:active{opacity:.7;}
@@ -1408,6 +1409,7 @@ opacity:0;pointer-events:none;z-index:1;}
             </span>
           </button>
           <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:0;top:61px;width:340px;height:520px;z-index:3;pointer-events:none;"></canvas>
+<canvas id="rbcFrontCv" aria-hidden="true" style="position:absolute;left:0;top:61px;width:340px;height:520px;z-index:7;pointer-events:none;"></canvas>
 <!-- === START: HOLD HINT === -->
 <span class="hold-pulse" aria-hidden="true"></span>
 <div class="hold-hint" aria-hidden="true">
@@ -9830,6 +9832,13 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
       cp.getContext('2d').drawImage(liveRbc, 0, 0);
       cloneRbc.replaceWith(cp);
     }
+    const liveRf = document.getElementById('rbcFrontCv'), cloneRf = faceFrontClone.querySelector('#rbcFrontCv');
+    if (liveRf && cloneRf) {
+      const cp2 = document.createElement('canvas');
+      cp2.width = liveRf.width; cp2.height = liveRf.height; cp2.style.cssText = cloneRf.style.cssText;
+      cp2.getContext('2d').drawImage(liveRf, 0, 0);
+      cloneRf.replaceWith(cp2);
+    }
     // back face is irrelevant for sharing — keep it out of the capture pass
     faceBackClone.style.visibility = 'hidden';
 
@@ -15473,7 +15482,7 @@ function openRewardTerms() {
   const cv = document.getElementById('rbcCv');
   if (!cv || !cv.getContext) return;
   const ctx = cv.getContext('2d');
-  const N = 400000;
+  const N = 300000;
   const capEl = {}, capBase = '';         /* walang caption sa card */
 
   function start() { try {
@@ -15807,9 +15816,12 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   /* ---------- renderer (transparent bg, z-buffered, lit dots) ---------- */
   let cw = 0, ch = 0, dpr = 1, img, d, sz = 1, sh = 0, zw = 0, zh = 0, zb;
   const PIX = new Int32Array(N), ZBI = new Int32Array(N), ZZ = new Float32Array(N);
+  const INR = new Uint8Array(N), PXW = new Float32Array(N), PYW = new Float32Array(N), PZW = new Float32Array(N);
+  const fcv = document.getElementById('rbcFrontCv'), fctx = fcv ? fcv.getContext('2d') : null;
+  let fimg = null, fd = null, qrR = null;
 
   function resize(wCss, hCss) {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, dprCap);
     cw = Math.floor(wCss*dpr); ch = Math.floor(hCss*dpr);
     cv.width = cw; cv.height = ch;
     sz = dpr >= 2 ? 2 : 1; sh = sz === 2 ? 1 : 0;
@@ -15817,18 +15829,21 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     zb = new Float32Array(zw*zh);
     img = ctx.createImageData(cw, ch);
     d = img.data;
+    if (fcv) { fcv.width = cw; fcv.height = ch; fimg = fctx.createImageData(cw, ch); fd = fimg.data; }
   }
 
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const speed = (Math.PI*2/18) * (reduce ? .25 : 1);
   let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
-    let stride = 1, fpsAcc = 0, fpsN = 0, fpsWarm = 0;
+    const hwC = navigator.hardwareConcurrency || 4;
+  let dprCap = hwC >= 6 ? 2 : hwC >= 4 ? 1.5 : 1;
+  let stride = hwC >= 8 ? 1 : hwC >= 6 ? 2 : 3;
+  let fpsAcc = 0, fpsN = 0, fpsWarm = 0, lowN = 0, workMs = 8, govN = 0;
   const QR_S = .8;   /* QR scale on the chest: 72px button x .8 = ~58px */
   /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
   const hb = document.getElementById('holdOpenBtn');
   if (hb) {
-    hb.addEventListener('pointerdown', () => { tgt = 2; });
-    ['pointerup','pointerleave','pointercancel'].forEach(ev => hb.addEventListener(ev, () => { tgt = 1; }));
+    /* robot ay independent sa QR: walang speed boost */
   }
 
   const Lv = norm3([-.45,.65,.62]), Hv = norm3([Lv[0], Lv[1], Lv[2]+1]);
@@ -16032,22 +16047,24 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   }
   function frameInner(now) {
     requestAnimationFrame(frame);
+    if (now - last < 15.5) return;   /* cap sa ~60fps, kahit 90/120Hz ang screen */
     const dt = Math.min(.05, (now-last)/1000); last = now;
+    const t0 = performance.now();
     const hidden = document.hidden || (cardEl && cardEl.classList.contains('flipped')) ||
       (osEl && osEl.classList.contains('active')) || (gateEl && gateEl.classList.contains('show'));
     if (hidden) return;
     const wCss = cv.clientWidth, hCss = cv.clientHeight;
     if (!wCss || !hCss) return;
-    const dprNow = Math.min(window.devicePixelRatio || 1, 2);
+    const dprNow = Math.min(window.devicePixelRatio || 1, dprCap);
     if (cw !== Math.floor(wCss*dprNow) || ch !== Math.floor(hCss*dprNow)) resize(wCss, hCss);
 
     boost += (tgt-boost)*(1-Math.exp(-dt*5));
     fpsWarm += dt;
     if (fpsWarm > 2) {                       /* skip the first 2s (boot jank) */
-      fpsAcc += dt; fpsN++;
+      fpsAcc = 0; fpsN = 0;
       if (fpsAcc > 1.5) {
         const f = fpsN/fpsAcc; window.__ROBOT_FPS = Math.round(f);
-        if (f < 40 && stride < 4) stride++;  /* only goes down, no oscillation */
+        if (f < 30) { if (++lowN >= 3 && stride < 3) { stride++; lowN = 0; } } else lowN = 0;
         fpsAcc = 0; fpsN = 0;
       }
     }
@@ -16081,10 +16098,14 @@ const sc = Math.min(406*dpr*.965/200, cw*.92/100)*1.2*ZM;
       hb.style.transform = 'translate(-50%,-50%) scale(' + (QR_S*kq*Math.max(.2, zn)) + ',' + (QR_S*kq) + ')';
       hb.style.opacity = vis;
       hb.style.pointerEvents = zn > .35 ? '' : 'none';
+      const qrr = QR_S*kq*dpr*34, qrx = qrr*Math.max(.2, zn);
+      qrR = zn > .35 ? { x: cx + xr*kq*sc, y: cy - ys*kq*sc, rx: qrx, ry: qrr } : null;
     }
 
     d.fill(0);
     zb.fill(-1e9);
+    let mnX = cw, mxX = -1, mnY = ch, mxY = -1;
+    if (fd) fd.fill(0);
 
     for (let i = 0; i < N; i++) {
       if (stride > 1 && i % stride) { PIX[i] = -1; continue; }
@@ -16102,8 +16123,14 @@ const sc = Math.min(406*dpr*.965/200, cw*.92/100)*1.2*ZM;
       const k = D/(D-z2)*sc;
       const px = (cx + xr*k) | 0, py = (cy - ys*k) | 0;
       if (px < 0 || py < 0 || px > cw-sz || py > ch-sz) { PIX[i] = -1; continue; }
+      if (px < mnX) mnX = px; if (px > mxX) mxX = px; if (py < mnY) mnY = py; if (py > mxY) mxY = py;
       const zi = (py >> sh)*zw + (px >> sh);
       PIX[i] = py*cw + px; ZBI[i] = zi; ZZ[i] = z2;
+      INR[i] = 0;
+      if (qrR) {
+        const ex = (px - qrR.x)/qrR.rx, ey = (py - qrR.y)/qrR.ry;
+        if (ex*ex + ey*ey < 1) { INR[i] = 1; PXW[i] = x + FX; PYW[i] = yc + CY + FY; PZW[i] = z0 + FZ; }
+      }
       if (z2 > zb[zi]) zb[zi] = z2;
     }
 
@@ -16138,6 +16165,15 @@ shade = Math.min(1.05, .16 + .85*nl + .9*rim);
 
       /* === START: COOL METALLIC GLINT === */
 const r = CR[i]*shade + spc*105, gg = CG[i]*shade + spc*135, b = CB[i]*shade + spc*175;
+      if (INR[i] && fd) {
+        const m6 = 72, ddx = PXW[i] - BM[m6+9], ddy = PYW[i] - BM[m6+10], ddz = PZW[i] - BM[m6+11];
+        if (BM[m6+2]*ddx + BM[m6+5]*ddy + BM[m6+8]*ddz > 15) {
+          for (let yy = 0; yy < sz; yy++) {
+            let fi = (pi + yy*cw)*4;
+            for (let xx = 0; xx < sz; xx++, fi += 4) { fd[fi] += r; fd[fi+1] += gg; fd[fi+2] += b; }
+          }
+        }
+      }
 /* === END: COOL METALLIC GLINT === */
       for (let yy = 0; yy < sz; yy++) {
         let idx = (pi + yy*cw)*4;
@@ -16146,7 +16182,7 @@ const r = CR[i]*shade + spc*105, gg = CG[i]*shade + spc*135, b = CB[i]*shade + s
     }
 
     /* additive light → transparent PNG-style: alpha = brightest channel, color un-premultiplied */
-    for (let i = 0, L = d.length; i < L; i += 4) {
+    for (let yy2 = mnY; yy2 < mxY + sz; yy2++) for (let i = (yy2*cw + mnX)*4, L = (yy2*cw + mxX + sz + 1)*4; i < L; i += 4) {
       const r = d[i], g = d[i+1], b = d[i+2];
       let a = r > g ? r : g; if (b > a) a = b;
       /* === START: ANTI-WHITE GUARD === */
@@ -16158,7 +16194,33 @@ if (a) {
 }
 /* === END: ANTI-WHITE GUARD === */
     }
-    ctx.putImageData(img, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+    if (mxX >= mnX) ctx.putImageData(img, 0, 0, mnX, mnY, mxX - mnX + sz, mxY - mnY + sz);
+    workMs += ((performance.now() - t0) - workMs) * .08;
+    if (++govN > 90) {                       /* tuwing ~1.5s */
+      govN = 0;
+      if (workMs > 11) {
+        if (stride < 4) stride++;
+        else if (dprCap > 1) { dprCap = 1; stride = 2; }
+      } else if (workMs < 5.5 && stride > 1) stride--;
+    }
+    if (fctx) {
+      if (fd && qrR) {
+        const bx0 = Math.max(0, Math.floor(qrR.x - qrR.rx) - 1), bx1 = Math.min(cw, Math.ceil(qrR.x + qrR.rx) + 1);
+        const by0 = Math.max(0, Math.floor(qrR.y - qrR.ry) - 1), by1 = Math.min(ch, Math.ceil(qrR.y + qrR.ry) + 1);
+        for (let yy = by0; yy < by1; yy++) for (let xx = bx0; xx < bx1; xx++) {
+          const i4 = (yy*cw + xx)*4, r = fd[i4], g = fd[i4+1], b = fd[i4+2];
+          let a = r > g ? r : g; if (b > a) a = b;
+          if (a) {
+            const k = 255/a; let R = r*k, G = g*k, B = b*k;
+            const lo = Math.min(R, G, B), ex = lo > 170 ? lo - 170 : 0;
+            fd[i4+3] = a; fd[i4] = R - ex; fd[i4+1] = G - ex; fd[i4+2] = B - ex;
+          }
+        }
+        fctx.clearRect(0, 0, cw, ch);
+        if (bx1 > bx0 && by1 > by0) fctx.putImageData(fimg, 0, 0, bx0, by0, bx1 - bx0, by1 - by0);
+      } else fctx.clearRect(0, 0, cw, ch);
+    }
     { /* contact shadow */
       const rx0 = BM[6*12+9] - FX, rz0 = BM[6*12+11] - FZ;
       const xr = rx0*ca - rz0*sa, zr = rx0*sa + rz0*ca;

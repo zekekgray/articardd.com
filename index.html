@@ -16247,7 +16247,7 @@ shade = Math.min(1.05, .16 + .85*nl + .9*rim);
 /* === END: SHADE CAP === */
       }
       if (PUL[i]) { if (shade < .95) shade = .95; shade *= pf; }
-      shade *= (.86 + z2/420)*stride*Math.pow(500000/N, .8);
+      shade *= (.86 + z2/420)*stride*Math.pow(380000/N, .8);
       /* === START: COOL METALLIC GLINT === */
 const r = CR[i]*shade + spc*105, gg = CG[i]*shade + spc*135, b = CB[i]*shade + spc*175;
       if (INR[i] && fd) {

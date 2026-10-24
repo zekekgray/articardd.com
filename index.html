@@ -1405,7 +1405,7 @@ opacity:0;pointer-events:none;z-index:1;}
               </svg>
             </span>
           </button>
-          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:0;top:100px;width:340px;height:380px;z-index:3;pointer-events:none;"></canvas>
+          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:0;top:78px;width:340px;height:406px;z-index:3;pointer-events:none;"></canvas>
 <!-- === START: HOLD HINT === -->
 <span class="hold-pulse" aria-hidden="true"></span>
 <div class="hold-hint" aria-hidden="true">
@@ -15423,7 +15423,7 @@ function openRewardTerms() {
   const cv = document.getElementById('rbcCv');
   if (!cv || !cv.getContext) return;
   const ctx = cv.getContext('2d');
-  const N = 75000;
+  const N = 200000;
   const capEl = {}, capBase = '';         /* walang caption sa card */
 
   function start() { try {
@@ -15659,9 +15659,6 @@ function openRewardTerms() {
 
   /* --- stool --- */
   mark(11);
-  box([0,43,0], [16,2,14], { col: S, dm: 1.6 });
-  for (const sx of [-1,1]) for (const sz of [-1,1])
-    cap([sx*12,41,sz*10], [sx*12,0,sz*10], 1.8, 1.6, { col: P, dm: 1.6 });
   /* --- zzz --- */
   mark(12);
   for (const [zx, zy, zs] of [[16,200,3],[22,209,4.5],[29,219,6]]) {
@@ -15670,7 +15667,7 @@ function openRewardTerms() {
   mark(0);
 
   /* --- floor rings --- */
-  for (const r of [34,56,80,106,134]) ring([0,.3,0], [0,1,0], r, .9, r === 56 ? P : S, 120, .2);
+  /* floor rings removed */
 
   /* ---------- allocate and sample the dots ---------- */
   const X = new Float32Array(N), Y = new Float32Array(N), Z = new Float32Array(N);
@@ -15678,7 +15675,7 @@ function openRewardTerms() {
   const CR = new Float32Array(N), CG = new Float32Array(N), CB = new Float32Array(N);
   const HN = new Uint8Array(N), PUL = new Uint8Array(N), BN = new Uint8Array(N);
 
-  const nFloor = Math.round(N*.04), nLine = Math.round(N*.18), nSurf = N - nFloor - nLine;
+  const nFloor = 0, nLine = Math.round(N*.18), nSurf = N - nFloor - nLine;
   let p = 0;
   const colorize = (i, col, gain, amp) => {
     const c = PAL[col];
@@ -15967,7 +15964,7 @@ function openRewardTerms() {
 
     const ca = Math.cos(ang), sa = Math.sin(ang);
     const cp = Math.cos(pitch), spn = Math.sin(pitch);
-    const sc = Math.min(ch*.86/200, cw*.92/268)*ZM;     /* fit sa card: taas at floor rings */
+    const sc = Math.min(ch*.965/200, cw*.92/100)*ZM;    /* fit sa card: robot lang, +20% */
     const cx = cw/2, cy = ch*.5;
     const pf = .8 + .2*Math.sin(now*.004);
     animate(now/1000);
@@ -16050,3 +16047,4 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
+

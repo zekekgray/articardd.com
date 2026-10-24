@@ -15757,7 +15757,9 @@ function openRewardTerms() {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const speed = (Math.PI*2/18) * (reduce ? .25 : 1);
   let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
+  const QR_S = .8;
   let stride = 1, fpsAcc = 0, fpsN = 0, fpsWarm = 0;
+  const QR_S = .8;   /* QR scale on the chest: 72px button x .8 = ~58px */
 
   /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
   const hb = document.getElementById('holdOpenBtn');
@@ -15995,6 +15997,26 @@ function openRewardTerms() {
     const cx = cw/2, cy = ch*.5;
     const pf = .8 + .2*Math.sin(now*.004);
     animate(now/1000);
+    if (hb) { /* QR panel attached to chest (bone 6) */
+      const m = 6*12, qx = 0, qy = 141.5, qz = 13.5;
+      let x = BM[m]*qx + BM[m+1]*qy + BM[m+2]*qz + BM[m+9];
+      let yc = BM[m+3]*qx + BM[m+4]*qy + BM[m+5]*qz + BM[m+10];
+      let z0 = BM[m+6]*qx + BM[m+7]*qy + BM[m+8]*qz + BM[m+11];
+      yc -= CY + FY; x -= FX; z0 -= FZ;
+      const xr = x*ca - z0*sa, zr = x*sa + z0*ca;
+      const ys = yc*cp - zr*spn, z2 = zr*cp + yc*spn;
+      const kq = D/(D-z2);
+      /* chest normal (bone z-axis) -> view space */
+      const nx0 = BM[m+2], ny0 = BM[m+5], nz0 = BM[m+8];
+      const nxr = nx0*ca - nz0*sa, nzr = nx0*sa + nz0*ca;
+      const zn = nzr*cp + ny0*spn;
+      const vis = Math.min(1, Math.max(0, (zn - .12)/.35));
+      hb.style.left = ((cx + xr*kq*sc)/dpr) + 'px';
+      hb.style.top = (78 + (cy - ys*kq*sc)/dpr) + 'px';
+      hb.style.transform = 'translate(-50%,-50%) scale(' + (QR_S*kq*Math.max(.2, zn)) + ',' + (QR_S*kq) + ')';
+      hb.style.opacity = vis;
+      hb.style.pointerEvents = zn > .35 ? '' : 'none';
+    }
 
     d.fill(0);
     zb.fill(-1e9);
@@ -16092,3 +16114,4 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
+

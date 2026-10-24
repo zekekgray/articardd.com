@@ -15759,7 +15759,9 @@ function openRewardTerms() {
   let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
   const QR_S = .8;
   let stride = 1, fpsAcc = 0, fpsN = 0, fpsWarm = 0;
-  const QR_S = .8;   /* QR scale on the chest: 72px button x .8 = ~58px */
+    /* === START: QR_S DUPLICATE REMOVED === */
+  /* QR_S is declared once above (const QR_S = .8;). QR on the chest: 72px button x .8 = ~58px */
+  /* === END: QR_S DUPLICATE REMOVED === */
 
   /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
   const hb = document.getElementById('holdOpenBtn');

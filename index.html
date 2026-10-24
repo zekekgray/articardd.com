@@ -9775,6 +9775,7 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
     const sig = shareSig();
     if (faceCache.front && faceCache.sig === sig) return faceCache.front;
 
+    try { if (window.__robotStill) window.__robotStill(); } catch (e) {}
     const liveScene = document.querySelector('.scene');
 
     // ── Clone the WHOLE .scene (not just the .face) — this preserves the
@@ -9899,7 +9900,7 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
     try {
       canvas = await html2canvas(faceFrontClone, {
         scale: SCALE,
-        backgroundColor: '#111114',
+        backgroundColor: null,
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -9938,7 +9939,7 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
 
   let _shareTok = 0, _sharePromise = null;
   function shareSig() {
-    return [activeTheme && activeTheme.id, activeCW, currentEntry && currentEntry.name, currentEntry && currentEntry.pos, currentEntry && currentEntry.company, profilePhotoB64 ? profilePhotoB64.length : 0].join('|');
+    return [activeTheme && activeTheme.id, activeCW, activeRobotPal, currentEntry && currentEntry.name, currentEntry && currentEntry.pos, currentEntry && currentEntry.company, profilePhotoB64 ? profilePhotoB64.length : 0].join('|');
   }
   function shareCard() {
     if (!currentEntry) return;
@@ -16078,7 +16079,21 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     return { a, st, tp, am, sd, ln, tf, af: .6 + .2*am, t0, D: Dd };
   }
 
-  function animate(t) {
+  let STILL = false;
+function poseStand() {
+    FX = 0; FZ = 0; FY = 0; ZM = 1;
+    setBone(6, 0, 0, 0);
+    setBone(1, 0, 0, 0);
+    setBone(2, 0, 0, .06);  setBone(3, -.1, 0, 0);
+    setBone(4, 0, 0, -.06); setBone(5, -.1, 0, 0);
+    setBone(7, 0, 0, 0); setBone(8, 0, 0, 0);
+    setBone(9, 0, 0, 0); setBone(10, 0, 0, 0);
+    const m = 11*12, z = 12*12;
+    BM[m] = 1; BM[m+4] = 1; BM[m+8] = 1; BM[m+10] = -1000;   /* stool hidden */
+    BM[z] = 1; BM[z+4] = 1; BM[z+8] = 1; BM[z+9] = 0; BM[z+11] = 0; BM[z+10] = -1000;  /* zzz hidden */
+}
+function animate(t) {
+    if (STILL) { poseStand(); return; }
     if (!seg || t > seg.t0 + seg.D + 20) seg = nextSeg(t);
     while (t >= seg.t0 + seg.D) seg = nextSeg(seg.t0 + seg.D);
     const A = seg.a, st = seg.st, sd = seg.sd, tf = seg.tf, af = seg.af, Dd = seg.D, u = t - seg.t0;
@@ -16215,18 +16230,25 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
 
   const cardEl = document.getElementById('card'), osEl = document.getElementById('screenOS'), gateEl = document.getElementById('screenGate');
 
-  function frame(now) {
+  window.__robotStill = function () {
+    const sS = stride;
+    STILL = true; stride = 1;
+    try { frameInner(performance.now(), true); }
+    finally { STILL = false; stride = sS; }
+};
+function frame(now) {
     try { frameInner(now); }
     catch (e) { if (!window.__RBT_ERR) { window.__RBT_ERR = 1; console.error('Humanoid frame', e); } }
   }
-  function frameInner(now) {
+  function frameInner(now, still) {
+    const requestAnimationFrame = still ? function () {} : window.requestAnimationFrame.bind(window);
     requestAnimationFrame(frame);
-    if (now - last < ((drag || now < holdUntil) ? 15.5 : 28)) return;   /* 30fps idle, 60fps kapag drag/hold */
+    if (!still && now - last < ((drag || now < holdUntil) ? 15.5 : 28)) return;   /* 30fps idle, 60fps kapag drag/hold */
     const dt = Math.min(.05, (now-last)/1000); last = now;
     const t0 = performance.now();
     const hidden = document.hidden || (cardEl && cardEl.classList.contains('flipped')) ||
       (osEl && osEl.classList.contains('active')) || (gateEl && gateEl.classList.contains('show'));
-    if (hidden) return;
+    if (hidden && !still) return;
     const wCss = cv.clientWidth, hCss = cv.clientHeight;
     if (!wCss || !hCss) return;
     const dprNow = Math.min(window.devicePixelRatio || 1, dprCap);
@@ -16252,9 +16274,10 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     }
     const wantAuto = (drag || now < holdUntil) ? 0 : 1;
     autoW += (wantAuto - autoW)*(1 - Math.exp(-dt*(wantAuto ? 1.2 : 8)));       /* smooth na balik sa sway */
-    const yaw = manYaw + Math.sin(ang)*.75*autoW;           /* ±43°, front stays readable */
+    const yaw = still ? 0 : manYaw + Math.sin(ang)*.75*autoW;           /* ±43°, front stays readable */
     const ca = Math.cos(yaw), sa = Math.sin(yaw);
-    const cp = Math.cos(pitch), spn = Math.sin(pitch);
+    const pT = still ? 0 : pitch;
+    const cp = Math.cos(pT), spn = Math.sin(pT);
     /* === START: ROBOT +20% (base height 406 css px, canvas is now 520) === */
 const sc = Math.min(406*dpr*.965/200, cw*.92/100)*1.2*ZM;
     const strideBR = stride*BRN;

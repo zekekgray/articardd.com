@@ -647,7 +647,8 @@
 .back-mascot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:73%;max-height:92%;object-fit:contain;z-index:3;pointer-events:none;filter:drop-shadow(0 14px 26px rgba(0,0,0,.45));}
 .back-mascot-btn{position:absolute;top:16px;right:16px;z-index:6;width:48px;height:48px;border-radius:50%;border:.6px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
 body.public-mode .back-mascot-btn{display:none !important;}
-.robot-pal-btn{position:absolute;top:88px;right:16px;z-index:6;width:48px;height:48px;border-radius:50%;border:.6px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
+.robot-pal-btn svg{width:15px;height:15px;}
+.robot-pal-btn{position:absolute;top:auto;bottom:4px;right:4px;z-index:6;width:28px;height:28px;border-radius:50%;border:.6px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
 body.public-mode .robot-pal-btn{display:none !important;}
 .mascot-limited{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:8px;padding:7px 8px 7px 14px;border-radius:20px;border:.6px solid rgba(232,204,122,.45);background:rgba(20,22,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#E8CC7A;font:700 9.5px -apple-system,'SF Pro Text',sans-serif;letter-spacing:.14em;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
 .mascot-limited.show{display:flex;}
@@ -1428,12 +1429,12 @@ opacity:0;pointer-events:none;z-index:1;}
             <div class="pill-avatar" id="pillAvatar" onclick="event.stopPropagation();haptic('light');triggerPhotoUpload();"></div>
             <div class="pill-name" id="pillName">E. N. TAMBIGA</div>
            <div class="pill-pos" id="pillPos">CEO | ARTIBYTE APOSTROPHE INC.</div>
-            <div id="pillClock" aria-hidden="true" style="position:absolute;left:82px;right:44px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:2;">
-              <div style="display:flex;align-items:baseline;gap:6px;line-height:1;">
-                <span id="pcTime" style="font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.02em;color:#1c1c1e;font-variant-numeric:tabular-nums;">--:--</span>
+            <div id="pillClock" aria-hidden="true" style="position:absolute;left:74px;right:40px;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:2;white-space:nowrap;">
+              <div style="display:flex;align-items:baseline;justify-content:center;gap:5px;line-height:1;">
+                <span id="pcTime" style="font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;font-size:64px;line-height:.8;font-weight:700;letter-spacing:-.04em;color:#1c1c1e;font-variant-numeric:tabular-nums;">--:--</span>
                 <span id="pcAp" style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;color:#1c1c1e;opacity:.6;">--</span>
               </div>
-              <div id="pcDate" style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1c1c1e;opacity:.6;margin-top:5px;">—</div>
+              <div id="pcDate" style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;text-align:center;color:#1c1c1e;opacity:.6;margin-top:4px;">—</div>
             </div>
             <div id="pillVisToggleTrack" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:18px;border-radius:9px;background:#1c1c1e;cursor:pointer;z-index:3;pointer-events:all;touch-action:none;">
               <div id="pillVisToggleKnob" style="position:absolute;top:2px;left:14px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);"></div>

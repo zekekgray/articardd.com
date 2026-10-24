@@ -15760,10 +15760,8 @@ const PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const speed = (Math.PI*2/18) * (reduce ? .25 : 1);
   let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
-  const QR_S = .8;
-  let stride = 1, fpsAcc = 0, fpsN = 0, fpsWarm = 0;
+    let stride = 1, fpsAcc = 0, fpsN = 0, fpsWarm = 0;
   const QR_S = .8;   /* QR scale on the chest: 72px button x .8 = ~58px */
-
   /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
   const hb = document.getElementById('holdOpenBtn');
   if (hb) {

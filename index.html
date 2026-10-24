@@ -1257,7 +1257,8 @@ opacity:0;pointer-events:none;z-index:1;}
       <div class="gt-err" id="gtErr" role="alert"></div>
       <button type="submit" id="gtBtn" class="gt-btn">CONTINUE</button>
     </form>
-    <div class="gt-hint">Your key unlocks your card</div>
+     <div class="gt-hint">Your key unlocks your card</div>
+    <button type="button" class="gt-link" onclick="openFreeSignup()">Create a free card</button>
     <svg class="gt-preview" viewBox="0 0 340 580" aria-hidden="true">
       <rect width="340" height="580" rx="24" fill="#2F343A"/>
       <rect x="4.35" y="3.44" width="332" height="71.3" rx="24" fill="#F3EDE4"/>
@@ -2949,8 +2950,8 @@ opacity:0;pointer-events:none;z-index:1;}
       </div>
       <div class="os-row" onclick="openLicenseScreen()" style="cursor:pointer;">
         <div class="os-row-icon" style="background:#34C759;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-        <div class="os-row-text"><div class="os-row-title">Subscriptions &amp; License</div></div>
-        <span class="os-row-value">Annual</span>
+        <div class="os-row-text"><div class="os-row-title">Subscriptions &amp; License</div><div class="os-row-sub" id="acctPlanSub">10 contacts · 3 meetings</div></div>
+       <span class="os-row-value" id="acctPlanValue">Free</span>
         <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
@@ -4449,9 +4450,14 @@ function fillConnectPreview() {
         type:amx.type, date:amx.date, time:amx.time, duration:amx.duration,
         location:amx.location, locationAddress:amx.address, recurrence:amx.recurrence, timezone:amx.tz
       });
-      amx.step = 3; haptic('success');
+      amx.step = 3; haptic('success'); planRefresh();;
     } catch (e) {
-      amx.err = 'Could not send your request: ' + (e.message || 'Please try again.'); haptic('error');
+     if (planIsQuotaErr(e)) {
+        const pub = document.body.classList.contains('public-mode');
+        amx.err = pub ? "This person can't accept new meeting requests right now." : 'You have used all your free meeting bookings.';
+        if (!pub) setTimeout(() => planUpgrade('bookings'), 250);
+        haptic('error');
+      } else { amx.err = 'Could not send your request: ' + (e.message || 'Please try again.'); haptic('error'); }
     }
     amx.busy = false; amxRender();
   }
@@ -6445,6 +6451,7 @@ function osBackTapped() {
 
     const acctScreen = document.getElementById('screenAccount');
     rmRefreshBadge(); /* REQUEST MANAGER BADGE */
+    planPaint();
     acctScreen.style.display = 'flex';
     acctScreen.classList.add('active', 'entering');
     setTimeout(() => acctScreen.classList.remove('entering'), 360);
@@ -6718,7 +6725,8 @@ function osBackTapped() {
       else { clearTimeout(_abPushT); _abPushT = setTimeout(abCloudPush, 400); }   /* may bagong edit habang nagpu-push */
       return true;
     } catch (e) {
-      if (/session|sign in/i.test(String(e && e.message))) return false;
+     if (/session|sign in/i.test(String(e && e.message))) return false;
+      if (planIsQuotaErr(e)) { planRefresh(); planUpgrade('contacts'); return false; }
       showToast('Contacts saved on this device. Cloud sync pending', 'neutral');
       return false;
     } finally { _abPushing = false; }
@@ -6896,6 +6904,8 @@ function osBackTapped() {
       const strong = match && ((pk && match.phones.some(p => abPhoneKey(p) === pk)) || (em && match.emails.some(e => e.toLowerCase() === em)));
       importCandidates.push({ c, match, action: strong ? 'merge' : 'add' });
     });
+   let _room = planRoom('contacts');
+    importCandidates.forEach(x => { if (x.action !== 'add') return; if (_room > 0) _room--; else { x.action = 'skip'; x.limit = true; } });
     auMakeSheet('importPreviewOverlay', 'Review Import', `<div id="importPreviewBody"></div>`);
     renderImportPreview();
   }
@@ -6922,7 +6932,9 @@ function osBackTapped() {
     const rows = importCandidates.map((x, i) => {
       const c = x.c;
       const sub = [c.mobile, c.email].filter(Boolean).join(' · ') || 'No phone or email';
-      const ctrl = x.match
+     onst ctrl = x.limit
+        ? `<div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11.5px;color:#B5583A;margin:8px 0 0 52px;">Over the free limit. Upgrade to Pro to import.</div>`
+        : x.match
         ? `<div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:11.5px;color:#B5583A;margin:8px 0 8px 52px;">Already saved as ${auEsc(x.match.name)}</div>
            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:52px;">${importChip(i, 'merge', 'Merge', x.action === 'merge')}${importChip(i, 'skip', 'Skip', x.action === 'skip')}${importChip(i, 'add', 'Keep both', x.action === 'add')}</div>`
         : `<div style="display:flex;gap:6px;margin:8px 0 0 52px;">${importChip(i, 'add', 'Add', x.action === 'add')}${importChip(i, 'skip', 'Skip', x.action === 'skip')}</div>`;
@@ -6945,7 +6957,7 @@ function osBackTapped() {
   }
 
   async function confirmImportContacts() {
-   let added = 0, merged = 0, skipped = 0;
+  let added = 0, merged = 0, skipped = 0, room = planRoom('contacts'), over = 0;
     const impRec = abNewRec(), impAdded = [];
     let nextId = ADDRESS_BOOK.reduce((m, c) => Math.max(m, c.id || 0), 0) + 1;
     importCandidates.forEach(({ c, match, action }) => {
@@ -6954,7 +6966,9 @@ function osBackTapped() {
         if (!impRec.journal.has(match)) impRec.journal.set(match, Object.assign({}, match)); ctMergeInto(match, normalizeContact(c));
         merged++; return;
       }
-     const fresh = newContact(Object.assign({}, c, { id: nextId++, source: 'import' }));
+      if (room <= 0) { over++; return; }
+      room--;
+      const fresh = newContact(Object.assign({}, c, { id: nextId++, source: 'import' }));
       ADDRESS_BOOK.push(fresh); impAdded.push(fresh);
       added++;
     });
@@ -6973,7 +6987,7 @@ function osBackTapped() {
           <div style="width:56px;height:56px;border-radius:50%;background:rgba(52,199,89,0.14);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:14px;color:rgba(60,60,67,0.65);line-height:1.7;margin-bottom:18px;">${added} added${merged ? ` · ${merged} merged` : ''}${skipped ? ` · ${skipped} skipped` : ''}</div>
+          <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:14px;color:rgba(60,60,67,0.65);line-height:1.7;margin-bottom:18px;">${added} added${merged ? ` · ${merged} merged` : ''}${skipped ? ` · ${skipped} skipped` : ''}${over ? ` · ${over} not imported (free limit)` : ''}</div>
           <button onclick="closeAuGenericModal('importDoneOverlay')" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:14.5px;font-weight:700;cursor:pointer;">Done</button>
         </div>`);
     }, 280);
@@ -9113,7 +9127,8 @@ function toggleContactEdit() {
 
   async function acCommitContact(contact, mode, match) {
     contact = newContact(Object.assign({ source: 'manual' }, contact));
-    if (_acSaving) return false;
+   if (_acSaving) return false;
+    if (!(mode === 'merge' && match) && !planGate('contacts', 1)) return false;
     acSetSaving(true);
     let backup = null;
     if (mode === 'merge' && match) {
@@ -11216,6 +11231,7 @@ async function rmAddToContacts(id) {
   const m = _rmMeetings.find(x => x.meetingId === id);
   const c = m && rmGuestContact(m);
   if (!c) { haptic('error'); showToast('No guest details to add', 'error'); return; }
+  if (!planGate('contacts', 1)) return;
   if ((acFindMatch(c) || {}).match) { renderRequestManager(); showToast('Already in Contacts', 'neutral'); return; }
   _rmAdding = true;
   haptic('light');
@@ -12899,7 +12915,44 @@ function copyPIAthId() {
     showCard(entry);
   });
 
-  /* === START: REMOTE CARD SYNC (gsheet → UI + localStorage cache) === */
+  /* === START: FREEMIUM (plan, quota, upgrade) === */
+const PLAN_DEF = { plan: 'free', limits: { contacts: 10, bookings: 3 }, usage: { bookings: 0 }, status: 'none' };
+let PLAN_STATE = JSON.parse(JSON.stringify(PLAN_DEF));
+const isPro = () => PLAN_STATE.plan === 'pro';
+function planApply(p) {
+  if (!p) return;
+  PLAN_STATE = { loaded: true, plan: p.plan === 'pro' ? 'pro' : 'free', limits: Object.assign({}, PLAN_DEF.limits, p.limits || {}), usage: Object.assign({}, PLAN_DEF.usage, p.usage || {}), status: p.status || 'none' };
+  planPaint();
+}
+async function planRefresh() { if (!rmToken()) return; try { planApply(await apiPost('ownerPlan', { token: rmToken() })); } catch (e) {} }
+const planIsQuotaErr = e => !!e && (e.code === 'QUOTA' || /quota|limit reached/i.test(String(e.message || '')));
+/* hindi pa loaded = huwag mag-block sa client; ang server pa rin ang huhusga */
+function planRoom(kind) {
+  if (!PLAN_STATE.loaded || document.body.classList.contains('public-mode')) return Infinity;
+  const lim = PLAN_STATE.limits[kind];
+  if (lim == null) return Infinity;
+  const used = kind === 'contacts' ? ADDRESS_BOOK.length : (PLAN_STATE.usage.bookings || 0);
+  return Math.max(0, lim - used);
+}
+function planGate(kind, need) { if (planRoom(kind) >= need) return true; planUpgrade(kind); return false; }
+function planPaint() {
+  const v = document.getElementById('acctPlanValue'), s = document.getElementById('acctPlanSub'); if (!v) return;
+  const L = PLAN_STATE.limits, fmtL = n => n == null ? '∞' : n;
+  v.textContent = isPro() ? 'Pro' : 'Free';
+  if (s) s.textContent = ADDRESS_BOOK.length + ' / ' + fmtL(L.contacts) + ' contacts · ' + (PLAN_STATE.usage.bookings || 0) + ' / ' + fmtL(L.bookings) + ' meetings';
+}
+function planUpgrade(kind) {
+  haptic('error');
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const c = kind === 'contacts'
+    ? { t: 'Your network is growing.', b: "You've saved " + ADDRESS_BOOK.length + ' of ' + PLAN_STATE.limits.contacts + ' free contacts. Upgrade to Pro to save more while keeping everything you have already recorded.' }
+    : { t: 'Ready for more meetings?', b: "You've used all " + PLAN_STATE.limits.bookings + ' free meeting bookings. Upgrade to Pro to unlock more booking capacity. Your existing meetings stay accessible.' };
+  auMakeSheet('planUpOverlay', auEsc(c.t), `<div style="${F}font-size:14px;line-height:1.6;color:rgba(60,60,67,0.75);margin:-4px 2px 18px;">${auEsc(c.b)}</div>
+    <button onclick="closeAuGenericModal('planUpOverlay');setTimeout(openLicenseScreen,260)" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;${F}font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:8px;">Explore Pro</button>
+    <button onclick="closeAuGenericModal('planUpOverlay')" style="width:100%;padding:13px;border-radius:14px;border:none;background:rgba(0,0,0,0.06);color:rgba(60,60,67,0.6);${F}font-size:14px;font-weight:600;cursor:pointer;">Not now</button>`);
+}
+/* === END: FREEMIUM === */
+/* === START: REMOTE CARD SYNC (gsheet → UI + localStorage cache) === */
 const CARD_CACHE_PREFIX = 'athna-card-cache-v1:';
 function cardCacheRead(kind) {
   try { return JSON.parse(localStorage.getItem(CARD_CACHE_PREFIX + kind) || 'null'); } catch (e) { return null; }
@@ -12917,9 +12970,10 @@ async function syncLeads() {
   if (!Array.isArray(leads) || !leads.length) return;
   let seen = {};
   try { const r = await window.storage.get('leads-seen', false); if (r && r.value) seen = JSON.parse(r.value); } catch (e) {}
-  const added = [];
+const added = []; let leadsHeld = 0;
   leads.forEach(l => {
     if (!l.leadId || seen[l.leadId]) return;
+     if (planRoom('contacts') <= 0) { leadsHeld++; return; }
     seen[l.leadId] = 1;
     const c = newContact({ source: 'connect', name: l.name, role: l.title, mobile: acNormalizePhone(l.mobile), email: String(l.email || '').toLowerCase(), notes: 'Via Connect form' + (l.notes ? ' · ' + l.notes : ''), tag: 'New', avatarBg: avatarColorFromName(l.name) });
     if ((acFindMatch(c) || {}).match) return;
@@ -12931,6 +12985,7 @@ async function syncLeads() {
     return;                                   /* not marked seen, will retry */
   }
   try { await window.storage.set('leads-seen', JSON.stringify(seen), false); } catch (e) {}
+  if (leadsHeld) showToast(leadsHeld + ' new connection' + (leadsHeld > 1 ? 's' : '') + ' on hold. Free contact limit reached', 'neutral');
   if (added.length) {
     filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     showToast(added.length + ' new connection' + (added.length > 1 ? 's' : ''), 'success');
@@ -12983,6 +13038,7 @@ function applyRemoteCard(d, owner, fromCache) {
    else if (!owner) profilePhotoB64 = null;
    else if (profilePhotoB64 && rmToken()) apiPost('ownerUpdateCard', { token: rmToken(), fields: { photo: profilePhotoB64 } }).catch(function () {});
    if (owner) window.__LICENSE__ = d.license || null;
+    if (owner) { if (d.plan) planApply(d.plan); else planRefresh(); }
    if (d.mascotId && MASCOTS.some(function (m) { return m.id === d.mascotId; })) { activeMascot = d.mascotId; window.__MASCOT_REMOTE__ = true; }
 
     showCard(currentEntry);
@@ -13049,6 +13105,42 @@ window.forgetDevice = function () { try { localStorage.removeItem('athna-owner-r
   } catch (e) {}
 })();
 /* === END: REMEMBER DEVICE === */
+/* === START: FREE SIGNUP === */
+function openFreeSignup() {
+  haptic('light');
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  auMakeSheet('freeSignupOverlay', 'Create your free card', `<div id="fsBody">
+    <div style="${F}font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-4px 2px 14px;">Free: 10 contacts and 3 meeting bookings. Upgrade any time.</div>
+    <input id="fsName" class="am-input" type="text" placeholder="Full name" autocomplete="name">
+    <div style="height:8px"></div>
+    <input id="fsEmail" class="am-input" type="email" placeholder="you@email.com" autocomplete="email">
+    <div id="fsErr" style="${F}font-size:12px;color:#FF453A;min-height:18px;margin:8px 2px;"></div>
+    <button id="fsGo" onclick="submitFreeSignup()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;${F}font-size:14.5px;font-weight:700;cursor:pointer;">Create free card</button></div>`);
+  const o = document.getElementById('freeSignupOverlay'); if (o) o.style.zIndex = '10100';   /* nasa ibabaw ng gate */
+}
+let _fsBusy = false;
+async function submitFreeSignup() {
+  if (_fsBusy) return;
+  const name = (document.getElementById('fsName').value || '').trim(), email = (document.getElementById('fsEmail').value || '').trim().toLowerCase();
+  const err = document.getElementById('fsErr');
+  if (!name) { err.textContent = 'Enter your name.'; haptic('error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Enter a valid email.'; haptic('error'); return; }
+  _fsBusy = true; err.textContent = '';
+  const b = document.getElementById('fsGo'); b.textContent = 'Creating…'; b.style.opacity = '.6';
+  try {
+    const d = await apiPost('ownerSignupFree', { name, email });
+    sessionStorage.setItem('athna-owner-token', d.token); sessionStorage.setItem('athna-owner-session', '1');
+    try { localStorage.setItem('athna-owner-remember', JSON.stringify({ token: d.token, expiresAt: d.expiresAt })); } catch (e) {}
+    const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+    document.getElementById('fsBody').innerHTML = `<div style="${F}font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-4px 2px 12px;">Save your Private Key now. It is shown only once and signs you in.</div>
+      <div style="${F}font-family:'Space Mono',monospace;font-size:15px;font-weight:700;text-align:center;padding:14px;border:1px dashed rgba(0,0,0,0.2);border-radius:12px;word-break:break-all;user-select:all;margin-bottom:12px;">${auEsc(d.privateKey)}</div>
+      <button onclick="fallbackCopy('${auEsc(d.privateKey)}')" style="width:100%;padding:13px;border-radius:14px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.72);color:#1c1c1e;${F}font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">Copy key</button>
+      <button onclick="location.replace(location.pathname)" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;${F}font-size:14.5px;font-weight:700;cursor:pointer;">Continue</button>`;
+    haptic('success');
+  } catch (e) { err.textContent = String((e && e.message) || "Couldn't create your card."); haptic('error'); b.textContent = 'Create free card'; b.style.opacity = ''; }
+  _fsBusy = false;
+}
+/* === END: FREE SIGNUP === */
 /* === START: CARD GATE === */
 (function cardGate() {
   const $ = id => document.getElementById(id);
@@ -13422,6 +13514,7 @@ function meetingRebook(id) {
 function openAddMeeting(pre) {
   if (document.getElementById('artimeetOverlay')) return;
   if (pre && typeof pre.preventDefault === 'function') pre = null;   // galing sa onclick event
+  if (!document.body.classList.contains('public-mode') && !planGate('bookings', 1)) return;
   bookMeetingArtimeet();
   if (!pre || !amx) return;
   amx.name  = pre.name  || '';
@@ -15870,7 +15963,8 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
 
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const speed = (Math.PI*2/18) * (reduce ? .25 : 1);
-  let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
+ let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
+  let pX0 = 0, pX1 = -1, pY0 = 0, pY1 = -1;   /* bbox ng nakaraang frame */
   /* === START: ROBOT INTERACTIVE (drag to rotate, auto-face front) === */
   let drag = false, manYaw = 0, manVel = 0, autoW = 1, holdUntil = 0, dStart = null, lastX = 0, lastT = 0, dragEnd = 0;
   const ff = document.querySelector('#screenCard .face-front');
@@ -15925,7 +16019,8 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     /* robot ay independent sa QR: walang speed boost */
   }
 
-  const Lv = norm3([-.45,.65,.62]), Hv = norm3([Lv[0], Lv[1], Lv[2]+1]);
+   const Lv = norm3([-.45,.65,.62]), Hv = norm3([Lv[0], Lv[1], Lv[2]+1]);
+  const BRN = Math.pow(500000/N, .8);
   const D = 900, CY = 98, TOL = 3.2;
 
   /* ---------- animation: 12 bones ---------- */
@@ -16126,7 +16221,7 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   }
   function frameInner(now) {
     requestAnimationFrame(frame);
-    if (now - last < 15.5) return;   /* cap sa ~60fps, kahit 90/120Hz ang screen */
+    if (now - last < ((drag || now < holdUntil) ? 15.5 : 28)) return;   /* 30fps idle, 60fps kapag drag/hold */
     const dt = Math.min(.05, (now-last)/1000); last = now;
     const t0 = performance.now();
     const hidden = document.hidden || (cardEl && cardEl.classList.contains('flipped')) ||
@@ -16162,6 +16257,7 @@ let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     const cp = Math.cos(pitch), spn = Math.sin(pitch);
     /* === START: ROBOT +20% (base height 406 css px, canvas is now 520) === */
 const sc = Math.min(406*dpr*.965/200, cw*.92/100)*1.2*ZM;
+    const strideBR = stride*BRN;
 /* === END: ROBOT +20% === */    /* fit sa card: robot lang, +20% */
     const cx = cw/2, cy = ch*.5;
     const pf = .8 + .2*Math.sin(now*.004);
@@ -16189,10 +16285,10 @@ const sc = Math.min(406*dpr*.965/200, cw*.92/100)*1.2*ZM;
       qrR = zn > .35 ? { x: cx + xr*kq*sc, y: cy - ys*kq*sc, rx: qrx, ry: qrr } : null;
     }
 
-    d.fill(0);
+    if (pX1 >= pX0) for (let yy = pY0; yy <= pY1 + sz; yy++) d.fill(0, (yy*cw + pX0)*4, (yy*cw + pX1 + sz + 1)*4);
     zb.fill(-1e9);
     let mnX = cw, mxX = -1, mnY = ch, mxY = -1;
-    if (fd) fd.fill(0);
+    if (fd && qrR) fd.fill(0);   /* sinusulatan lang ito kapag nakaharap ang QR */
 
     for (let i = 0; i < N; i++) {
       if (stride > 1 && i % stride) { PIX[i] = -1; continue; }
@@ -16248,7 +16344,7 @@ shade = Math.min(1.05, .16 + .85*nl + .9*rim);
 /* === END: SHADE CAP === */
       }
       if (PUL[i]) { if (shade < .95) shade = .95; shade *= pf; }
-      shade *= (.86 + z2/420)*stride*Math.pow(300000/N, .8);
+      shade *= (.86 + z2/420)*strideBR;
       /* === START: COOL METALLIC GLINT === */
 const r = CR[i]*shade + spc*105, gg = CG[i]*shade + spc*135, b = CB[i]*shade + spc*175;
       if (INR[i] && fd) {
@@ -16280,8 +16376,9 @@ if (a) {
 }
 /* === END: ANTI-WHITE GUARD === */
     }
-    ctx.clearRect(0, 0, cw, ch);
+     ctx.clearRect(0, 0, cw, ch);
     if (mxX >= mnX) ctx.putImageData(img, 0, 0, mnX, mnY, mxX - mnX + sz, mxY - mnY + sz);
+    pX0 = mnX; pX1 = mxX; pY0 = mnY; pY1 = mxY;
     workMs += ((performance.now() - t0) - workMs) * .08;
     if (false) {                       /* tuwing ~1.5s */
       govN = 0;

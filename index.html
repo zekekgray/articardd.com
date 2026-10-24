@@ -1405,7 +1405,7 @@ opacity:0;pointer-events:none;z-index:1;}
               </svg>
             </span>
           </button>
-          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:0;top:78px;width:340px;height:406px;z-index:3;pointer-events:none;"></canvas>
+          <canvas id="rbcCv" class="rbc-cv" aria-hidden="true" style="position:absolute;left:0;top:61px;width:340px;height:520px;z-index:3;pointer-events:none;"></canvas>
 <!-- === START: HOLD HINT === -->
 <span class="hold-pulse" aria-hidden="true"></span>
 <div class="hold-hint" aria-hidden="true">
@@ -15439,7 +15439,10 @@ function openRewardTerms() {
   const mix = (a,b,t) => a + (b-a)*t;
 
   const G = 0, P = 1, S = 2, W = 3;
-  const PAL = [[1.00,.62,.58],[1.00,.45,.72],[.45,.80,1.00],[.85,.97,1.00]];
+  /* === START: ROBOT PALETTE (no white / ivory) === */
+const PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
+/* G = titanium steel · P = pink accent · S = blue seam · W = electric cyan glow */
+/* === END: ROBOT PALETTE === */
 
   /* ---------- surface primitives ---------- */
   const prims = [];
@@ -15759,9 +15762,7 @@ function openRewardTerms() {
   let ang = 0, pitch = .14, last = performance.now(), boost = 1, tgt = 1;
   const QR_S = .8;
   let stride = 1, fpsAcc = 0, fpsN = 0, fpsWarm = 0;
-    /* === START: QR_S DUPLICATE REMOVED === */
-  /* QR_S is declared once above (const QR_S = .8;). QR on the chest: 72px button x .8 = ~58px */
-  /* === END: QR_S DUPLICATE REMOVED === */
+  const QR_S = .8;   /* QR scale on the chest: 72px button x .8 = ~58px */
 
   /* pindot sa QR button = bibilis ang ikot (gaya ng dati sa sphere) */
   const hb = document.getElementById('holdOpenBtn');
@@ -15995,7 +15996,9 @@ function openRewardTerms() {
     const yaw = Math.sin(ang)*.75;           /* ±43°, front stays readable */
     const ca = Math.cos(yaw), sa = Math.sin(yaw);
     const cp = Math.cos(pitch), spn = Math.sin(pitch);
-    const sc = Math.min(ch*.965/200, cw*.92/100)*ZM;    /* fit sa card: robot lang, +20% */
+    /* === START: ROBOT +20% (base height 406 css px, canvas is now 520) === */
+const sc = Math.min(406*dpr*.965/200, cw*.92/100)*1.2*ZM;
+/* === END: ROBOT +20% === */    /* fit sa card: robot lang, +20% */
     const cx = cw/2, cy = ch*.5;
     const pf = .8 + .2*Math.sin(now*.004);
     animate(now/1000);
@@ -16014,7 +16017,7 @@ function openRewardTerms() {
       const zn = nzr*cp + ny0*spn;
       const vis = Math.min(1, Math.max(0, (zn - .12)/.35));
       hb.style.left = ((cx + xr*kq*sc)/dpr) + 'px';
-      hb.style.top = (78 + (cy - ys*kq*sc)/dpr) + 'px';
+      hb.style.top = (61 + (cy - ys*kq*sc)/dpr) + 'px';
       hb.style.transform = 'translate(-50%,-50%) scale(' + (QR_S*kq*Math.max(.2, zn)) + ',' + (QR_S*kq) + ')';
       hb.style.opacity = vis;
       hb.style.pointerEvents = zn > .35 ? '' : 'none';
@@ -16064,14 +16067,18 @@ function openRewardTerms() {
         const ys = ny*cp - zr*spn, zn = zr*cp + ny*spn;
         let nl = xr*Lv[0] + ys*Lv[1] + zn*Lv[2]; if (nl < 0) nl = 0;
         let nh = xr*Hv[0] + ys*Hv[1] + zn*Hv[2];
-        if (nh > 0) { nh *= nh; nh *= nh; nh *= nh; nh *= nh; spc = nh*.55; }
+        if (nh > 0) { nh *= nh; nh *= nh; nh *= nh; nh *= nh; spc = nh*.38; }
         const rr = 1 - Math.abs(zn), rim = rr*rr*rr;
-        shade = .16 + .85*nl + 1.0*rim;
+        /* === START: SHADE CAP (no blown-out surfaces) === */
+shade = Math.min(1.05, .16 + .85*nl + .9*rim);
+/* === END: SHADE CAP === */
       }
       if (PUL[i]) { if (shade < .95) shade = .95; shade *= pf; }
       shade *= (.86 + z2/420)*stride;
 
-      const r = CR[i]*shade + spc*150, gg = CG[i]*shade + spc*150, b = CB[i]*shade + spc*150;
+      /* === START: COOL METALLIC GLINT === */
+const r = CR[i]*shade + spc*105, gg = CG[i]*shade + spc*135, b = CB[i]*shade + spc*175;
+/* === END: COOL METALLIC GLINT === */
       for (let yy = 0; yy < sz; yy++) {
         let idx = (pi + yy*cw)*4;
         for (let xx = 0; xx < sz; xx++, idx += 4) { d[idx] += r; d[idx+1] += gg; d[idx+2] += b; }
@@ -16082,7 +16089,14 @@ function openRewardTerms() {
     for (let i = 0, L = d.length; i < L; i += 4) {
       const r = d[i], g = d[i+1], b = d[i+2];
       let a = r > g ? r : g; if (b > a) a = b;
-      if (a) { const k = 255/a; d[i+3] = a; d[i] = r*k; d[i+1] = g*k; d[i+2] = b*k; }
+      /* === START: ANTI-WHITE GUARD === */
+if (a) {
+  const k = 255/a;
+  let R = r*k, G = g*k, B = b*k;
+  const lo = Math.min(R, G, B), ex = lo > 170 ? lo - 170 : 0;   /* too close to white → silver */
+  d[i+3] = a; d[i] = R - ex; d[i+1] = G - ex; d[i+2] = B - ex;
+}
+/* === END: ANTI-WHITE GUARD === */
     }
     ctx.putImageData(img, 0, 0);
     { /* contact shadow */

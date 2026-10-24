@@ -647,6 +647,8 @@
 .back-mascot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:73%;max-height:92%;object-fit:contain;z-index:3;pointer-events:none;filter:drop-shadow(0 14px 26px rgba(0,0,0,.45));}
 .back-mascot-btn{position:absolute;top:16px;right:16px;z-index:6;width:48px;height:48px;border-radius:50%;border:.6px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
 body.public-mode .back-mascot-btn{display:none !important;}
+.robot-pal-btn{position:absolute;top:88px;right:16px;z-index:6;width:48px;height:48px;border-radius:50%;border:.6px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
+body.public-mode .robot-pal-btn{display:none !important;}
 .mascot-limited{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:8px;padding:7px 8px 7px 14px;border-radius:20px;border:.6px solid rgba(232,204,122,.45);background:rgba(20,22,26,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#E8CC7A;font:700 9.5px -apple-system,'SF Pro Text',sans-serif;letter-spacing:.14em;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
 .mascot-limited.show{display:flex;}
 .mascot-limited:active{transform:translateX(-50%) scale(.96);opacity:.85;}
@@ -823,7 +825,7 @@ opacity:0;pointer-events:none;z-index:1;}
 .coach-pill:active{opacity:.7;}
 .coach-pill.hide{opacity:0;pointer-events:none;}
 .coach-pill svg{flex-shrink:0;}
-#cfm-clone-wrap .coach-pill,.share-blur-clone .coach-pill{display:none !important;}
+#cfm-clone-wrap .coach-pill,.share-blur-clone .coach-pill,#cfm-clone-wrap .robot-pal-btn,.share-blur-clone .robot-pal-btn{display:none !important;}
 /* === END: COACH PILL === */
 
 /* ── TOAST ── */
@@ -1389,8 +1391,8 @@ opacity:0;pointer-events:none;z-index:1;}
           <div class="card-top-line"></div>
           <button type="button" id="holdOpenBtn" class="hold-open" aria-label="Hold to open" style="position:absolute;left:170px;top:520.2px;transform:translate(-50%,-50%);z-index:6;border-radius:50%;width:72px;height:72px;min-width:0;padding:0;box-shadow:none;display:flex;align-items:center;justify-content:center;overflow:visible;background:transparent;border:none;">
             <span class="hold-open-fill" style="display:none;"></span>
-            <div id="holdQrRing" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:68px;height:68px;background:rgba(243,237,228,.3);border:.6px solid rgba(0,0,0,0.08);border-radius:50%;box-sizing:border-box;pointer-events:none;"></div>
-            <div id="holdQr" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;background:rgba(255,255,255,.3);padding:3px;box-sizing:border-box;border-radius:4px;pointer-events:none;"></div>
+            <div id="holdQrRing" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:68px;height:68px;background:rgba(243,237,228,.8);border:.6px solid rgba(0,0,0,0.08);border-radius:50%;box-sizing:border-box;pointer-events:none;"></div>
+            <div id="holdQr" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:44px;height:44px;background:rgba(255,255,255,.8);padding:3px;box-sizing:border-box;border-radius:4px;pointer-events:none;"></div>
             <span class="hold-open-label" style="display:none;align-items:center;justify-content:center;pointer-events:none;">
               <svg width="37" height="37" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/>
@@ -1419,6 +1421,7 @@ opacity:0;pointer-events:none;z-index:1;}
             TAP &amp; HOLD
           </button>
           <!-- === END: COACH PILL === -->
+          <button type="button" class="robot-pal-btn" aria-label="Choose robot colors" onclick="event.stopPropagation();haptic('light');openRobotPalPicker();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="#fff"/><circle cx="12" cy="7.5" r="1" fill="#fff"/><circle cx="15.5" cy="10" r="1" fill="#fff"/><path d="M12 21c-1.5 0-2-1-2-2s1-2 2-2h2a2 2 0 0 0 2-2"/></svg></button>
           <div class="glass-pill" id="glassPill">
             <div class="pill-avatar" id="pillAvatar" onclick="event.stopPropagation();haptic('light');triggerPhotoUpload();"></div>
             <div class="pill-name" id="pillName">E. N. TAMBIGA</div>
@@ -9766,7 +9769,7 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
     // remove the scene's ambient ::before glow context — it's decorative only
     // and can otherwise expand the measured bounding box during capture
     const styleOverride = document.createElement('style');
-        styleOverride.textContent = '.scene::before { display: none !important; } .coach-pill { display: none !important; } .hold-pulse { display: none !important; } .hold-hint { animation: none !important; transform: translateX(-50%) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(20,22,26,.85) !important; opacity: 1 !important; }';
+        styleOverride.textContent = '.scene::before { display: none !important; } .coach-pill, .robot-pal-btn { display: none !important; } .hold-pulse { display: none !important; } .hold-hint { animation: none !important; transform: translateX(-50%) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(20,22,26,.85) !important; opacity: 1 !important; }';
     sceneClone.appendChild(styleOverride);
 
     // Host: same size as .scene, off-screen, transparent — the clone keeps
@@ -14240,6 +14243,53 @@ function openMascotLore() {
     <div style="background:rgba(255,255,255,0.72);border-radius:16px;padding:15px 16px;${F}font-size:14px;line-height:1.65;color:#1c1c1e;">${auEsc(L.text)}</div>`);
 }
 loadMascot();
+/* === START: ROBOT COLORS === */
+const ROBOT_PALS = [
+  { id:'r1', name:'Steel Neon',      c:['#8094B3','#FF73B8','#73CCFF'] },
+  { id:'r2', name:'Gold Rush',       c:['#7A6E58','#E8CC7A','#FFB347'] },
+  { id:'r3', name:'Crimson Core',    c:['#7A6670','#E0524A','#FF8A5C'] },
+  { id:'r4', name:'Emerald Circuit', c:['#5E7D72','#3DDC97','#A8FFD8'] },
+  { id:'r5', name:'Violet Phantom',  c:['#70648F','#B07CFF','#FF6EC7'] },
+  { id:'r6', name:'Arctic Ice',      c:['#7C93A6','#A8D8EA','#7FE0FF'] },
+  { id:'r7', name:'Sunset Chrome',   c:['#8C7E86','#FF7A3D','#FFD166'] }
+];
+const ROBOT_PAL_KEY = 'robot-pal';
+let activeRobotPal = ROBOT_PALS[0].id;
+/* [0] body, [1] accent, [2] seam lines, [3] glow (lighter version ng [2]) */
+function robotPalRGB(id) {
+  const p = ROBOT_PALS.find(x => x.id === id) || ROBOT_PALS[0];
+  const rgb = p.c.map(h => [1,3,5].map(i => parseInt(h.substr(i,2),16)/255));
+  const glow = rgb[2].map(v => v + (1 - v)*.25);
+  return [rgb[0], rgb[1], rgb[2], glow];
+}
+function applyRobotPal() { if (window.__robotRecolor) window.__robotRecolor(robotPalRGB(activeRobotPal)); }
+async function loadRobotPal() {
+  if (document.body.classList.contains('public-mode')) return;
+  try { const r = await window.storage.get(ROBOT_PAL_KEY, false); if (r && r.value && ROBOT_PALS.some(x => x.id === r.value)) activeRobotPal = r.value; } catch (e) {}
+  applyRobotPal();
+}
+function robotPalCells() {
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  return ROBOT_PALS.map(p => {
+    const on = p.id === activeRobotPal;
+    const dots = p.c.map(h => `<i style="display:block;width:22px;height:22px;border-radius:50%;background:${h};box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);"></i>`).join('');
+    return `<button type="button" onclick="pickRobotPal('${p.id}')" aria-label="${auEsc(p.name)}" aria-pressed="${on}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 8px;border-radius:16px;cursor:pointer;background:#2F343A;border:${on ? '2.5px solid #1c1c1e' : '1px solid rgba(0,0,0,0.1)'};box-shadow:${on ? '0 0 0 2px #E8CC7A' : 'none'};-webkit-tap-highlight-color:transparent;"><span style="display:flex;gap:6px;">${dots}</span><span style="${F}font-size:11.5px;font-weight:600;color:#F3EDE4;">${auEsc(p.name)}</span></button>`;
+  }).join('');
+}
+async function pickRobotPal(id) {
+  const prev = activeRobotPal; activeRobotPal = id;
+  let ok = false;
+  try { ok = !!(await window.storage.set(ROBOT_PAL_KEY, id, false)); } catch (e) {}
+  if (!ok) { activeRobotPal = prev; haptic('error'); showToast("Couldn't save robot colors", 'error'); return; }
+  applyRobotPal(); haptic('success');
+  const g = document.getElementById('robotPalGrid'); if (g) g.innerHTML = robotPalCells();
+}
+function openRobotPalPicker() {
+  if (document.body.classList.contains('public-mode')) return;
+  auMakeSheet('robotPalOverlay', 'Robot Colors', `<div id="robotPalGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">${robotPalCells()}</div>`);
+}
+loadRobotPal();
+/* === END: ROBOT COLORS === */
 /* === END: MASCOTS === */
 /* === START: SUPPORT MESSAGE (iMessage / WhatsApp) === */
 function supportMsg(kind, channel) {
@@ -15440,7 +15490,7 @@ function openRewardTerms() {
 
   const G = 0, P = 1, S = 2, W = 3;
   /* === START: ROBOT PALETTE (no white / ivory) === */
-const PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
+let PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
 /* G = titanium steel · P = pink accent · S = blue seam · W = electric cyan glow */
 /* === END: ROBOT PALETTE === */
 
@@ -15687,11 +15737,13 @@ const PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
   const NX = new Float32Array(N), NY = new Float32Array(N), NZ = new Float32Array(N);
   const CR = new Float32Array(N), CG = new Float32Array(N), CB = new Float32Array(N);
   const HN = new Uint8Array(N), PUL = new Uint8Array(N), BN = new Uint8Array(N);
+  const COLI = new Uint8Array(N), AMPG = new Float32Array(N);
 
   const nFloor = 0, nLine = Math.round(N*.18), nSurf = N - nFloor - nLine;
   let p = 0;
   const colorize = (i, col, gain, amp) => {
     const c = PAL[col];
+    COLI[i] = col; AMPG[i] = amp*gain;
     CR[i] = amp*gain*c[0]; CG[i] = amp*gain*c[1]; CB[i] = amp*gain*c[2];
   };
 
@@ -15742,6 +15794,16 @@ const PAL = [[.50,.58,.70],[1.00,.45,.72],[.45,.80,1.00],[.30,.88,1.00]];
     CR[p] = amp; CG[p] = amp*mix(.62,.45,u); CB[p] = amp*mix(.55,.72,u);
   }
 
+  /* ---------- robot recolor ---------- */
+  window.__robotRecolor = function (pal) {
+    PAL = pal;
+    for (let i = 0; i < N; i++) {
+      const a = AMPG[i]; if (!a) continue;
+      const c = pal[COLI[i]];
+      CR[i] = a*c[0]; CG[i] = a*c[1]; CB[i] = a*c[2];
+    }
+  };
+  if (typeof applyRobotPal === 'function') applyRobotPal();
   /* ---------- renderer (transparent bg, z-buffered, lit dots) ---------- */
   let cw = 0, ch = 0, dpr = 1, img, d, sz = 1, sh = 0, zw = 0, zh = 0, zb;
   const PIX = new Int32Array(N), ZBI = new Int32Array(N), ZZ = new Float32Array(N);
@@ -16128,3 +16190,4 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
+

@@ -2001,6 +2001,7 @@ opacity:0;pointer-events:none;z-index:1;}
         <button type="button" role="tab" id="abSegMine" class="on" aria-selected="true" onclick="abSegSelect('mine')">My Contacts</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
         <button type="button" role="tab" id="abSegDiscover" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('files')">Files</button>
       </div>
       <!-- === END: CONTACTS SUB-TABS === -->
 <div class="ab-quickbar">
@@ -2189,6 +2190,7 @@ opacity:0;pointer-events:none;z-index:1;}
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
         <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Calendar</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('files')">Files</button>
       </div>
       <div class="up-toggle" style="margin-bottom:12px;">
         <button class="up-toggle-btn active" id="upViewListBtn" onclick="switchUpcomingView('list')">List</button>
@@ -2224,6 +2226,25 @@ opacity:0;pointer-events:none;z-index:1;}
         <div class="up-section-label" id="upCalSelectedLabel">—</div>
         <div id="upCalSelectedWrap"></div>
       </div>
+    </div>
+
+    <!-- FILES -->
+    <div class="os-pane" data-pane="files">
+      <div class="ab-pane-header">
+        <div style="display:flex;align-items:baseline;">
+          <div class="os-title" style="padding:6px 0 0 4px;">Files</div>
+          <span class="ab-count" id="flCount">(0)</span>
+        </div>
+        <button class="ab-add-btn" onclick="haptic('light');flAddChoice()">+ Add</button>
+      </div>
+      <div class="ab-seg" role="tablist" aria-label="Contacts sections">
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
+        <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
+        <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Files</button>
+      </div>
+      <input class="ab-search" id="flSearch" type="search" placeholder="Search files &amp; notes" aria-label="Search files and notes" oninput="flRender()">
+      <div id="flList"></div>
     </div>
 
     <!-- NOTE OS -->
@@ -3251,6 +3272,7 @@ opacity:0;pointer-events:none;z-index:1;}
       <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('mine')">My Contacts</button>
       <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
       <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Discover</button>
+      <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('files')">Files</button>
     </div>
     <div id="auBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 30px;"></div>
 <div id="dcAskDock" style="flex-shrink:0;"></div>
@@ -6220,6 +6242,7 @@ function fillConnectPreview() {
     if (scrubber) scrubber.style.display = tabId === 'address' ? 'flex' : 'none';
     if (tabId === 'address') filterAddressBook(document.getElementById('abSearchInput')?.value || '');
     if (tabId === 'tag') renderNotes();
+    if (tabId === 'files') flRender();
     if (tabId === 'upcoming') { loadMeetings(); rmRefreshBadge(); }
     currentOSPane = tabId;
     document.getElementById('osBackBtn')?.classList.toggle('os-back-home', tabId === 'home');
@@ -7092,6 +7115,7 @@ function osBackTapped() {
   function abSegSelect(which) {
     haptic('light');
     if (which === 'calendar') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab('upcoming'); return; }
+    if (which === 'files') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab('files'); return; }
     if (currentOSPane !== 'address') switchOSTab('address');
     if (which === 'discover') { openAuSearch(); return; }
     abSegSync('mine');
@@ -9669,6 +9693,7 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
   }
 
   function renderNotes() {
+    try { flRender(); } catch (e) {}
     const countEl = document.getElementById('noteCount');
     if (countEl) countEl.textContent = `(${NOTES.length})`;
     const wrap = document.getElementById('noteListWrap');
@@ -12568,7 +12593,7 @@ function copyPIAthId() {
 
   /* === START: ACCESSIBILITY LAYER === */
   (function a11yLayer() {
-    const DIALOG_SEL = '.share-overlay,.cf-overlay,.fb-overlay,.gs-overlay,#cardMenuOverlay,#cardFilterOverlay,#physOrderOverlay,#addContactScreen,#noteEditorScreen,#contactDetailScreen,#screenAccount,#personalInfoScreen,#identityScreen,#licenseScreen,#tosScreen,#screenOS,#artimeetOverlay,#requestMgrScreen,#storyOverlay,#confirmDialogOverlay,#sampleCardOverlay,#publicCta';
+    const DIALOG_SEL = '.share-overlay,.cf-overlay,.fb-overlay,.gs-overlay,#cardMenuOverlay,#cardFilterOverlay,#physOrderOverlay,#addContactScreen,#noteEditorScreen,#fileEditorScreen,#contactDetailScreen,#screenAccount,#personalInfoScreen,#identityScreen,#licenseScreen,#tosScreen,#screenOS,#artimeetOverlay,#requestMgrScreen,#storyOverlay,#confirmDialogOverlay,#sampleCardOverlay,#publicCta';
     const CLICKABLE = '[onclick]:not(button):not(input):not(select):not(textarea):not(a[href]),.ab-row,.ab-tag,.theme-dot-wrap,.au-nomatch-row,.id-checkbox';
     const ERR_SEL = '.ac-err,.cf-fe,.id-err-msg,.err-msg';
     /* === START: KEEP BANNER === */
@@ -12590,7 +12615,7 @@ function copyPIAthId() {
     };
     const CLOSERS = {
       artimeetOverlay:'closeArtimeet', requestMgrScreen:'closeRequestManager', storyOverlay:'closeStory',
-      addContactScreen:'requestCloseAddContact', noteEditorScreen:'requestCloseNoteEditor', contactDetailScreen:'requestCloseContactDetail',
+      addContactScreen:'requestCloseAddContact', noteEditorScreen:'requestCloseNoteEditor', fileEditorScreen:'flRequestClose', contactDetailScreen:'requestCloseContactDetail',
       confirmDialogOverlay:'cancelConfirmDialog',
       screenAccount:'closeAccountPage', personalInfoScreen:'closePersonalInfoScreen', identityScreen:'closeIdentityScreen',
       licenseScreen:'closeLicenseScreen', tosScreen:'closeTosScreen', screenOS:'exitOS',
@@ -17327,11 +17352,141 @@ function openProtocol() {
 _rbT = setTimeout(showRobotBubble, RB_FIRST_MS);
 /* === END: ROBOT BUBBLE JS === */
 
+/* === START: FILES TAB (local, versions, + Notes) === */
+var FL_KEY = 'files-v1', FL_DB = {}, FL_CUR = null, FL_MAX = 1572864, FL_VMAX = 30, FL_BUSY = false;
+(async function () {
+  try { const r = await window.storage.get(FL_KEY, false); if (r && r.value) FL_DB = JSON.parse(r.value) || {}; } catch (e) {}
+  flRender();
+})();
+async function flPersist() { try { return !!(await window.storage.set(FL_KEY, JSON.stringify(FL_DB), false)); } catch (e) { return false; } }
+function flLast(f) { return f.vs[f.vs.length - 1]; }
+function flName(s) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s ? (/\.(md|txt|json|csv|ya?ml)$/i.test(s) ? s : s + '.md') : ''; }
+function flKb(n) { return n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB'; }
+
+function flRender() {
+  const w = document.getElementById('flList'); if (!w) return;
+  const q = (document.getElementById('flSearch')?.value || '').trim().toLowerCase();
+  const names = Object.keys(FL_DB).filter(n => FL_DB[n].vs.length).sort((a, b) => flLast(FL_DB[b]).t - flLast(FL_DB[a]).t);
+  const shown = names.filter(n => n.toLowerCase().includes(q));
+  const notes = (typeof NOTES !== 'undefined' ? NOTES : []).filter(n => !q || ((n.title || '') + ' ' + (n.body || '')).toLowerCase().includes(q))
+    .sort((a, b) => ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) || (b.ts - a.ts));
+  const c = document.getElementById('flCount'); if (c) c.textContent = '(' + (shown.length + notes.length) + ')';
+  let h = '';
+  if (shown.length) {
+    h += '<div class="ab-section-header">Files</div><div class="ab-section-group">' + shown.map(n => {
+      const l = flLast(FL_DB[n]);
+      return `<div class="os-row" style="cursor:pointer;" data-n="${auEsc(n)}" onclick="flOpen(this.dataset.n)" onpointerdown="this.style.background='rgba(0,0,0,0.04)'" onpointerup="this.style.background=''" onpointerleave="this.style.background=''">
+        <div class="os-row-icon" style="background:#4A9DE0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="os-row-text"><div class="os-row-title">${auEsc(n)}</div><div class="os-row-sub">v${l.v} · ${flKb(l.size || l.text.length)}</div></div>
+        <span class="os-row-value" style="font-size:11px;">${noteRelativeDate(l.t)}</span></div>`;
+    }).join('') + '</div>';
+  }
+  if (notes.length) h += '<div class="ab-section-header">Notes</div><div class="ab-section-group">' + notes.map(noteRowHtml).join('') + '</div>';
+  if (!h) h = `<div class="up-empty-card">${q ? 'No match' : 'No files or notes yet. Tap + Add'}</div>`;
+  w.innerHTML = h;
+}
+
+function flAddChoice() {
+  const ico = p => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const rows = auInviteRow('#4A9DE0', ico('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'), 'Add file', "closeAuGenericModal('flAddOverlay');setTimeout(()=>flOpen(''),260);")
+             + auInviteRow('#E8CC7A', ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>').replace('#fff', '#1c1c1e'), 'New note', "closeAuGenericModal('flAddOverlay');setTimeout(()=>openNoteEditor(null),260);");
+  auMakeSheet('flAddOverlay', 'Add', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${rows}</div>`);
+}
+
+function flOpen(n) {
+  haptic('light');
+  const f = n && FL_DB[n], c = f && flLast(f);
+  FL_CUR = { name: n || '', text: c ? c.text : '' };
+  document.getElementById('fileEditorScreen')?.remove();
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const btn = "background:none;border:none;cursor:pointer;padding:6px 4px;font-size:15px;color:#1c1c1e;" + F;
+  const s = document.createElement('div');
+  s.id = 'fileEditorScreen';
+  s.style.cssText = 'position:fixed;inset:0;z-index:960;background:#ECE4D6;display:flex;flex-direction:column;animation:screenFadeIn .3s cubic-bezier(0.16,1,0.3,1) forwards;';
+  s.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:max(16px,env(safe-area-inset-top)) 16px 10px;flex-shrink:0;">
+      <button type="button" onclick="haptic('light');flRequestClose()" style="${btn}font-weight:500;">Cancel</button>
+      <button type="button" id="flVerBtn" onclick="flVersions()" style="${btn}font-weight:500;${f ? '' : 'display:none;'}">Versions</button>
+      <button type="button" id="flCommitBtn" onclick="flCommit()" style="${btn}font-weight:700;">Commit</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 20px max(40px,env(safe-area-inset-bottom));display:flex;flex-direction:column;">
+      <input id="flTitle" type="text" placeholder="Name your file" autocomplete="off" autocapitalize="off" spellcheck="false" style="background:none;border:none;outline:none;font-family:-apple-system,'SF Pro Display',sans-serif;font-size:22px;font-weight:700;color:#1c1c1e;padding:10px 0 6px;"/>
+      <div id="flMeta" style="${F}font-size:12px;color:rgba(60,60,67,0.45);margin-bottom:10px;"></div>
+      <textarea id="flText" placeholder="Paste or type here" spellcheck="false" style="flex:1;min-height:260px;background:none;border:none;outline:none;resize:none;font:16px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#1c1c1e;"></textarea>
+      ${f ? `<button type="button" onclick="flDelete()" style="margin-top:16px;width:100%;background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.22);border-radius:14px;padding:13px;${F}font-size:14px;font-weight:600;color:#FF453A;cursor:pointer;">Delete File</button>` : ''}
+    </div>`;
+  document.body.appendChild(s);
+  document.getElementById('flTitle').value = n || '';
+  document.getElementById('flText').value = FL_CUR.text;
+  document.getElementById('flMeta').textContent = f ? 'v' + c.v + ' · ' + flKb(c.size || c.text.length) : 'New file. Saves as .md if no extension';
+  if (!n) setTimeout(() => document.getElementById('flTitle')?.focus(), 250);
+}
+function flDirty() {
+  if (!FL_CUR || !document.getElementById('fileEditorScreen')) return false;
+  return (document.getElementById('flTitle').value || '').trim() !== FL_CUR.name || document.getElementById('flText').value !== FL_CUR.text;
+}
+function flCloseNow() {
+  const s = document.getElementById('fileEditorScreen'); if (!s) return;
+  s.style.animation = 'osShellOut .25s cubic-bezier(0.4,0,0.2,1) forwards';
+  setTimeout(() => s.remove(), 260);
+  FL_CUR = null;
+}
+function flRequestClose() { if (FL_BUSY) return; if (flDirty()) confirmDiscard(flCloseNow); else flCloseNow(); }
+
+async function flCommit() {
+  if (FL_BUSY) return;
+  const n = flName(document.getElementById('flTitle').value);
+  const t = document.getElementById('flText').value.replace(/\r\n?/g, '\n');
+  if (!n || !t.trim()) { haptic('error'); showToast('Add a name and some text', 'error'); return; }
+  const size = new Blob([t]).size;
+  if (size > FL_MAX) { haptic('error'); showToast('Max 1.5 MB per file', 'error'); return; }
+  const prev = JSON.stringify(FL_DB);
+  const f = FL_DB[n] || (FL_DB[n] = { next: 1, vs: [] });
+  if (f.vs.length && flLast(f).text === t) { showToast('No changes', 'neutral'); return; }
+  const v = f.next;
+  f.vs.push({ v: v, t: Date.now(), size: size, text: t }); f.next = v + 1;
+  while (f.vs.length > FL_VMAX) f.vs.shift();
+  FL_BUSY = true;
+  const ok = await flPersist();
+  FL_BUSY = false;
+  if (!ok) { FL_DB = JSON.parse(prev); haptic('error'); showToast("Couldn't save. Storage may be full", 'error'); return; }
+  haptic('success');
+  flCloseNow(); flRender();
+  showToast('Committed v' + v, 'success');
+}
+
+function flVersions() {
+  if (!FL_CUR || !FL_DB[FL_CUR.name]) return;
+  haptic('light');
+  const f = FL_DB[FL_CUR.name];
+  const rows = f.vs.map((x, i) => [x, i]).reverse().map(([x, i]) =>
+    `<div class="os-row" style="cursor:pointer;" onclick="flRestore(${i})"><div class="os-row-text"><div class="os-row-title">v${x.v}</div><div class="os-row-sub">${auEsc(new Date(x.t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }))}</div></div><span class="os-row-value">${flKb(x.size || x.text.length)}</span></div>`).join('');
+  auMakeSheet('flVerOverlay', 'Versions', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${rows}</div>
+    <div style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:12px;color:rgba(60,60,67,0.5);margin:10px 4px 0;">Tap a version to load it into the editor, then Commit to save it as a new version.</div>`);
+}
+function flRestore(i) {
+  const f = FL_CUR && FL_DB[FL_CUR.name], x = f && f.vs[i]; if (!x) return;
+  document.getElementById('flText').value = x.text;
+  closeAuGenericModal('flVerOverlay');
+  haptic('success'); showToast('Loaded v' + x.v + '. Commit to keep it', 'neutral');
+}
+
+function flDelete() {
+  const n = FL_CUR && FL_CUR.name; if (!n || !FL_DB[n]) return;
+  haptic('medium');
+  confirmDialog({ title: 'Delete "' + n + '"?', message: 'This file and all its versions will be removed from this device.', confirmLabel: 'Delete', danger: true, onConfirm: async () => {
+    const prev = JSON.stringify(FL_DB);
+    delete FL_DB[n];
+    if (!(await flPersist())) { FL_DB = JSON.parse(prev); haptic('error'); showToast("Couldn't delete file", 'error'); return; }
+    haptic('success'); flCloseNow(); flRender(); showToast('File deleted', 'neutral');
+  } });
+}
+/* === END: FILES TAB === */
+
 /* === START: READY FLAG === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */
 </script>
 </body>
 </html>
-
 

@@ -2950,6 +2950,13 @@ opacity:0;pointer-events:none;z-index:1;}
         <div class="os-row-text"><div class="os-row-title">How to Use Your Card</div><div class="os-row-sub">Tap &amp; hold, flip, mascots, share</div></div>
         <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
+      <!-- === START: PROTOCOL ROW === -->
+      <div class="os-row" onclick="haptic('light');pfOpen()" style="cursor:pointer;">
+        <div class="os-row-icon" style="background:#2F343A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#E8CC7A"/><circle cx="15" cy="10" r="1" fill="#E8CC7A"/><path d="M8.5 15h7"/></svg></div>
+        <div class="os-row-text"><div class="os-row-title">Executive Protocol</div><div class="os-row-sub">Start your AI with the full protocol</div></div>
+        <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <!-- === END: PROTOCOL ROW === -->
       <div class="os-row" onclick="haptic('light');orderPhysicalCard()" style="cursor:pointer;">
         <div class="os-row-icon" style="background:#1c1c1e;"><svg width="19" height="19" viewBox="0 4 24 16" fill="none" stroke="#E8CC7A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9.82a6 6 0 0 1 0 4.36"/><path d="M9.2 8a9 9 0 0 1 0 8"/><path d="M12.4 6.2a12 12 0 0 1 0 11.6"/></svg></div>
         <div class="os-row-text"><div class="os-row-title">CardKit</div><div class="os-row-sub">Order your physical NFC card: ring, QR &amp; your mascot</div></div>
@@ -17197,6 +17204,95 @@ function rigAnimate(t) {
 })();
 /* === END: ARTIBOT (Three.js) === */
 
+/* === START: PROTOCOL (merged from ArtiBytte Executive Protocol) === */
+const PF_SRC = '/assets/protocol.md';
+const PF_H = 'https:' + String.fromCharCode(47, 47);
+const PF_AIS = [
+  { n:'DeepSeek', u:PF_H + 'chat.deepseek.com/' },
+  { n:'ChatGPT',  u:PF_H + 'chatgpt.com/' },
+  { n:'Claude',   u:PF_H + 'claude.ai/new' },
+  { n:'Gemini',   u:PF_H + 'gemini.google.com/app' },
+  { n:'Grok',     u:PF_H + 'grok.com/' }
+];
+const PF_PARTS = ['System prompt', 'Protocol core', 'Configuration record', 'Operating record'];
+let pfText = '';
+
+/* configuration record, built from Personal Information */
+function pfConfig() {
+  const P = PERSONAL_INFO, o = ownerInfo();
+  const v = (x, d) => (String(x || '').trim() || d || '[not set]');
+  return [
+    'CONFIGURATION RECORD',
+    '',
+    'Legal name: ' + v(P.company || o.company),
+    'Entity type: ' + v('', 'other organization'),
+    'Jurisdiction: ' + v(P.country, 'Philippines'),
+    'Reporting currency: ' + v('', 'PHP'),
+    'Industry: ' + v(P.industry),
+    'Mission: ' + v(P.aiBio),
+    'Operator: ' + v(piName() || o.name) + (o.pos ? ' (' + o.pos + ')' : '')
+  ].join('\n');
+}
+
+async function pfLoad() {
+  if (pfText) return pfText;
+  const r = await fetch(PF_SRC, { cache: 'no-cache' });
+  if (!r.ok) throw new Error('Protocol file not found');
+  let t = (await r.text()).trim();
+  const cfg = pfConfig();
+  t = t.indexOf('{{CONFIG}}') >= 0 ? t.replace('{{CONFIG}}', cfg) : t + '\n\n---\n\n' + cfg;
+  pfText = t + '\n\n---\n\nProtocol, activate.';
+  return pfText;
+}
+
+function pfOpen() {
+  haptic('medium');
+  pfText = '';
+  auMakeSheet('pfOverlay', 'Protocol', '<div id="pfBody"></div>');
+  const b = document.getElementById('pfBody');
+  if (b) b.innerHTML = '<div style="padding:30px 0;text-align:center;font-family:-apple-system,\'SF Pro Text\',sans-serif;font-size:13.5px;color:rgba(60,60,67,0.5);">Preparing your protocol…</div>';
+  pfLoad().then(pfPaint).catch(e => {
+    const bb = document.getElementById('pfBody');
+    if (bb) bb.innerHTML = '<div style="padding:24px 4px;text-align:center;font-family:-apple-system,\'SF Pro Text\',sans-serif;font-size:13.5px;color:#FF453A;">' + auEsc(e.message || 'Could not load the protocol') + '</div>';
+  });
+}
+
+function pfPaint() {
+  const b = document.getElementById('pfBody'); if (!b) return;
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const kbs = (new Blob([pfText]).size / 1024).toFixed(1) + ' KB';
+  const rows = PF_PARTS.map((p, i) => `<div class="os-row"><div class="os-row-icon" style="background:#1c1c1e;"><span style="${F}font-size:13px;font-weight:700;color:#E8CC7A;">${i + 1}</span></div><div class="os-row-text"><div class="os-row-title">${p}</div></div></div>`).join('');
+  const chips = PF_AIS.slice(1).map((a, i) => `<button type="button" onclick="pfStart(${i + 1})" style="padding:10px 16px;border-radius:20px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.72);color:#1c1c1e;${F}font-size:13px;font-weight:600;cursor:pointer;">${a.n}</button>`).join('');
+  const cmd = t => `<button type="button" onclick="pfCmd(this.dataset.t)" data-t="${auEsc(t)}" style="padding:9px 14px;border-radius:12px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.9);color:#1c1c1e;${F}font-size:12.5px;font-weight:600;cursor:pointer;">${auEsc(t)}</button>`;
+  b.innerHTML = `
+    <div style="${F}font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-6px 2px 14px;">One file with everything in order. Tap Start, paste into the chat, and send.</div>
+    <div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:14px;">${rows}</div>
+    <button type="button" onclick="pfStart(0)" style="width:100%;padding:15px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;${F}font-size:15px;font-weight:700;cursor:pointer;margin-bottom:6px;">Start with DeepSeek</button>
+    <div style="${F}font-size:11.5px;color:rgba(60,60,67,0.5);text-align:center;margin-bottom:14px;">Copies the protocol (${kbs}), then opens DeepSeek. Paste and send.</div>
+    <div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:0 2px 8px;">Or use another AI</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">${chips}</div>
+    <div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:0 2px 8px;">When you are done, send</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">${cmd('Update the operating record.')}${cmd('Produce session snapshot.')}</div>
+    <details style="margin-bottom:6px;"><summary style="${F}font-size:13px;font-weight:600;color:#1c1c1e;cursor:pointer;min-height:36px;">Preview</summary><pre id="pfPre" style="max-height:40vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;background:rgba(255,255,255,0.72);border-radius:12px;padding:12px;margin:8px 0 0;user-select:text;-webkit-user-select:text;"></pre></details>`;
+  const pre = document.getElementById('pfPre'); if (pre) pre.textContent = pfText;
+}
+
+function pfStart(i) {
+  if (!pfText) { haptic('error'); return; }
+  const a = PF_AIS[i] || PF_AIS[0];
+  haptic('success');
+  try { navigator.clipboard.writeText(pfText).catch(() => fallbackCopy(pfText)); } catch (e) { fallbackCopy(pfText); }
+  if (!window.open(a.u, '_blank', 'noopener')) location.href = a.u;
+  showToast('Protocol copied. Paste it in ' + a.n + ' and send.', 'success');
+}
+
+function pfCmd(t) {
+  haptic('light');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => showToast('Copied', 'success')).catch(() => fallbackCopy(t));
+  else fallbackCopy(t);
+}
+/* === END: PROTOCOL === */
+
 /* === START: ROBOT BUBBLE JS === */
 const PROTOCOL_URL = 'https://protocol.artibytte.com';
 const RB_FIRST_MS = 3500, RB_SHOW_MS = 9000, RB_GAP_MS = 40000, RB_KEY = 'ac-rb-dismissed';
@@ -17225,7 +17321,7 @@ function openProtocol() {
   haptic('medium');
   clearTimeout(_rbT);
   document.getElementById('robotBubble')?.classList.remove('show');
-  if (!window.open(PROTOCOL_URL, '_blank', 'noopener')) location.href = PROTOCOL_URL;
+  pfOpen();
   _rbT = setTimeout(showRobotBubble, RB_GAP_MS);
 }
 _rbT = setTimeout(showRobotBubble, RB_FIRST_MS);
@@ -17237,6 +17333,5 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
-
 
 

@@ -16580,7 +16580,8 @@ if (a) {
 
   /* ── robot root ── */
   const robot = new T.Group(); scene.add(robot);
-  const body = new T.Group(); body.position.y = -3.98; robot.add(body);
+  const root = new T.Group(); root.rotation.order = 'ZYX'; root.position.y = -3.98; robot.add(root);
+const body = new T.Group(); root.add(body);
 
   /* torso */
   const core = cyl(1, 1, 1.9, blackM, 48); core.scale.set(0.5, 1, 0.28); core.position.set(0, 5.65, -0.02); body.add(core);
@@ -16837,7 +16838,225 @@ if (a) {
     pose();
   }
 
-  /* ── drag to rotate + auto-face front ── */
+  /* === START: PARTICLE-ROBOT ACTION SYSTEM PORT === */
+const RK = 0.045, FEET = -3.98;               /* RK = particle units -> ARTIBOT units */
+const RS = { still: false };
+const ACT_LIM = { 1:[-.8,.8], 3:[-2.8,.25], 5:[-2.8,.25], 7:[-2.3,.9], 9:[-2.3,.9], 8:[-.15,2.6], 10:[-.15,2.6] };
+[headPivot, arms[1].ua, arms[1].fa, arms[-1].ua, arms[-1].fa, legs[1].hip, legs[1].knee, legs[-1].hip, legs[-1].knee]
+  .forEach(o => { o.rotation.order = 'ZYX'; });
+const BONE = { 1: headPivot, 2: arms[1].ua, 3: arms[1].fa, 4: arms[-1].ua, 5: arms[-1].fa,
+               7: legs[1].hip, 8: legs[1].knee, 9: legs[-1].hip, 10: legs[-1].knee };
+const REST = { 2:[0,0,.2], 4:[0,0,-.2], 3:[0,0,-.05], 5:[0,0,.05] };   /* rest pose ng ARTIBOT */
+function setBone(b, rx, ry, rz) {
+  const lm = ACT_LIM[b]; if (lm) rx = rx < lm[0] ? lm[0] : rx > lm[1] ? lm[1] : rx;
+  const r = REST[b]; if (r) { rx += r[0]; ry += r[1]; rz += r[2]; }
+  BONE[b].rotation.set(rx, ry, rz);
+}
+function footFix() {
+  [1, -1].forEach(s => { const L = legs[s]; L.ank.rotation.x = -(L.hip.rotation.x + L.knee.rotation.x); });
+}
+
+/* stool (bone 11) */
+const stool = new T.Group(); stool.visible = false; robot.add(stool);
+{
+  const seat = cyl(.765, .765, .18, gun, 48); seat.position.y = 1.935; stool.add(seat);
+  const pole = cyl(.117, .144, 1.71, gunDark, 24); pole.position.y = .99; stool.add(pole);
+  const base = cyl(.675, .675, .081, white, 48); base.position.y = .0765; stool.add(base);
+  const sr = ring(.79, .012, cyanM, 'y'); sr.position.y = 2.04; stool.add(sr);
+}
+/* zzz (bone 12) */
+const zTex = canvasTex(64, 64, (x, w, h) => {
+  x.font = '700 52px Helvetica,Arial,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = '#5af0ff'; x.shadowColor = '#19e6ff'; x.shadowBlur = 10; x.fillText('Z', w / 2, h / 2 + 3);
+});
+const zzz = new T.Group(); zzz.visible = false; robot.add(zzz);
+const zMats = [];
+[[16,200,3],[22,209,4.5],[29,219,6]].forEach(([zx, zy, zs]) => {
+  const m = new T.SpriteMaterial({ map: zTex, transparent: true, depthWrite: false, toneMapped: false });
+  const sp = new T.Sprite(m); const s = zs * RK * 2.2;
+  sp.scale.set(s, s, 1); sp.position.set(zx * RK, zy * RK, 0); zzz.add(sp); zMats.push(m);
+});
+
+const rdr = (() => {
+  let s = (Math.random() * 4294967296) >>> 0;
+  return () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+})();
+const ACT_W = [3,2.5,3,3,3,3,2,1.2,2,2.5,2.2], ACT_T = ACT_W.reduce((s, v) => s + v, 0);
+const ACT_D = [4.5,3.8,7,7,8,0,8,14,0,5,0];   /* wave,head,dance,sing,walk,jump,sit,nap,spin,look,flip */
+let seg = null, lastAct = -1, FX = 0, FZ = 0, FY = 0, ZM = 1;
+const pvv = new T.Vector3();
+const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const win = (a, b, f, x) => ss(a, a + f, x) * (1 - ss(b - f, b, x));
+
+function nextSeg(t0) {
+  let a;
+  do { let r = rdr() * ACT_T; for (a = 0; a < ACT_W.length - 1 && r > ACT_W[a]; a++) r -= ACT_W[a]; } while (a === lastAct);
+  lastAct = a;
+  const st = Math.min(3, rdr() * 4 | 0), tp = Math.min(4, rdr() * 5 | 0), am = Math.min(4, rdr() * 5 | 0);
+  const ln = Math.min(4, rdr() * 5 | 0), sd = rdr() < .5 ? -1 : 1;
+  const tf = .7 + .15 * tp;
+  let Dd;
+  if (a === 5) Dd = 1.8 + (st + 1) * 1.6 / tf + .5 * ln;
+  else if (a === 10) Dd = 2.4 + (st === 3 ? 2 : 1) * ((1 + (st === 1 ? .35 : 0)) / tf + .5) + .5 * ln;
+  else if (a === 8) Dd = 1.6 + (st === 2 ? 2 : 1) * 2.4 / tf + .5 * ln;
+  else Dd = ACT_D[a] * (.75 + .125 * ln) + .3 + rdr() * .9;
+  return { a, st, tp, am, sd, ln, tf, af: .6 + .2 * am, t0, D: Dd };
+}
+
+function poseStand() {
+  FX = FZ = FY = 0; ZM = 1;
+  root.rotation.set(0, 0, 0); root.position.set(0, FEET, 0); robot.scale.setScalar(1);
+  setBone(1, 0, 0, 0);
+  setBone(2, 0, 0, .06); setBone(3, -.1, 0, 0);
+  setBone(4, 0, 0, -.06); setBone(5, -.1, 0, 0);
+  setBone(7, 0, 0, 0); setBone(8, 0, 0, 0); setBone(9, 0, 0, 0); setBone(10, 0, 0, 0);
+  stool.visible = false; zzz.visible = false; footFix();
+}
+
+function rigAnimate(t) {
+  if (RS.still) { poseStand(); return; }
+  if (!seg || t > seg.t0 + seg.D + 20) seg = nextSeg(t);
+  while (t >= seg.t0 + seg.D) seg = nextSeg(seg.t0 + seg.D);
+  const AC = seg.a, st = seg.st, sd = seg.sd, tf = seg.tf, af = seg.af, Dd = seg.D, u = t - seg.t0;
+  const w = win(0, Dd, Math.min(.6, Dd * .18), u), q = (a, b) => ss(a * Dd, b * Dd, u);
+  let wR = 0, wL = 0, wvf = 1, wam = .45 * af, nod = 0, shk = 0, tilt = 0, look = 0, lookX = 0, jolt = 0;
+  let sit = 0, lap = 0, sl = 0, droop = 0, stl = 0, zv = 0, kk = 0;
+  let f1 = 0, f2 = 0, wk = 0, hd = 0, hv = 0, dist = 0, turn = 0, spread = 0, hop = 0, bsw = 0, bz = 0;
+  let dw = 0, sync = false, dTw = .3, dLeg = 1, dBnc = 2.2, sg = 0, hb2 = 1, mR = 0, mL = 0, oR = 0, oL = 0;
+  let ju = 0, air = 0, cr = 0;
+  let lay = 0, rollA = 0, flA = 0, flOn = false, lift = 0, tuck = 0, armUp = 0, hug = 0;
+  const bt = t * 7.5 * tf, sb = Math.sin(bt);
+
+  if (AC === 0) {
+    wR = (st === 3 || sd > 0) ? w : 0; wL = (st === 3 || sd < 0) ? w : 0;
+    if (st === 1) { wvf = 1.5; wam = .55 * af; }
+    if (st === 2) tilt = w * .12 * Math.sin(t * 2 * tf);
+  } else if (AC === 1) {
+    if (st === 0) nod = w;
+    else if (st === 1) shk = w;
+    else if (st === 2) { const k = q(.5, .56); nod = w * (1 - k); shk = w * k; }
+    else tilt = w * .3 * af * Math.sin(t * 2.4 * tf);
+  } else if (AC === 2) {
+    dw = w; sync = st === 1;
+    if (st === 2) { dTw = .6; dLeg = .3; }
+    if (st === 3) dBnc = 3.6;
+  } else if (AC === 3) {
+    sg = w;
+    if (st === 2) mR = mL = w;
+    else if (sd > 0) { mR = w; if (st < 3) oL = w * (st === 1 ? 1.3 : 1); }
+    else { mL = w; if (st < 3) oR = w * (st === 1 ? 1.3 : 1); }
+    if (st === 1) hb2 = 1.8;
+  } else if (AC === 4) {
+    hv = [0, .7, 1.4, 2.1][st] * sd;
+    f1 = q(.1, .42); f2 = q(.52, .84);
+    wk = (win(.1 * Dd, .42 * Dd, .5, u) + win(.52 * Dd, .84 * Dd, .5, u)) * (.6 + .4 * af);
+    turn = Math.PI * (q(.42, .52) + q(.84, .94));
+    hd = hv * (q(0, .08) - q(.94, 1));
+    dist = 12 + 6 * seg.am;
+  } else if (AC === 5) {
+    const n = st + 1, per = 1.6 / tf, jw = ss(.3, .9, u) * (1 - ss(Dd - .8, Dd - .2, u));
+    ju = Math.min(n, Math.max(0, (u - .9) / per));
+    const sn = Math.abs(Math.sin(Math.PI * ju));
+    air = sn * jw * (.6 + .4 * af) * (st === 1 ? .55 : 1);
+    cr = Math.pow(1 - sn, 3) * jw;
+    if (st === 3) turn = sd * 2 * Math.PI * ju;
+  } else if (AC === 6) {
+    sit = q(.14, .28) - q(.78, .9); stl = q(.06, .14) - q(.9, .97);
+    lap = st === 2 ? 0 : sit;
+    if (st === 2) { const ww = win(.3 * Dd, .76 * Dd, .5, u); wR = sd > 0 ? ww : 0; wL = sd < 0 ? ww : 0; }
+    else if (st === 1) nod = sit * .5;
+    else if (st === 3) kk = sit * (.5 + .4 * af);
+    else look = sit * .3 * Math.sin(t * .9 * tf);
+  } else if (AC === 7) {
+    sl = q(0, .18) - q(.8, .86);
+    if (st < 3) { sit = q(.2, .3) - q(.84, .92); stl = q(.1, .2) - q(.92, .98); lap = sit; droop = sit * (st === 1 ? .5 : .35); }
+    else { droop = sl * .3; bz = sl * .03 * Math.sin(t * 1.1 * tf); }
+    zv = q(.32, .36) - q(.78, .82);
+    if (st === 2) { jolt = Math.exp(-Math.pow((u / Dd - .55) * 24, 2)); hop = jolt * 2; }
+  } else if (AC === 8) {
+    turn = sd * 2 * Math.PI * (st === 2 ? 2 : 1) * q(.12, .88);
+    spread = w * [.15, 1, 1, 1.8][st];
+    if (st === 3) hop = w * 2 * Math.abs(Math.sin(t * 8 * tf));
+  } else if (AC === 10) {
+    const nf = st === 3 ? 2 : 1, tn = st === 1 ? 2 : 1, Tf = (1 + (st === 1 ? .35 : 0)) / tf, T2 = Tf + .5;
+    const jw = ss(.3, .9, u) * (1 - ss(Dd - .8, Dd - .2, u));
+    const r = Math.min(nf, Math.max(0, (u - .9) / T2)), k = Math.min(nf - 1, Math.floor(r));
+    const s = Math.min(1, Math.max(0, (r - k) * T2 / Tf));
+    flOn = true; flA = -2 * Math.PI * tn * (k + ss(0, 1, s));
+    lift = (58 + (st === 1 ? 30 : 0)) * (.75 + .25 * af) * 4 * s * (1 - s);
+    cr = Math.pow(1 - Math.abs(Math.sin(Math.PI * s)), 3) * jw;
+    tuck = ss(.05, .3, s) * (1 - ss(.65, .9, s));
+    armUp = ss(0, .12, s) * (1 - ss(.18, .35, s));
+    if (st === 2) spread = tuck * 1.1; else hug = tuck;
+  } else if (AC === 11) {
+    lay = q(.08, .2) - q(.8, .92);
+    const pg = Math.min(1, Math.max(0, (u / Dd - .22) / .56));
+    if (st === 0) rollA = sd * 2 * Math.PI * 2 * pg * pg * (3 - 2 * pg);
+    else if (st === 1) rollA = sd * 2 * Math.PI * 3 * pg * pg * (3 - 2 * pg);
+    else if (st === 2) rollA = sd * 2.4 * Math.sin(4 * Math.PI * pg);
+    else rollA = sd * 2 * Math.PI * (q(.22, .5) - q(.52, .8));
+    lift = lay * Math.sqrt(Math.pow(38 * Math.sin(rollA), 2) + Math.pow(19 * Math.cos(rollA), 2));
+  } else {
+    look = w * af * (.5 * Math.sin(t * 1.3 * tf) + .35 * Math.sin(t * 2.9 * tf));
+    tilt = w * .12 * Math.sin(t * 1.7 * tf + 1) * (st === 1 ? 1.6 : 1);
+    if (st === 2) lookX = w * .18 * af * Math.sin(t * 1.6 * tf);
+    if (st === 3) { tilt = w * .25 * sd; look = w * .5 * sd; bz = w * .06 * sd; }
+    else bsw = w * .15 * Math.sin(t * .8 * tf);
+  }
+
+  const wv = t * 6.2831853 * 2.2 * tf * wvf;
+  const ph = (f1 + f2) * dist * .75, sw = Math.sin(ph), cph = Math.cos(ph);
+  const px = dist * (f1 - f2) * Math.sin(hv), pz = dist * (f1 - f2) * Math.cos(hv);
+  FX = px * .8; FZ = pz * .8; ZM = 1 - .5 * lay; FY = .5 * (lift + 22 * air);
+  const dwa = dw * (.6 + .4 * af), pL = sync ? sb : -sb, altP = sync ? 0 : Math.PI;
+  const lR = dw * dLeg * Math.max(0, sb), lL = dw * dLeg * Math.max(0, -sb);
+  const kt = t * 5 * tf, kR = kk * Math.max(0, Math.sin(kt)), kL = kk * Math.max(0, -Math.sin(kt));
+
+  /* root (bone 6) */
+  root.rotation.set(flA - 1.5707963 * lay,
+    hd + turn + bsw + dTw * dw * (.6 + .4 * af) * Math.sin(bt * .5),
+    .05 * dw * sb + bz + sg * .04 * af * Math.sin(t * 1.6 * tf) + rollA);
+  let tx = px, ty = 0, tz = pz + 98 * lay;
+  if (flOn) { pvv.set(0, 100, 0).applyEuler(root.rotation); tx -= pvv.x; ty += 100 - pvv.y; tz -= pvv.z; }
+  ty += -48.3 * (1 - Math.cos(1.5 * sit)) - 3.5 * Math.abs(sw) * wk - 87 * (1 - Math.cos(.5 * cr))
+      + dBnc * Math.abs(sb) * dw * (.6 + .4 * af) + 22 * air + hop + lift;
+  root.position.set((tx - FX) * RK, FEET + (ty - FY) * RK, (tz - FZ) * RK);
+  robot.scale.setScalar(ZM);
+
+  setBone(1, .03 * Math.sin(t * .7) + nod * (.1 + .26 * af * Math.sin(t * 9.4 * tf)) + dw * .1 * Math.abs(sb)
+    - sg * (.12 * hb2 + .05 * Math.sin(t * 8)) + sl * (.14 + .1 * Math.sin(t * 1.8 * tf)) + droop + lookX - jolt * .5 + .3 * tuck,
+    .08 * Math.sin(t * .5) + shk * .5 * af * Math.sin(t * 7.5 * tf) + dw * .3 * Math.sin(bt * .5) + sg * .25 * Math.sin(t * 1.6 * tf) + look,
+    .05 * (wR - wL) + dw * .12 * sb + sg * .1 * Math.sin(t * 1.6 * tf + 1) + tilt + (AC === 7 ? lap * .12 * sd : 0));
+
+  setBone(2, .35 * sw * wk - .9 * mR - .2 * lap - 1.1 * hug, -.55 * mR,
+    .05 + .02 * Math.sin(t * 1.1) + wR * 1.7 + dwa * (1.1 + .5 * sb) + oR * (1 + .15 * Math.sin(t * 1.6)) + 2 * air + 1.3 * spread + 3 * lay + 2.4 * armUp);
+  setBone(3, -.25 * (1 - wR) - 1.5 * mR - .8 * lap - 1.3 * hug, 0,
+    wR * (1.45 + wam * Math.sin(wv)) + dwa * (.7 + .5 * Math.sin(bt + 1)) + .4 * air);
+  setBone(4, -.35 * sw * wk - .9 * mL - .2 * lap - 1.1 * hug, .55 * mL,
+    -(.05 + .02 * Math.sin(t * 1.3 + 1) + wL * 1.7 + dwa * (1.1 + .5 * pL) + oL * (1 + .15 * Math.sin(t * 1.6)) + 2 * air + 1.3 * spread + 3 * lay + 2.4 * armUp));
+  setBone(5, -.25 * (1 - wL) - 1.5 * mL - .8 * lap - 1.3 * hug, 0,
+    -(wL * (1.45 + wam * Math.sin(wv)) + dwa * (.7 + .5 * Math.sin(bt + 1 + altP)) + .4 * air));
+
+  setBone(7, -.4 * sw * wk - 1.5 * sit - .5 * cr - .5 * lR - .3 * air - 1.2 * tuck, 0, 0);
+  setBone(8, .7 * Math.max(0, cph) * wk + 1.5 * sit + cr + .9 * lR + .6 * air - kR + 1.6 * tuck, 0, 0);
+  setBone(9, .4 * sw * wk - 1.5 * sit - .5 * cr - .5 * lL - .3 * air - 1.2 * tuck, 0, 0);
+  setBone(10, .7 * Math.max(0, -cph) * wk + 1.5 * sit + cr + .9 * lL + .6 * air - kL + 1.6 * tuck, 0, 0);
+  footFix();
+
+  if (stl > 0) {
+    stool.visible = true;
+    stool.position.set(-FX * RK, FEET + (-160 * (1 - Math.min(1, stl)) - FY) * RK, -FZ * RK);
+  } else stool.visible = false;
+  if (zv > 0) {
+    zzz.visible = true;
+    zzz.position.set((tx - FX) * RK, FEET + (ty + 5 * Math.sin(t * 1.7) - FY) * RK, (tz - FZ) * RK);
+    zMats.forEach(m => { m.opacity = zv; });
+  } else zzz.visible = false;
+}
+/* === END: PARTICLE-ROBOT ACTION SYSTEM PORT === */
+
+/* ── drag to rotate + auto-face front ── */
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let drag = false, manYaw = 0, manVel = 0, autoW = 1, holdUntil = 0, dStart = null, lastX = 0, lastT = 0, dragEnd = 0;
   ff.style.touchAction = 'pan-y';
@@ -16886,7 +17105,7 @@ if (a) {
     const sx = (_p.x * 0.5 + 0.5) * W, sy = (-_p.y * 0.5 + 0.5) * H;
     _o.copy(_w); _o.x += 1; _o.project(camera);
     const ppu = Math.abs(_o.x - _p.x) * 0.5 * W;            /* px bawat 1 unit sa lalim ng chest */
-    const k = (QR_UNITS * ppu) / 72;
+    const k = (QR_UNITS * ppu * robot.scale.x) / 72;
     _n.set(0, 0, 1).transformDirection(body.matrixWorld);
     _c.copy(camera.position).sub(_w).normalize();
     const zn = _n.dot(_c);
@@ -16908,11 +17127,11 @@ if (a) {
 
   /* ── share / preview snapshot: idle pose, nakaharap ── */
   window.__robotStill = function () {
-    const sy = robot.rotation.y, sw = walkW, sn = nodW;
-    robot.rotation.y = 0; walkW = 0; nodW = 0; pose();
+    const sy = robot.rotation.y, sv = RS.still;
+    robot.rotation.y = 0; RS.still = true; rigAnimate(0);
     robot.updateMatrixWorld(true);
     renderer.render(scene, camera);
-    robot.rotation.y = sy; walkW = sw; nodW = sn; pose();
+    robot.rotation.y = sy; RS.still = sv;
   };
 
   /* ── loop ── */
@@ -16937,7 +17156,7 @@ if (a) {
     autoW += (wantAuto - autoW) * (1 - Math.exp(-dt * (wantAuto ? 1.2 : 8)));
     robot.rotation.y = manYaw + (reduce ? 0 : Math.sin(tAcc * 0.5) * 0.28 * autoW);
 
-    animate(dt);
+    rigAnimate(tAcc);
 
     /* fade eye glow kapag nakatalikod */
     head.getWorldQuaternion(qq); fwd.set(0, 0, 1).applyQuaternion(qq);

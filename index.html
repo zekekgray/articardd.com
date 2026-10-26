@@ -16678,7 +16678,7 @@ const body = new T.Group(); root.add(body);
   labelM.position.set(0, 6.22, 0.325); labelM.visible = false; body.add(labelM);
 
   const pelvis = extrudePoly([
-    [-0.54, 4.95], [0.54, 4.95], [0.5, 4.62], [0.2, 4.08], [0, 3.98], [-0.2, 4.08], [-0.5, 4.62]
+    [-0.6, 4.95], [0.6, 4.95], [0.64, 4.72], [0.56, 4.42], [0.24, 4.06], [0, 3.98], [-0.24, 4.06], [-0.56, 4.42], [-0.64, 4.72]
   ], 0.38, 0.07, 0.06, white);
   body.add(pelvis);
   [-1, 1].forEach(s => { const sc = sphere(0.022, blackM, 1, 1, 1, 12); sc.position.set(s * 0.43, 4.72, 0.27); body.add(sc); });
@@ -16760,13 +16760,15 @@ const body = new T.Group(); root.add(body);
     const wr = ring(0.108, 0.012, cyanM, 'y'); wr.position.y = -0.075; h.add(wr);
     const palm = rbox(0.3, 0.34, 0.1, 0.06, 0.025, white); palm.position.y = -0.26; h.add(palm);
     const lens = [0.17, 0.15, 0.12], scale = [0.95, 1.0, 0.92, 0.78], curl = [0.18, 0.45, 0.45];
+    const FJ = [], FG = [], TJ = [];
     for (let i = 0; i < 4; i++) {
       const fi = i;
       const g = new T.Group(); g.position.set(s * (0.108 - i * 0.072), -0.43, 0); g.rotation.z = s * (1.5 - i) * 0.06; h.add(g);
+      FG.push({ g: g, z0: g.rotation.z }); FJ.push([]);
       let cur = g;
       for (let j = 0; j < 3; j++) {
         const L = lens[j] * scale[fi];
-        const jg = new T.Group(); jg.rotation.x = -curl[j] * (0.9 + fi * 0.05); cur.add(jg);
+        const jg = new T.Group(); jg.rotation.x = -curl[j] * (0.9 + fi * 0.05); cur.add(jg); FJ[fi].push(jg);
         jg.add(sphere(0.03, blackM, 1, 1, 1, 12));
         const seg = cyl(0.026, 0.024, L, j < 2 ? blackM : white, 14); seg.position.y = -L / 2; jg.add(seg);
         const nx = new T.Group(); nx.position.y = -L; jg.add(nx); cur = nx;
@@ -16776,7 +16778,7 @@ const body = new T.Group(); root.add(body);
     const th = new T.Group(); th.position.set(s * 0.15, -0.2, 0.02); th.rotation.z = s * 0.45; h.add(th);
     let tc = th;
     [0.13, 0.11].forEach((L, j) => {
-      const jg = new T.Group(); jg.rotation.x = -0.3; tc.add(jg);
+      const jg = new T.Group(); jg.rotation.x = -0.3; tc.add(jg); TJ.push(jg);
       jg.add(sphere(0.032, blackM, 1, 1, 1, 12));
       const seg = cyl(0.03, 0.027, L, j === 0 ? blackM : white, 14); seg.position.y = -L / 2; jg.add(seg);
       const nx = new T.Group(); nx.position.y = -L; jg.add(nx); tc = nx;
@@ -16785,6 +16787,7 @@ const body = new T.Group(); root.add(body);
     h.rotation.order = 'ZYX';
     h.rotation.y = -s * 1.3;
     h.rotation.z = -s * 0.15;
+    h.userData = { FJ: FJ, FG: FG, TJ: TJ, th: th, thz0: th.rotation.z, s: s, gp: 0.2, sp: 0 };
     return h;
   }
   function makeArm(s) {
@@ -16812,20 +16815,20 @@ const body = new T.Group(); root.add(body);
     const cuff = ring(0.125, 0.022, gun, 'y'); cuff.position.y = -1.22; fa.add(cuff);
 
     const hand = makeHand(s); hand.scale.setScalar(1.15); hand.position.y = -1.3; fa.add(hand);
-    return { ua, fa };
+    return { ua, fa, hand };
   }
   const arms = { '-1': makeArm(-1), '1': makeArm(1) };
 
   /* legs */
   function makeLeg(s) {
-    const leg = new T.Group(); leg.position.x = s * 0.5; body.add(leg);
+    const leg = new T.Group(); leg.position.x = s * 0.46; body.add(leg);
     const HIP = 4.45, KNEE = 2.3, ANK = 0.5;
-    const hipBall = sphere(0.27, blackM, 1, 1, 1, 32); hipBall.position.set(-s * 0.08, 4.4, 0); leg.add(hipBall);
     const hip = new T.Group(); hip.position.y = HIP; leg.add(hip);
+    const hipBall = sphere(0.3, blackM, 1, 1, 1, 32); hip.add(hipBall);
 
-    const thigh = makeLimb({ rTop: 0.36, rBot: 0.23, len: 1.9, bulge: 0.07, sz: 0.92 }); thigh.position.y = 3.35 - HIP; hip.add(thigh);
-    stripe(thigh, s * 1.22, 0.1, 0.85);
-    stripe(thigh, s * 0.5, 0.06, 0.96, 0.003, 0.0045, blackM);
+    const thigh = makeLimb({ rTop: 0.32, rBot: 0.23, len: 2.15, bulge: 0.07, sz: 0.92 }); thigh.position.y = 3.445 - HIP; hip.add(thigh);
+    stripe(thigh, s * 1.22, 0.22, 0.88);
+    stripe(thigh, s * 0.5, 0.16, 0.96, 0.003, 0.0045, blackM);
 
     const tStub = cyl(0.19, 0.19, 0.34, blackM, 32); tStub.position.y = KNEE - HIP + 0.12; hip.add(tStub);
     const tRing = ring(0.205, 0.018, gun, 'y'); tRing.position.y = 2.43 - HIP; hip.add(tRing);
@@ -16967,8 +16970,23 @@ function poseStand() {
   setBone(4, 0, 0, -.06); setBone(5, -.1, 0, 0);
   setBone(7, 0, 0, 0); setBone(8, 0, 0, 0); setBone(9, 0, 0, 0); setBone(10, 0, 0, 0);
   stool.visible = false; zzz.visible = false; footFix();
+  handPose(arms[1].hand, .2, 0, 0, 0, true); handPose(arms[-1].hand, .2, 0, 0, 0, true);
 }
 
+/* grip: 0 = bukas, 1 = kuyom · spr: 0..1 kalat ng daliri · rip: ripple ng daliri · ph: phase */
+const FOPEN = [0.02, 0.05, 0.05], FMAX = [1.45, 1.7, 1.25];
+function handPose(hd, grip, spr, rip, ph, snap) {
+  const U = hd.userData, k = snap ? 1 : 0.2;
+  U.gp += (grip - U.gp) * k; U.sp += (spr - U.sp) * k;
+  for (let i = 0; i < 4; i++) {
+    const gi = Math.min(1, Math.max(0, U.gp + rip * Math.sin(ph + i * 0.85)));
+    for (let j = 0; j < 3; j++) U.FJ[i][j].rotation.x = -(FOPEN[j] + (FMAX[j] - FOPEN[j]) * gi);
+    U.FG[i].g.rotation.z = U.FG[i].z0 + U.s * (1.5 - i) * 0.12 * U.sp;
+  }
+  U.TJ[0].rotation.x = -(0.3 + 0.55 * U.gp);
+  U.TJ[1].rotation.x = -(0.3 + 0.7 * U.gp);
+  U.th.rotation.z = U.thz0 - U.s * 0.22 * U.sp;
+}
 function rigAnimate(t) {
   if (RS.still) { poseStand(); return; }
   if (!seg || t > seg.t0 + seg.D + 20) seg = nextSeg(t);
@@ -17099,6 +17117,19 @@ function rigAnimate(t) {
   setBone(10, .7 * Math.max(0, -cph) * wk + 1.5 * sit + cr + .9 * lL + .6 * air - kL + 1.6 * tuck, 0, 0);
   footFix();
 
+  [[1, wR, mR, oR], [-1, wL, mL, oL]].forEach(([sd2, wv2, mc, ot]) => {
+    let gp = .2 + .2 * wk + .1 * lap + .12 * sl + .05 * lay, sp = 0, rp = .04;
+    const bp = .5 + .5 * sb;
+    gp += dw * (-.1 + .15 * bp); sp += .5 * dw; rp += .1 * dw;                 /* dance */
+    gp = gp * (1 - wv2) + .02 * wv2; sp += .9 * wv2; rp = rp * (1 - wv2) + .14 * wv2;   /* wave */
+    gp = gp * (1 - mc) + .78 * mc;                                              /* mic */
+    gp = gp * (1 - ot) + .1 * ot; sp += .6 * ot;                                /* kabilang kamay habang kumakanta */
+    gp = gp * (1 - air) + .05 * air; sp += air; gp += .35 * cr;                 /* jump */
+    gp = gp * (1 - hug) + .85 * hug;                                            /* flip: tuck */
+    gp = gp * (1 - armUp) + .05 * armUp; sp += armUp;
+    const sk = Math.min(1, spread); gp = gp * (1 - sk) + .08 * sk; sp += spread * .7;   /* spin */
+    handPose(arms[sd2].hand, Math.min(1, Math.max(0, gp)), Math.min(1, Math.max(0, sp)), rp, t * 6 + (sd2 > 0 ? 0 : 1.3));
+  });
   if (stl > 0) {
     stool.visible = true;
     stool.position.set(-FX * RK, FEET + (-160 * (1 - Math.min(1, stl)) - FY) * RK, -FZ * RK);
@@ -17482,6 +17513,74 @@ function flDelete() {
   } });
 }
 /* === END: FILES TAB === */
+
+/* === START: EDGE SWIPE → OPEN OS (iPhone style) === */
+(function edgeSwipeOpen() {
+  const EDGE = 26, COMMIT = 0.35, FLICK = 0.6;
+  const zone = document.createElement('div');
+  zone.id = 'osEdgeZone'; zone.setAttribute('aria-hidden', 'true');
+  zone.style.cssText = 'position:fixed;left:0;top:0;bottom:0;width:' + EDGE + 'px;z-index:250;touch-action:none;';
+  const grip = document.createElement('div');
+  grip.setAttribute('aria-hidden', 'true');
+  grip.style.cssText = 'position:fixed;left:3px;top:50%;width:4px;height:40px;margin-top:-20px;border-radius:2px;background:rgba(28,28,30,.22);z-index:249;pointer-events:none;transition:opacity .25s;';
+  document.body.appendChild(zone); document.body.appendChild(grip);
+  const sc = document.getElementById('screenCard'); if (sc) sc.style.touchAction = 'pan-y';
+
+  const blocked = () => document.body.classList.contains('public-mode') ||
+    !!document.querySelector('.share-overlay.show,.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#screenGate.show,#screenOS.active,#screenAccount.active,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#confirmDialogOverlay,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardMenuOverlay[style*="flex"]') ||
+    !document.getElementById('screenCard') || !window.currentEntry && typeof currentEntry === 'undefined';
+  setInterval(() => { const b = blocked(); grip.style.opacity = b ? '0' : '1'; zone.style.pointerEvents = b ? 'none' : ''; }, 500);
+
+  let st = null, os = null;
+  const Wd = () => window.innerWidth;
+
+  document.addEventListener('pointerdown', e => {
+    if (st || blocked()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const onEdge = e.clientX <= EDGE;
+    const onBg = !e.target.closest('.scene,button,a,input,textarea,select,[onclick],.hold-open,#osEdgeZone,[role="dialog"]');
+    if (!onEdge && !onBg) return;
+    st = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), on: false, dx: 0 };
+  }, true);
+
+  window.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id) return;
+    const dx = e.clientX - st.x, dy = e.clientY - st.y;
+    if (!st.on) {
+      if (dx < -8 || (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx))) { st = null; return; }
+      if (dx < 8) return;
+      st.on = true;
+      enterOS('address');
+      os = document.getElementById('screenOS');
+      os.classList.remove('entering');
+      os.style.animation = 'none'; os.style.transition = 'none';
+    }
+    st.dx = Math.max(0, dx);
+    os.style.transform = 'translateX(' + (st.dx - Wd()) + 'px)';
+    os.style.boxShadow = '0 0 40px rgba(0,0,0,' + (0.18 * Math.min(1, st.dx / Wd())) + ')';
+    e.preventDefault();
+  }, { passive: false });
+
+  function clean() { if (!os) return; os.style.transform = ''; os.style.transition = ''; os.style.animation = ''; os.style.boxShadow = ''; }
+  function end(e) {
+    if (!st || e.pointerId !== st.id) return;
+    const s = st; st = null;
+    if (!s.on || !os) return;
+    const vel = s.dx / Math.max(1, performance.now() - s.t);
+    const open = s.dx > Wd() * COMMIT || vel > FLICK;
+    os.style.transition = 'transform .32s cubic-bezier(.16,1,.3,1)';
+    os.style.transform = open ? 'translateX(0)' : 'translateX(-' + Wd() + 'px)';
+    haptic(open ? 'medium' : 'light');
+    const o = os; os = null;
+    setTimeout(() => {
+      if (!open) o.classList.remove('active');
+      o.style.transform = ''; o.style.transition = ''; o.style.animation = ''; o.style.boxShadow = '';
+    }, 340);
+  }
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+})();
+/* === END: EDGE SWIPE → OPEN OS === */
 
 /* === START: READY FLAG === */
 window.__ATHNA_READY__ = true;

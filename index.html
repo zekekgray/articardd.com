@@ -829,6 +829,15 @@ opacity:0;pointer-events:none;z-index:1;}
 .coach-pill svg{flex-shrink:0;}
 #cfm-clone-wrap .coach-pill,.share-blur-clone .coach-pill,#cfm-clone-wrap .robot-pal-btn,.share-blur-clone .robot-pal-btn{display:none !important;}
 /* === END: COACH PILL === */
+/* === START: PROTOCOL FAB CSS === */
+@property --pfa{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes pfSpin{to{--pfa:360deg}}
+.proto-fab{position:absolute;right:12px;top:268px;z-index:8;width:46px;height:46px;border-radius:50%;border:0;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(20,22,26,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);-webkit-tap-highlight-color:transparent;transition:transform .15s}
+.proto-fab::before{content:'';position:absolute;inset:-2px;border-radius:50%;padding:2px;background:conic-gradient(from var(--pfa),#4DA3FF,#9B6BFF,#FF5FA2,#FFB347,#4DA3FF);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:pfSpin 4s linear infinite;pointer-events:none}
+.proto-fab:active{transform:scale(.9)}
+body.public-mode .proto-fab,#cfm-clone-wrap .proto-fab,.share-blur-clone .proto-fab{display:none !important}
+@media (prefers-reduced-motion:reduce){.proto-fab::before{animation:none}}
+/* === END: PROTOCOL FAB CSS === */
 /* === START: ROBOT BUBBLE CSS === */
 .robot-bubble{position:absolute;right:12px;top:96px;width:150px;z-index:8;opacity:0;pointer-events:none;transform:translateX(10px) scale(.88);transform-origin:left center;transition:opacity .28s ease,transform .45s cubic-bezier(0.34,1.56,0.64,1);}
 .robot-bubble.show{opacity:1;pointer-events:auto;transform:none;}
@@ -1448,6 +1457,7 @@ opacity:0;pointer-events:none;z-index:1;}
             <button type="button" class="rb-x" aria-label="Dismiss" onclick="event.stopPropagation();dismissRobotBubble()">×</button>
           </div>
           <!-- === END: ROBOT BUBBLE === -->
+          <button type="button" class="proto-fab" aria-label="Open Executive Protocol" onclick="event.stopPropagation();haptic('light');openProtocol();"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#E8CC7A"/><circle cx="15" cy="10" r="1" fill="#E8CC7A"/><path d="M8.5 15h7"/></svg></button>
           <button type="button" class="robot-pal-btn" aria-label="Choose robot colors" onclick="event.stopPropagation();haptic('light');openRobotPalPicker();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="#fff"/><circle cx="12" cy="7.5" r="1" fill="#fff"/><circle cx="15.5" cy="10" r="1" fill="#fff"/><path d="M12 21c-1.5 0-2-1-2-2s1-2 2-2h2a2 2 0 0 0 2-2"/></svg></button>
           <div class="glass-pill" id="glassPill">
             <div class="pill-avatar" id="pillAvatar" onclick="event.stopPropagation();haptic('light');triggerPhotoUpload();"></div>
@@ -2242,6 +2252,13 @@ opacity:0;pointer-events:none;z-index:1;}
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('calendar')">Calendar</button>
         <button type="button" role="tab" aria-selected="false" onclick="abSegSelect('discover')">Discover</button>
         <button type="button" role="tab" class="on" aria-selected="true" onclick="haptic('light')">Files</button>
+      </div>
+      <div class="os-group" style="margin-bottom:12px;">
+        <div class="os-row" style="cursor:pointer;" onclick="haptic('light');pfOpen()" onpointerdown="this.style.background='rgba(0,0,0,0.04)'" onpointerup="this.style.background=''" onpointerleave="this.style.background=''">
+          <div class="os-row-icon" style="background:#2F343A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#E8CC7A"/><circle cx="15" cy="10" r="1" fill="#E8CC7A"/><path d="M8.5 15h7"/></svg></div>
+          <div class="os-row-text"><div class="os-row-title">Executive Protocol</div><div class="os-row-sub">Full protocol, system prompt to operating record</div></div>
+          <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>
       <input class="ab-search" id="flSearch" type="search" placeholder="Search files &amp; notes" aria-label="Search files and notes" oninput="flRender()">
       <div id="flList"></div>
@@ -7112,7 +7129,16 @@ function osBackTapped() {
     mine.setAttribute('aria-selected', String(which === 'mine'));
     disc.setAttribute('aria-selected', String(which === 'discover'));
   }
-  function abSegSelect(which) {
+  const DISCOVER_ON = false;   /* gawing true kapag handa na ang Discover */
+function abSoon() {
+    auMakeSheet('dcSoonOverlay', 'Discover', `<div style="text-align:center;padding:8px 6px 2px;font-family:-apple-system,'SF Pro Text',sans-serif;">
+      <div style="font-size:32px;margin-bottom:8px;">🧭</div>
+      <div style="font-size:17px;font-weight:700;color:#1c1c1e;margin-bottom:6px;">Coming soon</div>
+      <div style="font-size:13px;line-height:1.55;color:rgba(60,60,67,0.6);margin-bottom:18px;">Discover is under maintenance while we tune it to show only people who truly fit you both ways. We'll turn it on soon.</div>
+      <button onclick="closeAuGenericModal('dcSoonOverlay')" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;font-size:14.5px;font-weight:700;cursor:pointer;">Got it</button></div>`);
+}
+function abSegSelect(which) {
+    if (which === 'discover' && !DISCOVER_ON) { haptic('light'); abSoon(); return; }
     haptic('light');
     if (which === 'calendar') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab('upcoming'); return; }
     if (which === 'files') { const o = document.getElementById('auOverlay'); if (o && o.classList.contains('show')) closeAuSearch(); switchOSTab('files'); return; }
@@ -9878,7 +9904,7 @@ confirmDialog({ title: 'Cancel meeting with ' + m.name + '?', message: 'The meet
     // remove the scene's ambient ::before glow context — it's decorative only
     // and can otherwise expand the measured bounding box during capture
     const styleOverride = document.createElement('style');
-        styleOverride.textContent = '.scene::before { display: none !important; } .coach-pill, .robot-pal-btn, .robot-bubble { display: none !important; } .hold-pulse { display: none !important; } .hold-hint { animation: none !important; transform: translateX(-50%) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(20,22,26,.85) !important; opacity: 1 !important; }';
+        styleOverride.textContent = '.scene::before { display: none !important; } .coach-pill, .robot-pal-btn, .robot-bubble, .proto-fab { display: none !important; } .hold-pulse { display: none !important; } .hold-hint { animation: none !important; transform: translateX(-50%) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(20,22,26,.85) !important; opacity: 1 !important; }';
     sceneClone.appendChild(styleOverride);
 
     // Host: same size as .scene, off-screen, transparent — the clone keeps
@@ -14439,13 +14465,13 @@ function openMascotLore() {
 loadMascot();
 /* === START: ROBOT COLORS === */
 const ROBOT_PALS = [
-  { id:'r1', name:'Steel Neon',      c:['#8094B3','#FF73B8','#73CCFF'] },
-  { id:'r2', name:'Gold Rush',       c:['#7A6E58','#E8CC7A','#FFB347'] },
-  { id:'r3', name:'Crimson Core',    c:['#7A6670','#E0524A','#FF8A5C'] },
-  { id:'r4', name:'Emerald Circuit', c:['#5E7D72','#3DDC97','#A8FFD8'] },
-  { id:'r5', name:'Violet Phantom',  c:['#70648F','#B07CFF','#FF6EC7'] },
-  { id:'r6', name:'Arctic Ice',      c:['#7C93A6','#A8D8EA','#7FE0FF'] },
-  { id:'r7', name:'Sunset Chrome',   c:['#8C7E86','#FF7A3D','#FFD166'] }
+  { id:'r1', name:'Pearl Cyan',     c:['#EEF1F5','#4A4E55','#04A0CC'] },
+  { id:'r2', name:'Midnight Gold',  c:['#1E2230','#C9A84C','#F0D78C'] },
+  { id:'r3', name:'Rose Quartz',    c:['#F3DDE0','#8E6B72','#FF5FA2'] },
+  { id:'r4', name:'Obsidian Ember', c:['#23252B','#5A5F68','#FF6A3D'] },
+  { id:'r5', name:'Mint Jade',      c:['#E3F1EA','#4F6B5E','#19D98B'] },
+  { id:'r6', name:'Violet Ice',     c:['#E6E1F5','#5B5280','#9B6BFF'] },
+  { id:'r7', name:'Arctic Steel',   c:['#CFD8E3','#2F3A48','#5AC8FA'] }
 ];
 const ROBOT_PAL_KEY = 'robot-pal';
 let activeRobotPal = ROBOT_PALS[0].id;
@@ -17206,7 +17232,34 @@ function rigAnimate(t) {
   /* ── palette (Robot Colors picker) ── */
   window.__robotRecolor = function (pal) {
     const mx = (a, b, t) => a + (b - a) * t;
-    white.color.setRGB(mx(0.93, pal[0][0], 0.3), mx(0.945, pal[0][1], 0.3), mx(0.96, pal[0][2], 0.3));
+    white.color.setRGB(pal[0][0], pal[0][1], pal[0][2]);
+    gun.color.setRGB(pal[1][0], pal[1][1], pal[1][2]);
+    gunDark.color.setRGB(pal[1][0] * 0.4, pal[1][1] * 0.4, pal[1][2] * 0.4);
+    const rg = (c, a) => 'rgba(' + c.map(v => Math.round(Math.min(1, v) * 255)).join(',') + ',' + a + ')';
+    const lite = c => c.map(v => v + (1 - v) * 0.6);
+    head.traverse(o => {
+      if (!o.material || !o.material.map) return;
+      if (!o.userData.k) o.userData.k = o.material.map === eyeTex ? 'eye' : o.material.map === glowTex ? 'glow' : '-';
+      if (o.userData.k === 'eye') {
+        o.material.map = canvasTex(256, 64, (x, w, h) => {
+          x.clearRect(0, 0, w, h); x.shadowColor = rg(pal[3], 1); x.shadowBlur = 22;
+          const g = x.createLinearGradient(30, 0, w - 30, 0);
+          g.addColorStop(0, rg(pal[3], 0)); g.addColorStop(0.2, rg(pal[3], 1));
+          g.addColorStop(0.5, rg(lite(pal[3]), 1)); g.addColorStop(0.8, rg(pal[3], 1)); g.addColorStop(1, rg(pal[3], 0));
+          x.fillStyle = g; x.beginPath();
+          if (x.roundRect) x.roundRect(30, h / 2 - 5, w - 60, 10, 5); else x.rect(30, h / 2 - 5, w - 60, 10);
+          x.fill(); x.fill();
+        });
+        o.material.needsUpdate = true;
+      } else if (o.userData.k === 'glow') {
+        o.material.map = canvasTex(128, 128, (x, w, h) => {
+          const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+          g.addColorStop(0, rg(pal[3], 0.9)); g.addColorStop(0.35, rg(pal[3], 0.25)); g.addColorStop(1, rg(pal[3], 0));
+          x.fillStyle = g; x.fillRect(0, 0, w, h);
+        });
+        o.material.needsUpdate = true;
+      }
+    });
     cyanM.color.setRGB(pal[2][0], pal[2][1], pal[2][2]);
     eyeLight.color.setRGB(pal[3][0], pal[3][1], pal[3][2]);
   };
@@ -17359,7 +17412,7 @@ function rbBlocked() {
     (c && c.classList.contains('flipped')) || (os && os.classList.contains('active')) || (g && g.classList.contains('show'));
 }
 function rbDismissed() { try { return sessionStorage.getItem(RB_KEY) === '1'; } catch (e) { return false; } }
-function showRobotBubble() {
+function showRobotBubble() { return; /* pinalitan ng permanenteng .proto-fab */
   clearTimeout(_rbT);
   const b = document.getElementById('robotBubble'); if (!b) return;
   if (rbDismissed()) return;
@@ -17586,12 +17639,13 @@ function flDelete() {
 (function swipeBack() {
   const EDGE = 26, COMMIT = 0.35, FLICK = 0.6;
   const PAGES = [
+    ['auSheet', () => (typeof dcView !== 'undefined' && dcView !== 'discover') ? 'dirty' : 'ok', () => { if (typeof dcView !== 'undefined' && dcView !== 'discover') dcGo('discover'); else closeAuSearch(); }],
     ['contactDetailScreen', () => { if (typeof _cdEditMode !== 'undefined' && _cdEditMode && cdEditIsDirty()) return 'dirty'; return 'ok'; }, () => requestCloseContactDetail()],
     ['personalInfoScreen', null, () => closePersonalInfoScreen()],
     ['screenAccount', null, () => closeAccountPage()],
     ['screenOS', null, () => exitOS()]
   ];
-  const BLOCK = '.share-overlay.show,.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#confirmDialogOverlay,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardFilterOverlay,#physOrderOverlay,#requestMgrScreen,#screenGate.show';
+  const BLOCK = '.share-overlay.show:not(#auOverlay),.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#confirmDialogOverlay,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardFilterOverlay,#physOrderOverlay,#requestMgrScreen,#screenGate.show';
   const shown = id => { const e = document.getElementById(id); return e && getComputedStyle(e).display !== 'none' ? e : null; };
   const NO_START = '.ab-row-wrap,.ab-seg,.ab-recent-strip,.theme-switcher,input,textarea,select,.ab-scrubber,.up-cal-card,.cd-sheet,.dc-msgs';
 
@@ -17600,7 +17654,8 @@ function flDelete() {
     if (shown('addContactScreen') || shown('noteEditorScreen') || shown('fileEditorScreen')) return null;
     for (const p of PAGES) {
       const el = document.getElementById(p[0]); if (!el) continue;
-      const on = (p[0] === 'screenOS' || p[0] === 'screenAccount') ? el.classList.contains('active') : !!shown(p[0]);
+      const on = p[0] === 'auSheet' ? (document.getElementById('auOverlay').classList.contains('show') && !!shown('auSheet'))
+        : (p[0] === 'screenOS' || p[0] === 'screenAccount') ? el.classList.contains('active') : !!shown(p[0]);
       if (on) return { el: el, guard: p[1], close: p[2] };
     }
     return null;
@@ -17627,6 +17682,7 @@ function flDelete() {
       if (dx > -8) return;
       st.on = true;
       st.pg.el.style.animation = 'none'; st.pg.el.style.transition = 'none';
+      const ho = st.pg.el.closest('.share-overlay'); if (ho) ho.style.setProperty('background', 'transparent', 'important');
     }
     st.dx = Math.min(0, dx);
     st.pg.el.style.transform = 'translateX(' + st.dx + 'px)';
@@ -17634,7 +17690,7 @@ function flDelete() {
     e.preventDefault();
   }, { passive: false });
 
-  function reset(el) { el.style.transform = ''; el.style.transition = ''; el.style.animation = ''; el.style.boxShadow = ''; }
+  function reset(el) { const ho = el.closest('.share-overlay'); if (ho) ho.style.removeProperty('background'); el.style.transform = ''; el.style.transition = ''; el.style.animation = ''; el.style.boxShadow = ''; }
   function end(e) {
     if (!st || e.pointerId !== st.id) return;
     const s = st; st = null;
@@ -17658,6 +17714,619 @@ function flDelete() {
 })();
 /* === END: SWIPE LEFT → CLOSE / BACK === */
 
+/* === START: FILES + AI NOTES PARITY (from Protocol) === */
+var ntScope='', ntSelMode=false, ntSel=new Set(), ntCur=null, ntTimer=null, ntMv=null, ntSideKeys=[''], ntMvList=[], ntMtList=[], ntMtDirty=false, ntMtTm=null, ntPackText='', ntPackName='';
+var NT_H='https:'+'/'+'/';
+var NT_F="font-family:-apple-system,'SF Pro Text',sans-serif;";
+var NT_MAX_LINES=50000, NT_MAX_ROW=100;
+var NT_FENCE='\u0060\u0060\u0060';
+
+(function(){
+  if(document.getElementById('ntCss')) return;
+  var st=document.createElement('style'); st.id='ntCss';
+  st.textContent=`
+  .nt-pill{display:flex;align-items:center;border:1px solid rgba(0,0,0,.1);background:rgba(255,255,255,.72);border-radius:999px;flex:none}
+  .nt-pill button{width:44px;height:40px;border:0;background:none;color:#1c1c1e;display:grid;place-items:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+  .nt-pill button+button{border-left:1px solid rgba(0,0,0,.1)}
+  .nt-pill button:active{opacity:.55}
+  .nt-st{width:44px;height:44px;border-radius:50%;border:0;padding:0;cursor:pointer;flex:none;display:grid;place-items:center;background:#1c1c1e;color:#ECE4D6;transition:transform .12s,background .2s,color .2s;-webkit-tap-highlight-color:transparent}
+  .nt-st.saved{background:transparent;color:#34C759}
+  .nt-st:active{transform:scale(.92)}
+  .nt-lnk{background:none;border:0;padding:6px 2px;font:600 13.5px -apple-system,'SF Pro Text',sans-serif;color:#1c1c1e;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .nt-lnk:active{opacity:.5}
+  .nt-chip{padding:10px 16px;border-radius:20px;border:1px solid rgba(0,0,0,.1);background:rgba(255,255,255,.72);color:#1c1c1e;font:600 13px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;-webkit-tap-highlight-color:transparent}
+  .nt-chip:active{opacity:.6}
+  .nt-pb{padding:9px 16px;border-radius:20px;border:1px solid rgba(0,0,0,.1);background:rgba(255,255,255,.72);color:#1c1c1e;font:600 12.5px -apple-system,'SF Pro Text',sans-serif;cursor:pointer}
+  .nt-lim{font:12px -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.5);white-space:nowrap}
+  .nt-lim.over{color:#FF453A;font-weight:700}
+  `;
+  document.head.appendChild(st);
+})();
+
+/* ── helpers ── */
+function ntFmt(t){ return new Date(t).toLocaleString([], {dateStyle:'medium', timeStyle:'short'}); }
+function ntFix1(n){
+  if(typeof n.text!=='string'){
+    var t=(n.title&&n.title!=='New Note')?n.title:'';
+    n.text=t+((t&&n.body)?'\n':'')+(n.body||'');
+  }
+  if(typeof n.folder!=='string') n.folder='';
+  if(!Array.isArray(n.vs)) n.vs=[];
+  if(!n.t) n.t=Date.now();
+}
+function ntFix(){ NOTES.forEach(ntFix1); }
+function ntSplit(n){
+  var ls=String(n.text||'').split('\n');
+  n.title=(ls[0]||'').trim()||'New Note';
+  n.body=ls.slice(1).join('\n').trim();
+}
+function ntFolders(){
+  var m={}; NOTES.forEach(function(n){ if(n.folder) m[n.folder]=1; });
+  return Object.keys(m).sort();
+}
+function ntCopy(text, msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(function(){ haptic('success'); showToast(msg||'Copied','success'); }).catch(function(){ fallbackCopy(text); });
+  else fallbackCopy(text);
+}
+function ntDownload(name, text, type){
+  var url=URL.createObjectURL(new Blob([text],{type:type||'text/plain'})), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },1500);
+}
+function ntSnap(n, force){
+  if(!n.text.trim()) return;
+  var l=n.vs[n.vs.length-1];
+  if(l&&l.text===n.text) return;
+  if(!force&&(!l||Date.now()-l.t<120000)) return;
+  n.vs.push({t:Date.now(), text:n.text});
+  while(n.vs.length>20||(n.vs.length>1&&n.vs.reduce(function(a,v){return a+v.text.length;},0)>200000)) n.vs.shift();
+}
+
+/* ── load / render ── */
+async function loadNotes(){
+  try{ var r=await window.storage.get(NOTES_KEY,false); if(r&&r.value){ NOTES=JSON.parse(r.value)||[]; } }catch(e){}
+  ntFix(); renderNotes();
+}
+function renderNotes(){
+  try{ flRender(); }catch(e){}
+  var c=document.getElementById('noteCount'); if(c) c.textContent='('+NOTES.length+')';
+}
+function ntChrome(){
+  var l=document.getElementById('flList'); if(!l||!l.parentNode) return;
+  if(!document.getElementById('flSide')){
+    var s=document.createElement('div'); s.id='flSide'; l.parentNode.insertBefore(s,l);
+  }
+  if(!document.getElementById('flFoot')){
+    var f=document.createElement('div'); f.id='flFoot';
+    f.style.cssText='display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:14px 0 6px;';
+    f.innerHTML='<button type="button" class="nt-pb" onclick="haptic(\'light\');flPackOpen()">Context Pack</button><button type="button" class="nt-pb" onclick="haptic(\'light\');flExport()">Export</button><button type="button" class="nt-pb" onclick="haptic(\'light\');flImportPick()">Import</button>';
+    l.parentNode.insertBefore(f,l.nextSibling);
+  }
+}
+function ntVisibleNotes(){
+  var qe=document.getElementById('flSearch'), q=(qe&&qe.value||'').trim().toLowerCase();
+  var pool=q?NOTES.filter(function(n){ return (n.text||'').toLowerCase().indexOf(q)>-1; }):NOTES.filter(function(n){ return n.folder===ntScope; });
+  return pool.slice().sort(function(a,b){ return ((b.pin?1:0)-(a.pin?1:0))||(b.t-a.t); });
+}
+function ntSideHtml(){
+  var fs=ntFolders(); if(!fs.length) return '';
+  ntSideKeys=[''].concat(fs);
+  var rows=ntSideKeys.map(function(k,i){
+    var on=ntScope===k, cnt=NOTES.filter(function(n){ return n.folder===k; }).length;
+    return '<div class="os-row" style="cursor:pointer;" onclick="ntSetScope('+i+')"><div class="os-row-text"><div class="os-row-title"'+(on?' style="font-weight:700;"':'')+'>'+auEsc(k||'Notes')+'</div></div><span class="os-row-value">'+cnt+'</span>'+(on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+'</div>';
+  }).join('');
+  return '<div class="os-group" style="margin-bottom:6px;">'+rows+'</div>';
+}
+function ntSetScope(i){ haptic('light'); ntScope=ntSideKeys[i]||''; ntSelMode=false; ntSel.clear(); flRender(); }
+
+function noteRowHtml(n){
+  ntFix1(n);
+  var c=noteColor(n.id), ls=String(n.text||'').trim().split('\n');
+  var title=ls[0]||'Empty note', pv=ls.slice(1).join(' ').trim().slice(0,60);
+  var on=ntSel.has(n.id);
+  var lead=ntSelMode
+    ? '<div class="os-row-icon" style="background:'+(on?'#1c1c1e':'rgba(60,60,67,0.14)')+';">'+(on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ECE4D6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+'</div>'
+    : '<div class="os-row-icon" style="background:'+c.bg+';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="'+c.stroke+'" stroke-width="1.8"><path d="M14 3v5a1 1 0 0 0 1 1h5"/><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>';
+  return '<div class="os-row" data-noteid="'+n.id+'" style="cursor:pointer;" onpointerdown="this.style.background=\'rgba(0,0,0,0.04)\'" onpointerup="this.style.background=\'\'" onpointerleave="this.style.background=\'\'" onclick="ntRowTap(\''+n.id+'\')">'+lead+
+    '<div class="os-row-text"><div class="os-row-title">'+auEsc(title)+'</div><div class="os-row-sub">'+(n.pin?'Pinned · ':'')+auEsc(pv||'No additional text')+'</div></div>'+
+    '<span class="os-row-value" style="font-size:11px;">'+noteRelativeDate(n.t)+'</span></div>';
+}
+function ntRowTap(id){
+  if(ntSelMode){ haptic('light'); if(ntSel.has(id)) ntSel.delete(id); else ntSel.add(id); flRender(); return; }
+  openNoteEditor(id);
+}
+function ntSelToggle(){ haptic('light'); ntSelMode=!ntSelMode; ntSel.clear(); flRender(); }
+function ntSelAll(){
+  haptic('light');
+  var v=ntVisibleNotes(), all=v.length&&v.every(function(n){ return ntSel.has(n.id); });
+  v.forEach(function(n){ if(all) ntSel.delete(n.id); else ntSel.add(n.id); });
+  flRender();
+}
+
+function flRender(){
+  var w=document.getElementById('flList'); if(!w) return;
+  ntFix(); ntChrome();
+  var qe=document.getElementById('flSearch'), q=(qe&&qe.value||'').trim().toLowerCase();
+  if(ntScope&&ntFolders().indexOf(ntScope)<0) ntScope='';
+  var names=Object.keys(FL_DB).filter(function(n){ return FL_DB[n].vs.length; }).sort(function(a,b){ return flLast(FL_DB[b]).t-flLast(FL_DB[a]).t; });
+  var shown=(!ntScope||q)?names.filter(function(n){ return n.toLowerCase().indexOf(q)>-1; }):[];
+  var notes=ntVisibleNotes();
+  var c=document.getElementById('flCount'); if(c) c.textContent='('+(shown.length+notes.length)+')';
+  var side=document.getElementById('flSide'); if(side) side.innerHTML=q?'':ntSideHtml();
+  var h='';
+  if(shown.length){
+    h+='<div class="ab-section-header">Files</div><div class="ab-section-group">'+shown.map(function(n){
+      var l=flLast(FL_DB[n]);
+      return '<div class="os-row" style="cursor:pointer;" data-n="'+auEsc(n)+'" onclick="flOpen(this.dataset.n)" onpointerdown="this.style.background=\'rgba(0,0,0,0.04)\'" onpointerup="this.style.background=\'\'" onpointerleave="this.style.background=\'\'">'+
+        '<div class="os-row-icon" style="background:#4A9DE0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'+
+        '<div class="os-row-text"><div class="os-row-title">'+auEsc(n)+'</div><div class="os-row-sub">v'+l.v+' · '+flKb(l.size||l.text.length)+'</div></div>'+
+        '<span class="os-row-value" style="font-size:11px;">'+noteRelativeDate(l.t)+'</span></div>';
+    }).join('')+'</div>';
+  }
+  if(notes.length){
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 4px 8px;"><div class="ab-section-header" style="padding:0;margin:0;">'+auEsc(q?'Notes':(ntScope||'Notes'))+'</div><div style="display:flex;gap:14px;align-items:center;">'+
+      (ntSelMode?'<button type="button" class="nt-lnk" onclick="ntSelAll()">All</button><button type="button" class="nt-lnk" style="font-weight:700;" onclick="ntMitoOpen()">Mitochondria'+(ntSel.size?' · '+ntSel.size:'')+'</button>':'')+
+      '<button type="button" class="nt-lnk" onclick="ntSelToggle()">'+(ntSelMode?'Cancel':'Select')+'</button></div></div>'+
+      '<div class="ab-section-group">'+notes.map(noteRowHtml).join('')+'</div>';
+  }
+  if(!h) h='<div class="up-empty-card">'+(q?'No match':'No files or notes yet. Tap + Add')+'</div>';
+  w.innerHTML=h;
+}
+
+/* ── note editor (autosave, versions, share, more) ── */
+function ntBuildEditor(){
+  var s=document.getElementById('noteEditorScreen'); if(!s) return null;
+  if(s.dataset.nt==='1') return s;
+  s.dataset.nt='1';
+  var circ="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:0.6px solid rgba(255,255,255,0.9);background:rgba(255,255,255,0.82);box-shadow:0 2px 8px rgba(0,0,0,0.10);color:#1c1c1e;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;";
+  s.innerHTML=
+    '<div style="display:flex;align-items:center;gap:8px;padding:max(14px,env(safe-area-inset-top)) 14px 10px;flex-shrink:0;background:#ECE4D6;">'+
+      '<button type="button" id="ntBack" aria-label="Back" onclick="haptic(\'light\');requestCloseNoteEditor()" style="'+circ+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>'+
+      '<span style="flex:1"></span>'+
+      '<button type="button" id="ntHistBtn" class="nt-lnk" onclick="haptic(\'light\');ntVsToggle()" style="display:none;">Versions</button>'+
+      '<div class="nt-pill">'+
+        '<button type="button" aria-label="Share note" onclick="haptic(\'light\');ntShareOpen()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg></button>'+
+        '<button type="button" aria-label="More actions" onclick="haptic(\'light\');ntMoreOpen()"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg></button>'+
+      '</div>'+
+      '<button type="button" id="ntStBtn" class="nt-st" aria-label="Save note" onclick="haptic(\'success\');ntDone()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></button>'+
+    '</div>'+
+    '<textarea id="ntX" aria-label="Note" placeholder="Start typing…" spellcheck="false" style="flex:1;min-height:0;width:100%;border:0;background:#ECE4D6;color:#1c1c1e;padding:10px 20px max(24px,env(safe-area-inset-bottom));font:16px/1.6 -apple-system,\'SF Pro Text\',sans-serif;resize:none;outline:0;box-sizing:border-box;"></textarea>'+
+    '<div id="ntVs" hidden style="flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;"></div>';
+  document.getElementById('ntX').addEventListener('input', function(){
+    ntStat(false); clearTimeout(ntTimer);
+    ntTimer=setTimeout(function(){ ntSaveNow(false); },600);
+  });
+  return s;
+}
+function ntStat(saved){ var b=document.getElementById('ntStBtn'); if(b) b.classList.toggle('saved',!!saved); }
+function ntVsShow(on){
+  var vs=document.getElementById('ntVs'), x=document.getElementById('ntX'), b=document.getElementById('ntHistBtn');
+  if(!vs||!x) return;
+  vs.hidden=!on; x.style.display=on?'none':''; if(b) b.textContent=on?'Done':'Versions';
+}
+function openNoteEditor(id){
+  haptic('light'); ntFix();
+  var n=id?NOTES.find(function(x){ return x.id===id; }):null;
+  ntCur=n||{id:'n'+Date.now(), text:'', t:Date.now(), pin:false, folder:ntScope, vs:[], title:'New Note', body:''};
+  var scr=ntBuildEditor(); if(!scr) return;
+  document.getElementById('ntX').value=ntCur.text||'';
+  ntStat(!!n);
+  document.getElementById('ntHistBtn').style.display=n?'':'none';
+  ntVsShow(false);
+  document.body.appendChild(scr);
+  scr.style.transform=''; scr.style.transition=''; scr.style.opacity='1';
+  scr.style.display='flex';
+  scr.style.animation='screenFadeIn .3s cubic-bezier(0.16,1,0.3,1) forwards';
+  if(!n) setTimeout(function(){ var x=document.getElementById('ntX'); if(x) x.focus(); },120);
+}
+function ntSaveNow(snap){
+  clearTimeout(ntTimer);
+  var n=ntCur, x=document.getElementById('ntX');
+  if(!n||!x) return Promise.resolve(true);
+  var txt=x.value, isNew=NOTES.indexOf(n)<0;
+  if(isNew&&!txt.trim()) return Promise.resolve(true);
+  if(!isNew&&n.text===txt&&!snap) return Promise.resolve(true);
+  if(n.text!==txt){ n.text=txt; n.t=Date.now(); ntSplit(n); }
+  if(isNew) NOTES.unshift(n);
+  ntSnap(n,!!snap);
+  return saveNotes().then(function(ok){
+    if(!ok){ haptic('error'); showToast("Couldn't save note",'error'); return false; }
+    if(ntCur===n) ntStat(true);
+    var hb=document.getElementById('ntHistBtn'); if(hb) hb.style.display='';
+    renderNotes(); return true;
+  });
+}
+async function ntCloseEditor(){
+  var n=ntCur; if(!n) return true;
+  var ok=await ntSaveNow(true);
+  if(!ok){ showToast('Not saved. Storage may be full','error'); return false; }
+  ntCur=null;
+  var scr=document.getElementById('noteEditorScreen');
+  if(scr){
+    scr.style.animation='osShellOut .25s cubic-bezier(0.4,0,0.2,1) forwards';
+    setTimeout(function(){ scr.style.display='none'; scr.style.animation=''; },260);
+  }
+  renderNotes();
+  return true;
+}
+function requestCloseNoteEditor(){ ntCloseEditor(); }
+function closeNoteEditor(){ ntCloseEditor(); }
+function saveNoteEditor(){ ntDone(); }
+function noteIsDirty(){ return false; }
+function ntDone(){
+  var x=document.getElementById('ntX'); if(!ntCur||!x) return;
+  var has=x.value.trim();
+  ntCloseEditor().then(function(done){ if(done&&has) showToast('Saved','success'); });
+}
+window.addEventListener('pagehide', function(){ if(ntCur) ntSaveNow(false); });
+document.addEventListener('visibilitychange', function(){ if(document.hidden&&ntCur) ntSaveNow(false); });
+
+/* versions */
+function ntVsToggle(){
+  var vs=document.getElementById('ntVs'); if(!vs) return;
+  if(!vs.hidden){ ntVsShow(false); return; }
+  ntSaveNow(true).then(function(){
+    var n=ntCur; if(!n) return;
+    var rows=n.vs.map(function(v,i){ return [v,i]; }).reverse().filter(function(p){ return p[0].text!==n.text; }).map(function(p){
+      return '<div class="os-row" style="cursor:pointer;" onclick="ntRestore('+p[1]+')"><div class="os-row-text"><div class="os-row-title">'+auEsc(ntFmt(p[0].t))+'</div><div class="os-row-sub">'+auEsc((p[0].text.trim().split('\n')[0]||'').slice(0,50))+'</div></div><span class="os-row-value">'+flKb(new Blob([p[0].text]).size)+'</span></div>';
+    }).join('');
+    vs.innerHTML=rows?'<div class="os-group" style="margin:12px 16px;">'+rows+'</div>':'<div class="up-empty-card" style="margin:16px;">No earlier versions yet</div>';
+    ntVsShow(true);
+  });
+}
+function ntRestore(i){
+  var n=ntCur, v=n&&n.vs[i], x=document.getElementById('ntX'); if(!v||!x) return;
+  x.value=v.text;
+  ntSaveNow(true).then(function(){ ntVsShow(false); haptic('success'); showToast('Restored','success'); });
+}
+
+/* more: pin / duplicate / move / delete */
+function ntRow(label,js,danger){
+  return '<div class="os-row" style="cursor:pointer;" onclick="'+js+'"><div class="os-row-text"><div class="os-row-title"'+(danger?' style="color:#FF453A;"':'')+'>'+label+'</div></div></div>';
+}
+function ntMoreOpen(){
+  var x=document.getElementById('ntX');
+  if(!ntCur||!x||!x.value.trim()){ haptic('error'); showToast('Write something first','error'); return; }
+  ntSaveNow(false).then(function(){
+    var n=ntCur; if(!n) return;
+    auMakeSheet('ntMoreOverlay','Note','<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">'+
+      ntRow(n.pin?'Unpin':'Pin','ntMorePin()')+ntRow('Duplicate','ntMoreDup()')+ntRow('Move to folder','ntMoreMove()')+ntRow('Delete','ntMoreDel()',true)+'</div>');
+  });
+}
+function ntMorePin(){
+  closeAuGenericModal('ntMoreOverlay');
+  var n=ntCur; if(!n) return;
+  n.pin=!n.pin;
+  saveNotes().then(function(ok){
+    if(!ok){ n.pin=!n.pin; haptic('error'); showToast("Couldn't save",'error'); return; }
+    renderNotes(); showToast(n.pin?'Pinned':'Unpinned','success');
+  });
+}
+function ntMoreDup(){
+  closeAuGenericModal('ntMoreOverlay');
+  var n=ntCur; if(!n) return;
+  var c={id:'n'+Date.now(), text:n.text, title:n.title, body:n.body, t:Date.now(), pin:false, folder:n.folder, vs:[]};
+  NOTES.unshift(c);
+  saveNotes().then(function(ok){
+    if(!ok){ var i=NOTES.indexOf(c); if(i>-1) NOTES.splice(i,1); haptic('error'); showToast("Couldn't duplicate",'error'); return; }
+    renderNotes(); haptic('success'); showToast('Duplicated','success');
+  });
+}
+function ntMoreMove(){ closeAuGenericModal('ntMoreOverlay'); var n=ntCur; if(!n) return; setTimeout(function(){ ntMoveOpen(n); },280); }
+function ntMoreDel(){
+  closeAuGenericModal('ntMoreOverlay');
+  var n=ntCur; if(!n) return;
+  setTimeout(function(){
+    confirmDialog({title:'Delete this note?', message:'This note will be removed from this device.', confirmLabel:'Delete', danger:true, onConfirm:function(){ ntDeleteNow(n); }});
+  },280);
+}
+function ntDeleteNow(n){
+  clearTimeout(ntTimer);
+  var i=NOTES.indexOf(n); if(i<0) return;
+  NOTES.splice(i,1);
+  saveNotes().then(function(ok){
+    if(!ok){ NOTES.splice(i,0,n); haptic('error'); showToast("Couldn't delete note",'error'); return; }
+    ntCur=null;
+    var scr=document.getElementById('noteEditorScreen'); if(scr){ scr.style.display='none'; scr.style.animation=''; }
+    renderNotes(); haptic('success'); showToast('Deleted','neutral');
+  });
+}
+function deleteNoteEditor(){ ntMoreDel(); }
+function toggleNotePin(){ ntMorePin(); }
+
+/* move to folder */
+function ntMoveOpen(n){
+  ntMv=n; ntMvList=[''].concat(ntFolders());
+  var rows=ntMvList.map(function(f,i){
+    return '<div class="os-row" style="cursor:pointer;" onclick="ntMoveIdx('+i+')"><div class="os-row-text"><div class="os-row-title">'+auEsc(f||'Notes')+'</div></div>'+(n.folder===f?'<span class="os-row-value">Here</span>':'')+'</div>';
+  }).join('');
+  auMakeSheet('ntMoveOverlay','Move note','<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;">'+rows+'</div>'+
+    '<div style="display:flex;gap:8px;"><input id="ntMvNew" class="am-input" type="text" maxlength="40" placeholder="New folder" aria-label="New folder name" style="flex:1;" onkeydown="if(event.key===\'Enter\')ntMoveNew()"><button type="button" onclick="ntMoveNew()" style="flex-shrink:0;padding:0 18px;border-radius:12px;border:none;background:#1c1c1e;color:#ECE4D6;font-weight:700;cursor:pointer;">Move</button></div>');
+}
+function ntMoveIdx(i){ ntMoveTo(ntMvList[i]||''); }
+function ntMoveNew(){
+  var inp=document.getElementById('ntMvNew'), f=(inp&&inp.value||'').replace(/\s+/g,' ').trim().slice(0,40);
+  if(!f){ haptic('error'); showToast('Type a folder name','error'); if(inp) inp.focus(); return; }
+  ntMoveTo(f);
+}
+function ntMoveTo(f){
+  var n=ntMv; if(!n) return;
+  var prev=n.folder; n.folder=f;
+  saveNotes().then(function(ok){
+    if(!ok){ n.folder=prev; haptic('error'); showToast("Couldn't move note",'error'); return; }
+    closeAuGenericModal('ntMoveOverlay'); renderNotes(); haptic('success'); showToast('Moved','success');
+  });
+}
+
+/* share */
+var NT_SHA=[
+  {g:'ai',n:'ChatGPT',u:NT_H+'chatgpt.com/'},{g:'ai',n:'Claude',u:NT_H+'claude.ai/new'},
+  {g:'ai',n:'Gemini',u:NT_H+'gemini.google.com/app'},{g:'ai',n:'DeepSeek',u:NT_H+'chat.deepseek.com/'},
+  {g:'ai',n:'Grok',u:NT_H+'grok.com/'},{g:'ai',n:'Perplexity',u:NT_H+'www.perplexity.ai/'},
+  {g:'ai',n:'Copilot',u:NT_H+'copilot.microsoft.com/'},{g:'ai',n:'Mistral',u:NT_H+'chat.mistral.ai/chat'},
+  {g:'ai',n:'Kimi',u:NT_H+'www.kimi.com/'},{g:'ai',n:'Qwen',u:NT_H+'chat.qwen.ai/'},
+  {g:'ap',n:'Messages',u:'sms:',d:function(t){ return 'sms:?&body='+encodeURIComponent(t); }},
+  {g:'ap',n:'WhatsApp',u:NT_H+'web.whatsapp.com/',d:function(t){ return NT_H+'wa.me/?text='+encodeURIComponent(t); }},
+  {g:'ap',n:'Messenger',u:NT_H+'www.messenger.com/'},
+  {g:'ap',n:'Email',u:'mailto:',d:function(t,s){ return 'mailto:?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(t); }},
+  {g:'ap',n:'Telegram',u:NT_H+'web.telegram.org/',d:function(t){ return NT_H+'t.me/share/url?url=%20&text='+encodeURIComponent(t); }},
+  {g:'ap',n:'Notion',u:NT_H+'www.notion.so/'},{g:'ap',n:'Facebook',u:NT_H+'www.facebook.com/'},
+  {g:'ap',n:'Instagram',u:NT_H+'www.instagram.com/'},{g:'ap',n:'LinkedIn',u:NT_H+'www.linkedin.com/feed/'},
+  {g:'ap',n:'Slack',u:NT_H+'slack.com/'},{g:'ap',n:'Google Docs',u:NT_H+'docs.new'},
+  {g:'ap',n:'Copy',s:'copy'},{g:'ap',n:'More…',s:'more'}
+];
+function ntShareOpen(){
+  var x=document.getElementById('ntX');
+  if(!ntCur||!x||!x.value.trim()){ haptic('error'); showToast('Write something first','error'); return; }
+  var chips=function(g){ return NT_SHA.map(function(a,i){ return a.g===g?'<button type="button" class="nt-chip" onclick="ntShareTo('+i+')">'+auEsc(a.n)+'</button>':''; }).join(''); };
+  var lab='font:700 11px -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:0 2px 8px;';
+  auMakeSheet('ntShareOverlay','Share note',
+    '<div style="'+NT_F+'font-size:12.5px;color:rgba(60,60,67,0.55);line-height:1.5;margin:-6px 2px 14px;">Some apps can\'t receive text from a web page. For those, the note is copied first, then the app opens so you can paste.</div>'+
+    '<div style="'+lab+'">AI models</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">'+chips('ai')+'</div>'+
+    '<div style="'+lab+'">Send to</div><div style="display:flex;flex-wrap:wrap;gap:8px;">'+chips('ap')+'</div>');
+}
+function ntShareTo(i){
+  var a=NT_SHA[i], x=document.getElementById('ntX'); if(!a||!x) return;
+  var t=x.value, ttl=(t.trim().split('\n')[0]||'Note').slice(0,80);
+  if(a.s==='more'){
+    if(navigator.share){ closeAuGenericModal('ntShareOverlay'); navigator.share({title:ttl,text:t}).catch(function(){}); return; }
+    ntCopy(t,'Copied'); return;
+  }
+  if(a.s==='copy'){ ntCopy(t,'Copied'); return; }
+  var url=a.u, direct=false;
+  if(a.d){ var d=a.d(t,ttl); if(d.length<=1800){ url=d; direct=true; } }
+  try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){}
+  closeAuGenericModal('ntShareOverlay');
+  if(/^(sms|mailto):/.test(url)) location.href=url;
+  else if(!window.open(url,'_blank','noopener')) location.href=url;
+  showToast(direct?'Opening '+a.n+'…':'Copied. Paste it in '+a.n,'neutral');
+}
+
+/* ── Mitochondria (client-side) ── */
+var NT_MT={
+  rd:['Research direction','Find the strongest ideas, the gaps, and the next questions worth exploring.'],
+  pl:['Action plan','Turn the fragments into a prioritized plan with clear next steps.'],
+  cr:['Critique','Challenge the reasoning. List weak assumptions, contradictions and missing evidence.'],
+  sm:['Summary','Summarize what the fragments say, grouped by theme.'],
+  dc:['Decisions and risks','Extract the decisions to be made, the options, and the risks of each.']
+};
+function ntMitoBuild(list,obj,ty){
+  var T=NT_MT[ty]||NT_MT.rd;
+  var fr=list.map(function(n,i){ var ls=n.text.trim().split('\n'); return {id:'F'+(i+1), alias:'Note '+(i+1), title:ls[0]||'Untitled', text:n.text.trim()}; });
+  var L=['You are my thinking partner. Below are raw fragments from my own notes.','Treat each fragment as an unverified claim, not a fact. Cite fragment IDs (F1, F2…) for every point you make.','','OBJECTIVE',(obj||'').trim()||'(none given, infer it from the fragments)','','OUTPUT TYPE',T[0]+': '+T[1],'','FRAGMENTS'];
+  fr.forEach(function(f){ L.push('','['+f.id+'] '+f.title,f.text); });
+  L.push('','Answer in clear sections. Mark anything you inferred as an assumption.');
+  var p=L.join('\n');
+  return {fragments:fr, prompt:p, large:new Blob([p]).size>60000};
+}
+function ntMitoOpen(){
+  var l=NOTES.filter(function(n){ return ntSel.has(n.id); });
+  if(!l.length){ haptic('error'); showToast('Select at least one note','error'); return; }
+  if(!l.some(function(n){ return n.text.trim(); })){ haptic('error'); showToast('Selected notes are empty','error'); return; }
+  ntMtList=l; ntMtDirty=false; haptic('light');
+  var lab='font:700 11px -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:14px 2px 8px;';
+  var tys=Object.keys(NT_MT).map(function(k){ return '<option value="'+k+'">'+auEsc(NT_MT[k][0])+'</option>'; }).join('');
+  var ai=[['Claude',NT_H+'claude.ai/new'],['ChatGPT',NT_H+'chatgpt.com/'],['Gemini',NT_H+'gemini.google.com/app'],['DeepSeek',NT_H+'chat.deepseek.com/']].map(function(a){ return '<a class="nt-chip" href="'+a[1]+'" target="_blank" rel="noopener noreferrer">'+a[0]+'</a>'; }).join('');
+  auMakeSheet('ntMitoOverlay','Mitochondria',
+    '<div id="ntMtSub" style="'+NT_F+'font-size:12.5px;color:rgba(60,60,67,0.55);margin:-6px 2px 4px;"></div>'+
+    '<div style="'+lab+'">Fragments</div><div id="ntMtFr" style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;max-height:30vh;overflow-y:auto;"></div>'+
+    '<div style="'+lab+'">Objective</div><textarea id="ntMtObj" class="am-input" style="min-height:70px;resize:vertical;" placeholder="What do you want to solve or explore?" aria-label="Objective" oninput="ntMtObjIn()"></textarea>'+
+    '<div style="'+lab+'">Output type</div><select id="ntMtTy" class="am-input" aria-label="Output type" onchange="ntMtRefresh(false)">'+tys+'</select>'+
+    '<div style="'+lab+'">Prompt</div><textarea id="ntMtP" class="am-input" aria-label="Prompt" spellcheck="false" style="min-height:220px;resize:vertical;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;" oninput="ntMtDirty=true;ntMtRefresh(false)"></textarea>'+
+    '<div style="display:flex;gap:10px;align-items:center;margin:12px 0;"><button type="button" onclick="ntCopy(document.getElementById(\'ntMtP\').value,\'Prompt copied\')" style="flex:1;padding:13px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;font-weight:700;cursor:pointer;">Copy prompt</button><button type="button" class="nt-lnk" onclick="ntMtRefresh(true)">Reset</button></div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;">'+ai+'</div>');
+  ntMtRefresh(true);
+}
+function ntMtObjIn(){ clearTimeout(ntMtTm); ntMtTm=setTimeout(function(){ ntMtRefresh(false); },400); }
+function ntMtRefresh(force){
+  var p=document.getElementById('ntMtP'); if(!p) return;
+  var obj=(document.getElementById('ntMtObj')||{}).value, ty=(document.getElementById('ntMtTy')||{}).value||'rd';
+  var r=ntMitoBuild(ntMtList,obj,ty);
+  if(force) ntMtDirty=false;
+  if(!ntMtDirty) p.value=r.prompt;
+  var fr=document.getElementById('ntMtFr');
+  if(fr) fr.innerHTML=r.fragments.map(function(f,i){ return '<div style="padding:10px 14px;'+(i?'border-top:1px solid rgba(0,0,0,0.07);':'')+'"><div style="'+NT_F+'font-size:13.5px;font-weight:700;color:#1c1c1e;">'+auEsc(f.id)+'</div><div style="'+NT_F+'font-size:11.5px;color:rgba(60,60,67,0.55);">'+auEsc(f.alias)+' · '+auEsc(f.title.slice(0,40))+'</div></div>'; }).join('');
+  var sz=new Blob([p.value]).size, sub=document.getElementById('ntMtSub');
+  if(sub) sub.textContent=r.fragments.length+' fragments · '+flKb(sz)+((r.large||sz>60000)?' · Large: select fewer notes.':'')+(ntMtDirty?' · Edited':'');
+}
+
+/* ── file editor: gutter, paste, copy, download, upload, limits ── */
+function flWrapRows(t){
+  t=t.replace(/\r\n?/g,'\n');
+  var out=[], ch=false;
+  t.split('\n').forEach(function(s){
+    if(s.length<=NT_MAX_ROW){ out.push(s); return; }
+    ch=true; var r=s;
+    while(r.length>NT_MAX_ROW){
+      var cut=r.lastIndexOf(' ',NT_MAX_ROW-1);
+      cut=cut<NT_MAX_ROW*0.5?NT_MAX_ROW:cut+1;
+      out.push(r.slice(0,cut)); r=r.slice(cut);
+    }
+    out.push(r);
+  });
+  return ch?out.join('\n'):t;
+}
+function flGut(){
+  var t=document.getElementById('flText'), g=document.getElementById('flGut'); if(!t||!g) return;
+  var n=t.value.split('\n').length;
+  if(g._n!==n){ g._n=n; var a=[]; for(var i=1;i<=n;i++) a.push(i); g.textContent=a.join('\n'); }
+  g.scrollTop=t.scrollTop;
+}
+function flLimit(){
+  var t=document.getElementById('flText'), le=document.getElementById('flLim'), b=document.getElementById('flCommitBtn'); if(!t||!le) return;
+  var n=t.value.split('\n').length, over=n>NT_MAX_LINES;
+  le.textContent=over?'Max '+NT_MAX_LINES.toLocaleString()+' lines.':n.toLocaleString()+' / '+NT_MAX_LINES.toLocaleString()+' lines';
+  le.classList.toggle('over',over);
+  if(b){ b.disabled=over; b.style.opacity=over?'.4':''; }
+}
+function flOpen(n){
+  haptic('light');
+  var f=n&&FL_DB[n], c=f&&flLast(f);
+  FL_CUR={name:n||'', text:c?c.text:''};
+  var old=document.getElementById('fileEditorScreen'); if(old) old.remove();
+  var btn='background:none;border:none;cursor:pointer;padding:6px 4px;font-size:15px;color:#1c1c1e;'+NT_F;
+  var mono="font:16px/1.5 ui-monospace,Menlo,Consolas,monospace;";
+  var s=document.createElement('div');
+  s.id='fileEditorScreen';
+  s.style.cssText='position:fixed;inset:0;z-index:960;background:#ECE4D6;display:flex;flex-direction:column;animation:screenFadeIn .3s cubic-bezier(0.16,1,0.3,1) forwards;';
+  var pro=(typeof isPro==='function'&&isPro());
+  s.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:max(16px,env(safe-area-inset-top)) 16px 10px;flex-shrink:0;">'+
+      '<button type="button" onclick="haptic(\'light\');flRequestClose()" style="'+btn+'font-weight:500;">Cancel</button>'+
+      '<button type="button" id="flVerBtn" onclick="flVersions()" style="'+btn+'font-weight:500;'+(f?'':'display:none;')+'">Versions</button>'+
+      '<button type="button" id="flCommitBtn" onclick="flCommit()" style="'+btn+'font-weight:700;">Commit</button>'+
+    '</div>'+
+    '<div style="padding:0 20px;flex-shrink:0;">'+
+      '<input id="flTitle" type="text" placeholder="Name your file" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;background:none;border:none;outline:none;font-family:-apple-system,\'SF Pro Display\',sans-serif;font-size:22px;font-weight:700;color:#1c1c1e;padding:6px 0 4px;"/>'+
+      '<div id="flMeta" style="'+NT_F+'font-size:12px;color:rgba(60,60,67,0.45);margin-bottom:6px;"></div>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:14px;padding:0 20px;min-height:40px;flex-shrink:0;border-top:1px solid rgba(0,0,0,0.08);">'+
+      '<button type="button" class="nt-lnk" onclick="flPaste()">Paste</button>'+
+      '<button type="button" class="nt-lnk" onclick="flUpload()">Upload'+(pro?'':' <span style="font-size:10px;font-weight:700;border:1px solid rgba(0,0,0,0.15);border-radius:10px;padding:1px 6px;color:rgba(60,60,67,0.55);">Pro</span>')+'</button>'+
+      '<span id="flLim" class="nt-lim"></span>'+
+      '<span style="margin-left:auto;display:flex;gap:14px;">'+
+        '<button type="button" class="nt-lnk" onclick="flCopyText()">Copy</button>'+
+        '<button type="button" class="nt-lnk" onclick="flDownloadText()">Download</button>'+
+        (f?'<button type="button" class="nt-lnk" style="color:#FF453A;" onclick="flDelete()">Delete</button>':'')+
+      '</span>'+
+    '</div>'+
+    '<div style="flex:1;min-height:0;display:flex;border-top:1px solid rgba(0,0,0,0.08);">'+
+      '<pre id="flGut" aria-hidden="true" style="margin:0;padding:12px 8px 40px 12px;min-width:3ch;text-align:right;color:rgba(60,60,67,0.4);background:rgba(255,255,255,0.5);border-right:1px solid rgba(0,0,0,0.08);overflow:hidden;user-select:none;-webkit-user-select:none;'+mono+'">1</pre>'+
+      '<textarea id="flText" wrap="off" placeholder="Paste or type here" spellcheck="false" aria-label="File text" style="flex:1;min-width:0;border:0;background:none;outline:0;resize:none;white-space:pre;overflow:auto;padding:12px 14px 40px;color:#1c1c1e;'+mono+'"></textarea>'+
+    '</div>';
+  document.body.appendChild(s);
+  document.getElementById('flTitle').value=n||'';
+  var ta=document.getElementById('flText'); ta.value=FL_CUR.text;
+  document.getElementById('flMeta').textContent=f?'v'+c.v+' · '+flKb(c.size||c.text.length):'New file. Saves as .md if no extension';
+  ta.addEventListener('input',function(){ flGut(); flLimit(); });
+  ta.addEventListener('scroll',function(){ var g=document.getElementById('flGut'); if(g) g.scrollTop=ta.scrollTop; });
+  ta.addEventListener('keydown',function(e){ if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){ var b=document.getElementById('flCommitBtn'); if(b&&!b.disabled) b.click(); } });
+  ta.addEventListener('paste',function(e){
+    var txt=(e.clipboardData||window.clipboardData).getData('text'); if(!txt) return;
+    var w=flWrapRows(txt); if(w===txt) return;
+    e.preventDefault(); ta.setRangeText(w,ta.selectionStart,ta.selectionEnd,'end'); ta.dispatchEvent(new Event('input'));
+  });
+  flGut(); flLimit();
+  if(!n) setTimeout(function(){ var t=document.getElementById('flTitle'); if(t) t.focus(); },250);
+}
+async function flPaste(){
+  try{
+    var t=await navigator.clipboard.readText();
+    if(!t){ showToast('Clipboard is empty','error'); return; }
+    var ta=document.getElementById('flText'); ta.value=flWrapRows(t); ta.dispatchEvent(new Event('input')); ta.focus();
+  }catch(e){ haptic('error'); showToast("Can't read the clipboard. Long-press the box and paste",'error'); }
+}
+function flUpload(){
+  if(!(typeof isPro==='function'&&isPro())){ haptic('error'); showToast('Upload is for Pro. Free supports text only: type or Paste','neutral'); return; }
+  var inp=document.createElement('input'); inp.type='file'; inp.accept='.md,.txt,.json,.csv,.yaml,.yml,text/*';
+  inp.onchange=async function(e){
+    var f=e.target.files[0]; if(!f) return;
+    try{
+      var t=await f.text(), ta=document.getElementById('flText'), ti=document.getElementById('flTitle');
+      if(!ta) return; ta.value=t.replace(/\r\n?/g,'\n'); if(!ti.value.trim()) ti.value=f.name;
+      ta.dispatchEvent(new Event('input'));
+    }catch(x){ showToast('Could not read '+f.name,'error'); }
+  };
+  inp.click();
+}
+function flCopyText(){ var t=document.getElementById('flText'); if(t&&t.value) ntCopy(t.value,'Copied'); else showToast('Nothing to copy','neutral'); }
+function flDownloadText(){
+  var t=document.getElementById('flText'), ti=document.getElementById('flTitle'); if(!t||!t.value) { showToast('Nothing to download','neutral'); return; }
+  var nm=flName(ti.value)||'file.md', f=FL_DB[nm], dot=nm.lastIndexOf('.');
+  var out=f?(dot>0?nm.slice(0,dot):nm)+'-v'+flLast(f).v+(dot>0?nm.slice(dot):'.txt'):nm;
+  ntDownload(out,t.value); haptic('success');
+}
+
+/* ── export / import / context pack ── */
+function flExport(){
+  ntDownload('articardd-files-'+todayKey()+'.json', JSON.stringify({app:'articardd-files',v:1,t:Date.now(),files:FL_DB,notes:NOTES}), 'application/json');
+  haptic('success'); showToast('Backup downloaded','success');
+}
+function flImportPick(){
+  var inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+  inp.onchange=async function(e){
+    var f=e.target.files[0]; if(!f) return;
+    var o; try{ o=JSON.parse(await f.text()); }catch(x){ haptic('error'); showToast('Not a valid backup','error'); return; }
+    flImportRun(o);
+  };
+  inp.click();
+}
+async function flImportRun(o){
+  if(!o||typeof o!=='object'||(!o.files&&!o.notes)){ haptic('error'); showToast('Not a valid backup','error'); return; }
+  var pf=JSON.stringify(FL_DB), pn=JSON.stringify(NOTES), addV=0, addN=0;
+  var files=o.files||{};
+  Object.keys(files).forEach(function(n){
+    var f=files[n]; if(typeof n!=='string'||!f||!Array.isArray(f.vs)) return;
+    var d=FL_DB[n]||(FL_DB[n]={next:1,vs:[]});
+    f.vs.forEach(function(v){
+      if(!v||typeof v.text!=='string') return;
+      if(d.vs.some(function(x){ return x.text===v.text; })) return;
+      d.vs.push({v:d.next, t:v.t||Date.now(), size:new Blob([v.text]).size, text:v.text}); d.next++; addV++;
+    });
+    while(d.vs.length>FL_VMAX) d.vs.shift();
+    if(!d.vs.length) delete FL_DB[n];
+  });
+  (Array.isArray(o.notes)?o.notes:[]).forEach(function(m){
+    if(!m||typeof m!=='object'||!m.id||NOTES.some(function(x){ return x.id===m.id; })) return;
+    ntFix1(m); NOTES.push(m); addN++;
+  });
+  var ok=await flPersist(); if(ok) ok=await saveNotes();
+  if(!ok){ FL_DB=JSON.parse(pf); NOTES=JSON.parse(pn); haptic('error'); showToast("Couldn't import. Storage may be full",'error'); return; }
+  flRender(); haptic('success');
+  showToast(addV||addN?'Imported '+addV+' version(s), '+addN+' note(s)':'Nothing new to import', addV||addN?'success':'neutral');
+}
+function flPackOpen(){
+  var names=Object.keys(FL_DB).filter(function(n){ return FL_DB[n].vs.length; }).sort();
+  if(!names.length){ haptic('error'); showToast('No saved files yet','error'); return; }
+  haptic('light');
+  var radio=function(v,l,s,on){ return '<label style="display:block;background:rgba(255,255,255,0.72);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;"><input type="radio" name="flps" value="'+v+'"'+(on?' checked':'')+' onchange="flPackRefresh()" style="margin-right:8px;"><b style="'+NT_F+'font-size:14px;">'+l+'</b>'+(s?'<div style="'+NT_F+'font-size:12px;color:rgba(60,60,67,0.55);margin:3px 0 0 24px;">'+s+'</div>':'')+'</label>'; };
+  var chk=names.map(function(n){ return '<label style="display:flex;align-items:center;gap:10px;min-height:40px;'+NT_F+'font-size:13.5px;overflow-wrap:anywhere;"><input type="checkbox" class="flpc" value="'+auEsc(n)+'" checked onchange="flPackRefresh()">'+auEsc(n)+'</label>'; }).join('');
+  auMakeSheet('flPackOverlay','Export Context Pack',
+    radio('all','All files, every version','',true)+radio('lat','Latest versions only','Smallest handoff',false)+radio('sel','Selected files only','',false)+
+    '<div id="flPackF" hidden style="background:rgba(255,255,255,0.72);border-radius:14px;padding:4px 14px;max-height:26vh;overflow:auto;margin-bottom:8px;">'+chk+'</div>'+
+    '<div id="flPackS" style="'+NT_F+'font-size:12.5px;color:rgba(60,60,67,0.55);margin:8px 2px 12px;"></div>'+
+    '<div style="display:flex;gap:10px;"><button type="button" onclick="ntDownload(ntPackName,ntPackText,\'text/markdown\');haptic(\'success\')" style="flex:1;padding:13px;border-radius:14px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.72);color:#1c1c1e;font-weight:600;cursor:pointer;">Download .md</button><button type="button" onclick="ntCopy(ntPackText,\'Context Pack copied\')" style="flex:1;padding:13px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;font-weight:700;cursor:pointer;">Copy</button></div>');
+  flPackRefresh();
+}
+function flPackRefresh(){
+  var m=document.querySelector('input[name="flps"]:checked'), mode=m?m.value:'all';
+  var pf=document.getElementById('flPackF'); if(pf) pf.hidden=mode!=='sel';
+  var picked=[].slice.call(document.querySelectorAll('.flpc:checked')).map(function(c){ return c.value; });
+  var ns=Object.keys(FL_DB).filter(function(n){ return FL_DB[n].vs.length; }).sort();
+  if(mode==='sel') ns=ns.filter(function(n){ return picked.indexOf(n)>-1; });
+  var out=['# articardd Context Pack','Generated: '+new Date().toISOString(),''], nv=0;
+  ns.forEach(function(n){
+    var f=FL_DB[n], vs=mode==='lat'?[flLast(f)]:f.vs;
+    vs.forEach(function(v){ nv++; out.push('## '+n+' (v'+v.v+', '+new Date(v.t).toISOString().slice(0,10)+')',NT_FENCE+'text',v.text,NT_FENCE,''); });
+  });
+  ntPackText=out.join('\n'); ntPackName='articardd-context-pack-'+todayKey()+'.md';
+  var b=new Blob([ntPackText]).size, s=document.getElementById('flPackS');
+  if(s) s.textContent=ns.length+' files · '+nv+' versions · '+flKb(b)+' · ~'+Math.ceil(b/4).toLocaleString()+' tokens';
+}
+
+ntFix(); try{ flRender(); }catch(e){}
+/* === END: FILES + AI NOTES PARITY === */
 /* === START: READY FLAG === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */

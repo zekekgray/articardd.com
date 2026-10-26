@@ -16804,11 +16804,11 @@ const body = new T.Group(); root.add(body);
     g.addColorStop(0, 'rgba(40,235,255,0.9)'); g.addColorStop(0.35, 'rgba(25,200,255,0.25)'); g.addColorStop(1, 'rgba(0,150,255,0)');
     x.fillStyle = g; x.fillRect(0, 0, w, h);
   });
-  const glows = [];
+  const glows = [], eyes = [];
   [-1, 1].forEach(s => {
     const eye = new T.Mesh(new T.PlaneGeometry(0.22, 0.06),
       new T.MeshBasicMaterial({ map: eyeTex, transparent: true, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
-    eye.position.set(s * 0.155, 0.01, 0.462); eye.rotation.set(0, s * 0.43, s * 0.06); head.add(eye);
+    eye.position.set(s * 0.155, 0.01, 0.462); eye.rotation.set(0, s * 0.43, s * 0.06); head.add(eye); eyes.push(eye);
     const sp = new T.Sprite(new T.SpriteMaterial({ map: glowTex, blending: T.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.4, toneMapped: false }));
     sp.scale.set(0.5, 0.5, 1); sp.position.set(s * 0.155, 0.01, 0.5); head.add(sp); glows.push(sp);
   });
@@ -17010,6 +17010,8 @@ const win = (a, b, f, x) => ss(a, a + f, x) * (1 - ss(b - f, b, x));
 
 function nextSeg(t0) {
   let a;
+  if (_restDue) { _restDue = false; return { a: 12, st: 0, tp: 0, am: 0, sd: 1, ln: 0, tf: 1, af: .7, t0, D: 3.5 + rdr() * 6 }; }
+  _restDue = rdr() < .6;
   do { let r = rdr() * ACT_T; for (a = 0; a < ACT_W.length - 1 && r > ACT_W[a]; a++) r -= ACT_W[a]; } while (a === lastAct);
   lastAct = a;
   const st = Math.min(3, rdr() * 4 | 0), tp = Math.min(4, rdr() * 5 | 0), am = Math.min(4, rdr() * 5 | 0);
@@ -17053,7 +17055,7 @@ function rigAnimate(t) {
   if (!seg || t > seg.t0 + seg.D + 20) seg = nextSeg(t);
   while (t >= seg.t0 + seg.D) seg = nextSeg(seg.t0 + seg.D);
   const AC = seg.a, st = seg.st, sd = seg.sd, tf = seg.tf, af = seg.af, Dd = seg.D, u = t - seg.t0;
-  const w = win(0, Dd, Math.min(.6, Dd * .18), u), q = (a, b) => ss(a * Dd, b * Dd, u);
+  const w = AC === 12 ? 0 : win(0, Dd, Math.min(.6, Dd * .18), u), q = (a, b) => ss(a * Dd, b * Dd, u);
   let wR = 0, wL = 0, wvf = 1, wam = .45 * af, nod = 0, shk = 0, tilt = 0, look = 0, lookX = 0, jolt = 0;
   let sit = 0, lap = 0, sl = 0, droop = 0, stl = 0, zv = 0, kk = 0;
   let f1 = 0, f2 = 0, wk = 0, hd = 0, hv = 0, dist = 0, turn = 0, spread = 0, hop = 0, bsw = 0, bz = 0;
@@ -17341,13 +17343,84 @@ function rigAnimate(t) {
   /* ── share / preview snapshot: idle pose, nakaharap ── */
   window.__robotStill = function () {
     const sy = robot.rotation.y, sv = RS.still;
-    robot.rotation.y = 0; RS.still = true; rigAnimate(0);
+    robot.rotation.y = 0; RS.still = true; rigAnimate(0); eyes.forEach(e => { e.scale.y = 1; });
     robot.updateMatrixWorld(true);
     renderer.render(scene, camera);
     robot.rotation.y = sy; RS.still = sv;
   };
 
-  /* ── loop ── */
+  /* === START: IDLE LIFE LAYER === */
+let _restDue = true;
+const idle = { blinkAt: 1.2 + Math.random() * 2, blinkT: -1, dbl: false, open: 1, iw: 1, gw: 1,
+  ptr: { x: 0, y: 0, t: -1e9 }, gz: { y: 0, x: 0, mode: 0, oy: 0, ox: 0, next: 1.5 } };
+/* gaano kalakas ang paglingon habang may action (0 = off) */
+const GW = { 0:.7, 1:.35, 2:.35, 3:.4, 4:.7, 5:0, 6:.8, 7:.15, 8:0, 9:.4, 10:0, 11:0, 12:1 };
+const clampN = (v, a, b) => v < a ? a : v > b ? b : v;
+const _setPtr = e => {
+  const r = ff.getBoundingClientRect(); if (!r.width) return;
+  idle.ptr.x = clampN(((e.clientX - r.left) / r.width - .5) * 2, -1, 1);
+  idle.ptr.y = clampN(((e.clientY - r.top) / r.height - .5) * 2, -1, 1);
+  idle.ptr.t = performance.now();
+};
+ff.addEventListener('pointermove', _setPtr, { passive: true });
+ff.addEventListener('pointerdown', _setPtr, { passive: true });
+
+function idleLife(t, dt, now) {
+  const a = seg ? seg.a : 12, calm = reduce ? .3 : 1;
+  const heavy = a === 5 || a === 8 || a === 10 || a === 11;
+  idle.iw += ((heavy ? 0 : 1) - idle.iw) * Math.min(1, dt * 4);
+  idle.gw += ((GW[a] == null ? 1 : GW[a]) - idle.gw) * Math.min(1, dt * 5);
+
+  /* 1. paghinga: tatlong sine na hindi magkapareho ang ritmo, kaya hindi eksaktong umuulit */
+  const b = (Math.sin(t * 1.55) * .62 + Math.sin(t * .63 + 1.3) * .25 + Math.sin(t * 2.9 + .4) * .08) * calm;
+  chest.scale.set(1 + .010 * b, 1, 1 + .028 * b);
+  arms[-1].ua.parent.position.y = 6.2 + .010 * b;
+  arms[1].ua.parent.position.y = 6.2 + .010 * b;
+  headPivot.position.y = 6.75 + .008 * b;
+  body.rotation.z = (.007 * Math.sin(t * .41) + .004 * Math.sin(t * .97 + 2)) * idle.iw * calm;
+  body.rotation.x = .004 * Math.sin(t * .33 + 1) * idle.iw * calm;
+
+  /* 2. paglingon: kung may daliri sa card = sinusundan; kung wala = random na tingin sa user / gilid / neutral */
+  const g = idle.gz, follow = performance.now() - idle.ptr.t < 3500;
+  if (!follow && t > g.next) {
+    const r = Math.random();
+    g.mode = r < .45 ? 0 : r < .85 ? 1 : 2;          /* 0 = tingin sa user, 1 = sulyap sa gilid, 2 = neutral */
+    g.oy = (Math.random() - .5) * .6; g.ox = (Math.random() - .35) * .24;
+    g.next = t + 1.8 + Math.random() * 4.5;
+  }
+  let ty, tx;
+  if (follow) { ty = idle.ptr.x * .5 - robot.rotation.y * .8; tx = idle.ptr.y * .3; }
+  else if (g.mode === 0) { ty = -robot.rotation.y * .9; tx = 0; }
+  else if (g.mode === 1) { ty = g.oy - robot.rotation.y * .5; tx = g.ox; }
+  else { ty = 0; tx = 0; }
+  ty = clampN(ty, -.6, .6); tx = clampN(tx, -.22, .3);
+  const k = 1 - Math.exp(-dt * (follow ? 7 : 3));
+  g.y += (ty - g.y) * k; g.x += (tx - g.x) * k;
+  const gw = idle.gw * calm;
+  headPivot.rotation.y += (g.y + .02 * Math.sin(t * .53) + .012 * Math.sin(t * 1.31 + 2)) * gw;
+  headPivot.rotation.x += (g.x + .015 * Math.sin(t * .71 + .5)) * gw;
+  headPivot.rotation.z += .012 * Math.sin(t * .61 + 1) * gw;
+
+  /* 3. blink: random 2.2 to 6.7s, minsan double-blink; pikit habang natutulog */
+  if (idle.blinkT < 0 && t > idle.blinkAt) idle.blinkT = 0;
+  let openT = 1;
+  if (idle.blinkT >= 0) {
+    idle.blinkT += dt;
+    const p = idle.blinkT / .17;
+    openT = p < .5 ? 1 - p * 2 : p < 1 ? (p - .5) * 2 : 1;
+    if (p >= 1) {
+      idle.blinkT = -1;
+      if (!idle.dbl && Math.random() < .18) { idle.dbl = true; idle.blinkAt = t + .12; }
+      else { idle.dbl = false; idle.blinkAt = t + 2.2 + Math.random() * 4.5; }
+    }
+  }
+  if (a === 7 && seg) { const u = t - seg.t0; if (u > .12 * seg.D && u < .86 * seg.D) openT = 0; }
+  idle.open += (Math.max(.06, openT) - idle.open) * Math.min(1, dt * 30);
+  eyes.forEach(e => { e.scale.y = idle.open; });
+}
+/* === END: IDLE LIFE LAYER === */
+
+/* ── loop ── */
   const osEl = document.getElementById('screenOS'), gateEl = document.getElementById('screenGate');
   const fwd = new T.Vector3(), toCam = new T.Vector3(), qq = new T.Quaternion();
   let last = performance.now(), tAcc = 0;
@@ -17370,12 +17443,13 @@ function rigAnimate(t) {
     robot.rotation.y = manYaw + (reduce ? 0 : Math.sin(tAcc * 0.5) * 0.28 * autoW);
 
     rigAnimate(tAcc);
+    idleLife(tAcc, dt, now);
 
     /* fade eye glow kapag nakatalikod */
     head.getWorldQuaternion(qq); fwd.set(0, 0, 1).applyQuaternion(qq);
     toCam.copy(camera.position).normalize();
     const f = Math.max(0, fwd.dot(toCam));
-    glows.forEach(g => g.material.opacity = 0.4 * f * f);
+    glows.forEach(g => g.material.opacity = 0.4 * f * f * (0.3 + 0.7 * idle.open));
 
     robot.updateMatrixWorld(true);
     renderer.render(scene, camera);

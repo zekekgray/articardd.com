@@ -17418,6 +17418,43 @@ function acOpenApp(url) {
   location.href = m.ios;
   setTimeout(() => { document.removeEventListener('visibilitychange', h); if (!left) location.href = url; }, 1400);
 }
+/* === START: OPEN AI APP WITH PREFILLED TEXT === */
+const AI_PREFILL = {
+  'chatgpt.com': 'q', 'claude.ai': 'q', 'grok.com': 'q',
+  'www.perplexity.ai': 'q', 'copilot.microsoft.com': 'q', 'chat.mistral.ai': 'q'
+};
+/* laging kino-copy ang text. Kung kaya ng LLM at kasya sa URL, naka-prefill na sa input.
+   Returns true kung prefilled, false kung paste na lang ang kailangan. */
+function acOpenWithText(url, text) {
+  text = String(text || '');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function () { fallbackCopy(text); });
+    else fallbackCopy(text);
+  } catch (e) { fallbackCopy(text); }
+  let host = '';
+  try { host = new URL(url).hostname; } catch (e) {}
+  const key = AI_PREFILL[host];
+  if (key) {
+    try {
+      const u = new URL(url);
+      u.searchParams.set(key, text);
+      if (u.href.length <= 7500) {
+        if (!window.open(u.href, '_blank', 'noopener')) location.href = u.href;
+        return true;
+      }
+    } catch (e) {}
+  }
+  acOpenApp(url);
+  return false;
+}
+function ntMtSend(url, name) {
+  const p = document.getElementById('ntMtP');
+  if (!p || !p.value.trim()) { haptic('error'); showToast('Nothing to send', 'error'); return; }
+  haptic('success');
+  const pre = acOpenWithText(url, p.value);
+  showToast(pre ? 'Opening ' + name + ' with your prompt ready. Just send.' : 'Prompt copied. Paste it in ' + name + ' and send.', 'success');
+}
+/* === END: OPEN AI APP WITH PREFILLED TEXT === */
 /* === END: OPEN AI APP === */
 
 /* === START: PROTOCOL (merged from ArtiBytte Executive Protocol) === */
@@ -17484,7 +17521,7 @@ function pfPaint() {
     <div style="${F}font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-6px 2px 14px;">One file with everything in order. Tap Start, paste into the chat, and send.</div>
     <div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:14px;">${rows}</div>
     <button type="button" onclick="pfStart(0)" style="width:100%;padding:15px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;${F}font-size:15px;font-weight:700;cursor:pointer;margin-bottom:6px;">Start with DeepSeek</button>
-    <div style="${F}font-size:11.5px;color:rgba(60,60,67,0.5);text-align:center;margin-bottom:14px;">Copies the protocol (${kbs}), then opens DeepSeek. Paste and send.</div>
+    <div style="${F}font-size:11.5px;color:rgba(60,60,67,0.5);text-align:center;margin-bottom:14px;">Copies the protocol (${kbs}) and opens the AI. If the AI supports it and the text fits, it is already typed in. Otherwise just paste and send.</div>
     <div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:0 2px 8px;">Or use another AI</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">${chips}</div>
     <div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:0 2px 8px;">When you are done, send</div>
@@ -17498,8 +17535,8 @@ function pfStart(i) {
   const a = PF_AIS[i] || PF_AIS[0];
   haptic('success');
   try { navigator.clipboard.writeText(pfText).catch(() => fallbackCopy(pfText)); } catch (e) { fallbackCopy(pfText); }
-  acOpenApp(a.u);
-  showToast('Protocol copied. Paste it in ' + a.n + ' and send.', 'success');
+  const pre = acOpenWithText(a.u, pfText);
+  showToast(pre ? 'Opening ' + a.n + ' with the protocol ready. Just send.' : 'Protocol copied. Paste it in ' + a.n + ' and send.', 'success');
 }
 
 function pfCmd(t) {
@@ -18315,7 +18352,7 @@ function ntMitoOpen(){
   ntMtList=l; ntMtDirty=false; haptic('light');
   var lab='font:700 11px -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:14px 2px 8px;';
   var tys=Object.keys(NT_MT).map(function(k){ return '<option value="'+k+'">'+auEsc(NT_MT[k][0])+'</option>'; }).join('');
-  var ai=[['Claude',NT_H+'claude.ai/new'],['ChatGPT',NT_H+'chatgpt.com/'],['Gemini',NT_H+'gemini.google.com/app'],['DeepSeek',NT_H+'chat.deepseek.com/']].map(function(a){ return '<button type="button" class="nt-chip" onclick="acOpenApp(\''+a[1]+'\')">'+a[0]+'</button>'; }).join('');
+  var ai=[['Claude',NT_H+'claude.ai/new'],['ChatGPT',NT_H+'chatgpt.com/'],['Grok',NT_H+'grok.com/'],['Perplexity',NT_H+'www.perplexity.ai/'],['Gemini',NT_H+'gemini.google.com/app'],['DeepSeek',NT_H+'chat.deepseek.com/']].map(function(a){ return '<button type="button" class="nt-chip" onclick="ntMtSend(\''+a[1]+'\',\''+a[0]+'\')">'+a[0]+'</button>'; }).join('');
   auMakeSheet('ntMitoOverlay','Mitochondria',
     '<div id="ntMtSub" style="'+NT_F+'font-size:12.5px;color:rgba(60,60,67,0.55);margin:-6px 2px 4px;"></div>'+
     '<div style="'+lab+'">Fragments</div><div id="ntMtFr" style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;max-height:30vh;overflow-y:auto;"></div>'+
@@ -18669,4 +18706,5 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
+
 

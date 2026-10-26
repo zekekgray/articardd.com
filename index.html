@@ -6321,6 +6321,7 @@ function osBackTapped() {
     profilePhotoB64 = b64;
     let ok = false;
     try { ok = !!(await window.storage.set(PROFILE_PHOTO_KEY, b64, false)); } catch(e) {}
+    if (ok) { try { const cc = cardCacheRead('owner'); if (cc && cc.d) { cc.d.photo = b64; cardCacheWrite(cc.d, true); } } catch (e) {} }
     if (!ok) profilePhotoB64 = prev;
     else if (rmToken()) apiPost('ownerUpdateCard', { token: rmToken(), fields: { photo: b64 } }).catch(function () { showToast('Photo saved on this device. Cloud sync pending', 'neutral'); });
     applyAvatarEverywhere();
@@ -6400,6 +6401,34 @@ function osBackTapped() {
   }
 
   function triggerPhotoUpload() {
+    if (document.body.classList.contains('public-mode')) return;
+    haptic('light');
+    document.getElementById('acPhotoInput')?.remove();
+    const inp = document.createElement('input');
+    inp.id = 'acPhotoInput'; inp.type = 'file'; inp.accept = 'image/*';
+    inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+    inp.addEventListener('change', () => {
+      const file = inp.files && inp.files[0];
+      if (!file) { inp.remove(); return; }
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 200;
+        const s = Math.min(img.width, img.height), ox = (img.width - s) / 2, oy = (img.height - s) / 2;
+        canvas.getContext('2d').drawImage(img, ox, oy, s, s, 0, 0, 200, 200);
+        URL.revokeObjectURL(url); inp.remove();
+        saveProfilePhoto(canvas.toDataURL('image/jpeg', 0.7)).then(ok => {
+          if (ok) { haptic('success'); showToast('Photo updated', 'success'); }
+          else { haptic('error'); showToast("Couldn't save photo", 'error'); }
+        });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); inp.remove(); haptic('error'); showToast("Can't read that photo. Try a JPG or PNG", 'error'); };
+      img.src = url;
+    });
+    document.body.appendChild(inp);
+    inp.click();
+  }
+  function triggerPhotoUploadOld() {
     if (document.body.classList.contains('public-mode')) return;
     haptic('light');
     const inp = document.createElement('input');
@@ -12398,7 +12427,7 @@ function copyPIAthId() {
     closeAccountPage();
     (function () {
       var tok = sessionStorage.getItem('athna-owner-token');
-      Promise.resolve(abCloudFlush().catch(function () {})).then(function () { return tok ? apiPost('ownerLogout', { token: tok }).catch(function () {}) : null; }).then(function () {
+      Promise.resolve(Promise.all([abCloudFlush(), vtFlush()]).catch(function () {})).then(function () { return tok ? apiPost('ownerLogout', { token: tok }).catch(function () {}) : null; }).then(function () {
         window.forgetDevice && window.forgetDevice();
         try { localStorage.removeItem('athna-card-cache-v1:owner'); localStorage.removeItem('athna:card-cache-owner'); } catch (e) {}
         /* contacts + owner marker + dirty flag stay: instant render on next login, unsynced edits are not lost */
@@ -13136,6 +13165,7 @@ function applyRemoteCard(d, owner, fromCache) {
     if (!owner) publicConnectSync(); /* PUBLIC AUTO-OPEN */
     if (owner) loadMeetings(); /* UNIFIED MEETINGS: kunin sa Meetings sheet pagka-login/boot */
     if (owner) abCloudPull().then(function () { setTimeout(syncLeads, 300); });
+    if (owner) vtPullAll();
     if (!fromCache) cardCacheWrite(d, owner);
     return true;
   } catch (e) { console.error('applyRemoteCard failed', e); return false; }
@@ -17357,6 +17387,39 @@ function rigAnimate(t) {
 })();
 /* === END: ARTIBOT (Three.js) === */
 
+/* === START: OPEN AI APP (native first, browser fallback) === */
+const AI_APPS = {
+  'chatgpt.com':            { ios: 'chatgpt://',        pkg: 'com.openai.chatgpt' },
+  'claude.ai':              { ios: 'claude://',         pkg: 'com.anthropic.claude' },
+  'gemini.google.com':      { ios: 'googlegemini://',   pkg: 'com.google.android.apps.bard' },
+  'chat.deepseek.com':      { ios: 'deepseek://',       pkg: 'com.deepseek.chat' },
+  'grok.com':               { ios: 'grok://',           pkg: 'ai.x.grok' },
+  'www.perplexity.ai':      { ios: 'perplexity://',     pkg: 'ai.perplexity.app.android' },
+  'copilot.microsoft.com':  { ios: 'ms-copilot://',     pkg: 'com.microsoft.copilot' },
+  'chat.mistral.ai':        { pkg: 'ai.mistral.chat' },
+  'www.kimi.com':           { pkg: 'com.moonshot.kimichat' }
+};
+function acOpenApp(url) {
+  let host = '', path = '/';
+  try { const u = new URL(url); host = u.hostname; path = u.pathname || '/'; } catch (e) {}
+  const m = AI_APPS[host], ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/i.test(ua);
+  if (!m || (!ios && !android)) { if (!window.open(url, '_blank', 'noopener')) location.href = url; return; }
+  if (android) {   /* Android intent: bubukas ang app, kung wala ay browser */
+    location.href = 'intent://' + host + path + '#Intent;scheme=https;package=' + m.pkg +
+      ';S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+    return;
+  }
+  if (!m.ios) { location.href = url; return; }   /* iOS na walang kilalang scheme: universal link */
+  let left = false;
+  const h = () => { if (document.hidden) left = true; };
+  document.addEventListener('visibilitychange', h);
+  location.href = m.ios;
+  setTimeout(() => { document.removeEventListener('visibilitychange', h); if (!left) location.href = url; }, 1400);
+}
+/* === END: OPEN AI APP === */
+
 /* === START: PROTOCOL (merged from ArtiBytte Executive Protocol) === */
 const PF_SRC = '/assets/protocol.md';
 const PF_H = 'https:' + String.fromCharCode(47, 47);
@@ -17435,7 +17498,7 @@ function pfStart(i) {
   const a = PF_AIS[i] || PF_AIS[0];
   haptic('success');
   try { navigator.clipboard.writeText(pfText).catch(() => fallbackCopy(pfText)); } catch (e) { fallbackCopy(pfText); }
-  if (!window.open(a.u, '_blank', 'noopener')) location.href = a.u;
+  acOpenApp(a.u);
   showToast('Protocol copied. Paste it in ' + a.n + ' and send.', 'success');
 }
 
@@ -18223,6 +18286,7 @@ function ntShareTo(i){
   try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){}
   closeAuGenericModal('ntShareOverlay');
   if(/^(sms|mailto):/.test(url)) location.href=url;
+  else if(a.g==='ai') acOpenApp(url);
   else if(!window.open(url,'_blank','noopener')) location.href=url;
   showToast(direct?'Opening '+a.n+'…':'Copied. Paste it in '+a.n,'neutral');
 }
@@ -18251,7 +18315,7 @@ function ntMitoOpen(){
   ntMtList=l; ntMtDirty=false; haptic('light');
   var lab='font:700 11px -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:14px 2px 8px;';
   var tys=Object.keys(NT_MT).map(function(k){ return '<option value="'+k+'">'+auEsc(NT_MT[k][0])+'</option>'; }).join('');
-  var ai=[['Claude',NT_H+'claude.ai/new'],['ChatGPT',NT_H+'chatgpt.com/'],['Gemini',NT_H+'gemini.google.com/app'],['DeepSeek',NT_H+'chat.deepseek.com/']].map(function(a){ return '<a class="nt-chip" href="'+a[1]+'" target="_blank" rel="noopener noreferrer">'+a[0]+'</a>'; }).join('');
+  var ai=[['Claude',NT_H+'claude.ai/new'],['ChatGPT',NT_H+'chatgpt.com/'],['Gemini',NT_H+'gemini.google.com/app'],['DeepSeek',NT_H+'chat.deepseek.com/']].map(function(a){ return '<button type="button" class="nt-chip" onclick="acOpenApp(\''+a[1]+'\')">'+a[0]+'</button>'; }).join('');
   auMakeSheet('ntMitoOverlay','Mitochondria',
     '<div id="ntMtSub" style="'+NT_F+'font-size:12.5px;color:rgba(60,60,67,0.55);margin:-6px 2px 4px;"></div>'+
     '<div style="'+lab+'">Fragments</div><div id="ntMtFr" style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;max-height:30vh;overflow-y:auto;"></div>'+
@@ -18452,8 +18516,157 @@ function flPackRefresh(){
 ntFix(); try{ flRender(); }catch(e){}
 /* === END: FILES + AI NOTES PARITY === */
 /* === START: READY FLAG === */
+/* === START: VAULT CLOUD SYNC (files + AI notes → Supabase) === */
+const VT_KINDS = ['file', 'note'], VT_ROW_MAX = 5000000, VT_BATCH_BYTES = 2500000;
+let _vtPulled = { file: false, note: false }, _vtBusy = {}, _vtAgain = {}, _vtT = {}, _vtWarned = false;
+
+function vtCid() { return (currentEntry && currentEntry.cardId) || ''; }
+function vtSKey(k) { return 'ac-vt-sent:' + vtCid() + ':' + k; }
+function vtSentRead(k) { try { return JSON.parse(localStorage.getItem(vtSKey(k)) || '{}') || {}; } catch (e) { return {}; } }
+function vtSentWrite(k, o) { try { localStorage.setItem(vtSKey(k), JSON.stringify(o)); } catch (e) {} }
+function vtHash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return s.length + ':' + h; }
+function vtStamp(k, d) { if (k === 'file') { const l = d.vs && d.vs[d.vs.length - 1]; return l ? l.t : 0; } return d.t || 0; }
+function vtLocal(k) {
+  const m = {};
+  if (k === 'file') Object.keys(FL_DB).forEach(n => { if (FL_DB[n].vs && FL_DB[n].vs.length) m[n] = FL_DB[n]; });
+  else NOTES.forEach(n => { m[n.id] = n; });
+  return m;
+}
+function vtApply(k, id, data) {
+  if (k === 'file') { FL_DB[id] = data; return; }
+  if (typeof ntCur !== 'undefined' && ntCur && ntCur.id === id) return;   /* nasa editor ngayon, huwag galawin */
+  ntFix1(data);
+  const i = NOTES.findIndex(x => x.id === id);
+  if (i < 0) NOTES.push(data); else NOTES[i] = data;
+}
+function vtRemove(k, id) {
+  if (k === 'file') { delete FL_DB[id]; return; }
+  const i = NOTES.findIndex(x => x.id === id); if (i > -1) NOTES.splice(i, 1);
+}
+
+async function vtPullRun(k) {
+  if (!rmToken() || document.body.classList.contains('public-mode') || !vtCid()) return false;
+  let r;
+  try { r = await apiPost('ownerGetVault', { token: rmToken(), kind: k }); }
+  catch (e) { if (/session|sign in/i.test(String(e && e.message))) rmExpired(); return false; }
+  const exists = !!(r && r.exists), cloud = {};
+  ((r && r.items) || []).forEach(it => { if (it && it.id) cloud[it.id] = it.data; });
+  const local = vtLocal(k), sent = exists ? vtSentRead(k) : {};   /* walang laman ang cloud = ipush ulit lahat, huwag magbura */
+  const nsent = Object.assign({}, sent);
+  let changed = false;
+  Object.keys(cloud).forEach(id => {
+    const c = cloud[id], l = local[id], ch = vtHash(JSON.stringify(c));
+    if (!l) { if (id in sent) return; vtApply(k, id, c); nsent[id] = ch; changed = true; return; }   /* nasa sent pero wala sa local = pending delete */
+    const lh = vtHash(JSON.stringify(l));
+    if (lh === ch) { nsent[id] = ch; return; }
+    if (sent[id] === lh || vtStamp(k, c) > vtStamp(k, l)) { vtApply(k, id, c); nsent[id] = ch; changed = true; }
+  });
+  if (exists) Object.keys(sent).forEach(id => {                 /* binura sa ibang device */
+    if (id in cloud) return;
+    const l = local[id];
+    if (!l) { delete nsent[id]; return; }
+    if (vtHash(JSON.stringify(l)) === sent[id]) { vtRemove(k, id); delete nsent[id]; changed = true; }
+  });
+  if (changed) { if (k === 'file') await flPersist(); else await saveNotes(); flRender(); }
+  vtSentWrite(k, nsent);
+  _vtPulled[k] = true;
+  vtPush(k);
+  return true;
+}
+function vtPullAll() {
+  if (!rmToken() || !vtCid()) return;
+  let own = ''; try { own = localStorage.getItem('ac-vt-owner') || ''; } catch (e) {}
+  const go = () => { try { localStorage.setItem('ac-vt-owner', vtCid()); } catch (e) {} VT_KINDS.forEach(vtPullRun); };
+  if (own && own !== vtCid()) {   /* ibang account sa device na ito: huwag ihalo ang data */
+    FL_DB = {}; NOTES.length = 0;
+    Promise.all([flPersist(), saveNotes()]).then(() => { flRender(); go(); });
+    return;
+  }
+  go();
+}
+
+async function vtPush(k) {
+  if (!rmToken() || !_vtPulled[k]) return false;
+  if (_vtBusy[k]) { _vtAgain[k] = true; return false; }
+  _vtBusy[k] = true;
+  try {
+    const sent = vtSentRead(k), cur = vtLocal(k), ups = [], now = {};
+    let big = 0;
+    Object.keys(cur).forEach(id => {
+      const j = JSON.stringify(cur[id]), h = vtHash(j); now[id] = h;
+      if (sent[id] === h) return;
+      if (j.length > VT_ROW_MAX) { big++; return; }
+      ups.push({ id: id, data: cur[id], h: h, n: j.length });
+    });
+    const dels = Object.keys(sent).filter(id => !(id in now));
+    if (big && !_vtWarned) { _vtWarned = true; showToast(big + ' item(s) too large for cloud sync. Kept on this device', 'neutral'); }
+    let batch = [], bytes = 0;
+    const flush = async () => {
+      if (!batch.length) return;
+      await apiPost('ownerSaveVault', { token: rmToken(), kind: k, upserts: batch.map(b => ({ id: b.id, data: b.data })) });
+      batch.forEach(b => { sent[b.id] = b.h; }); vtSentWrite(k, sent); batch = []; bytes = 0;
+    };
+    for (const u of ups) {
+      if (batch.length && (bytes + u.n > VT_BATCH_BYTES || batch.length >= 20)) await flush();
+      batch.push(u); bytes += u.n;
+    }
+    await flush();
+    for (let i = 0; i < dels.length; i += 200) {
+      const part = dels.slice(i, i + 200);
+      await apiPost('ownerSaveVault', { token: rmToken(), kind: k, deletes: part });
+      part.forEach(id => { delete sent[id]; }); vtSentWrite(k, sent);
+    }
+    return true;
+  } catch (e) {
+    if (!/session|sign in/i.test(String(e && e.message))) showToast('Saved on this device. Cloud sync pending', 'neutral');
+    return false;
+  } finally {
+    _vtBusy[k] = false;
+    if (_vtAgain[k]) { _vtAgain[k] = false; setTimeout(() => vtPush(k), 300); }
+  }
+}
+function vtSoon(k) { if (!rmToken()) return; clearTimeout(_vtT[k]); _vtT[k] = setTimeout(() => vtPush(k), 1500); }
+async function vtFlush() { VT_KINDS.forEach(k => clearTimeout(_vtT[k])); await Promise.all(VT_KINDS.map(vtPush)); }
+document.addEventListener('visibilitychange', () => { if (document.hidden) VT_KINDS.forEach(k => vtPush(k)); });
+
+/* kahit anong save (edit, delete, import) ay awtomatikong mag-sync */
+(function () {
+  const fp = flPersist, sn = saveNotes;
+  flPersist = async function () { const ok = await fp.apply(this, arguments); if (ok) vtSoon('file'); return ok; };
+  saveNotes = async function () { const ok = await sn.apply(this, arguments); if (ok) vtSoon('note'); return ok; };
+})();
+/* === END: VAULT CLOUD SYNC === */
+
+/* === START: UPDATE WATCH (iwas stale code sa desktop) === */
+const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
+(function () {
+  let last = 0;
+  async function check() {
+    if (document.hidden || Date.now() - last < 60000) return;
+    last = Date.now();
+    try {
+      const r = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+      const j = await r.json();
+      if (j && j.v && j.v !== APP_BUILD) bar();
+    } catch (e) {}
+  }
+  function bar() {
+    if (document.getElementById('updBar')) return;
+    const b = document.createElement('div');
+    b.id = 'updBar'; b.setAttribute('role', 'status');
+    b.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10200;display:flex;align-items:center;gap:12px;background:rgba(28,28,30,.94);color:#fff;font:600 13px -apple-system,'SF Pro Text',sans-serif;padding:11px 12px 11px 18px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.25);";
+    b.innerHTML = '<span>New version available</span><button type="button" style="border:0;border-radius:10px;padding:7px 14px;background:#E8CC7A;color:#1c1c1e;font:700 13px inherit;cursor:pointer;">Refresh</button>';
+    b.querySelector('button').onclick = () => location.reload();
+    document.body.appendChild(b);
+  }
+  document.addEventListener('visibilitychange', check);
+  setInterval(check, 300000);
+  setTimeout(check, 4000);
+})();
+/* === END: UPDATE WATCH === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */
 </script>
 </body>
 </html>
+

@@ -838,6 +838,9 @@ opacity:0;pointer-events:none;z-index:1;}
 body.public-mode .proto-fab,#cfm-clone-wrap .proto-fab,.share-blur-clone .proto-fab{display:none !important}
 @media (prefers-reduced-motion:reduce){.proto-fab::before{animation:none}}
 /* === END: PROTOCOL FAB CSS === */
+/* === START: QR ON CHEST (3D) === */
+body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !important; }
+/* === END: QR ON CHEST (3D) === */
 /* === START: ROBOT BUBBLE CSS === */
 .robot-bubble{position:absolute;right:12px;top:96px;width:150px;z-index:8;opacity:0;pointer-events:none;transform:translateX(10px) scale(.88);transform-origin:left center;transition:opacity .28s ease,transform .45s cubic-bezier(0.34,1.56,0.64,1);}
 .robot-bubble.show{opacity:1;pointer-events:auto;transform:none;}
@@ -1457,7 +1460,6 @@ body.public-mode .proto-fab,#cfm-clone-wrap .proto-fab,.share-blur-clone .proto-
             <button type="button" class="rb-x" aria-label="Dismiss" onclick="event.stopPropagation();dismissRobotBubble()">×</button>
           </div>
           <!-- === END: ROBOT BUBBLE === -->
-          <button type="button" class="proto-fab" aria-label="Open Executive Protocol" onclick="event.stopPropagation();haptic('light');openProtocol();"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#E8CC7A"/><circle cx="15" cy="10" r="1" fill="#E8CC7A"/><path d="M8.5 15h7"/></svg></button>
           <button type="button" class="robot-pal-btn" aria-label="Choose robot colors" onclick="event.stopPropagation();haptic('light');openRobotPalPicker();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="#fff"/><circle cx="12" cy="7.5" r="1" fill="#fff"/><circle cx="15.5" cy="10" r="1" fill="#fff"/><path d="M12 21c-1.5 0-2-1-2-2s1-2 2-2h2a2 2 0 0 0 2-2"/></svg></button>
           <div class="glass-pill" id="glassPill">
             <div class="pill-avatar" id="pillAvatar" onclick="event.stopPropagation();haptic('light');triggerPhotoUpload();"></div>
@@ -2260,7 +2262,7 @@ body.public-mode .proto-fab,#cfm-clone-wrap .proto-fab,.share-blur-clone .proto-
           <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
-      <input class="ab-search" id="flSearch" type="search" placeholder="Search files &amp; notes" aria-label="Search files and notes" oninput="flRender()">
+      <input class="ab-search" id="flSearch" type="search" placeholder="Search files &amp; AI notes" aria-label="Search files and AI notes" oninput="flRender()">
       <div id="flList"></div>
     </div>
 
@@ -5285,6 +5287,9 @@ function fillConnectPreview() {
       qrBox.innerHTML = '';
       new QRCode(qrBox, { text: profileLink(), width: 152, height: 152, colorDark: '#000000', colorLight: 'rgba(255,255,255,.7)', correctLevel: QRCode.CorrectLevel.L });
       qrBox.querySelectorAll('canvas,img').forEach(el => { el.style.width = '100%'; el.style.height = '100%'; });
+      /* === START: REFRESH 3D QR === */
+      if (window.__robotQrUpdate) window.__robotQrUpdate();
+      /* === END: REFRESH 3D QR === */
     }
     if (btn.dataset.bound) return;
     btn.dataset.bound = '1';
@@ -17210,6 +17215,42 @@ function rigAnimate(t) {
   /* ── QR button anchored sa chest ── */
   const hb = document.getElementById('holdOpenBtn');
   const _w = new T.Vector3(), _p = new T.Vector3(), _o = new T.Vector3(), _n = new T.Vector3(), _c = new T.Vector3();
+  /* === START: QR ON CHEST (3D, hands occlude it) === */
+  const QR_PX = 256;
+  const qrCv = document.createElement('canvas'); qrCv.width = qrCv.height = QR_PX;
+  const qrTex = new T.CanvasTexture(qrCv); qrTex.encoding = T.sRGBEncoding; qrTex.anisotropy = 8;
+  const qrMesh = new T.Mesh(new T.PlaneGeometry(QR_UNITS, QR_UNITS), new T.MeshBasicMaterial({
+    map: qrTex, transparent: true, depthWrite: false, toneMapped: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  qrMesh.position.copy(CHEST); qrMesh.renderOrder = 2;
+  body.add(qrMesh);
+  window.__robotQrUpdate = function () {
+    const c = qrCv.getContext('2d'), S = QR_PX;
+    c.clearRect(0, 0, S, S);
+    c.beginPath(); c.arc(S / 2, S / 2, S * 0.472, 0, 6.2832);
+    c.fillStyle = 'rgba(243,237,228,.8)'; c.fill();
+    c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.08)'; c.stroke();
+    const bs = S * 44 / 72, bx = (S - bs) / 2;
+    c.fillStyle = 'rgba(255,255,255,.8)';
+    c.beginPath(); if (c.roundRect) c.roundRect(bx, bx, bs, bs, 14); else c.rect(bx, bx, bs, bs); c.fill();
+    const src = document.querySelector('#holdQr canvas');
+    if (src && src.width) { const p = S * 3 / 72; c.drawImage(src, bx + p, bx + p, bs - 2 * p, bs - 2 * p); }
+    qrTex.needsUpdate = true;
+  };
+  const ray = new T.Raycaster(), _rd = new T.Vector3();
+  let _occ = false, _occT = 0;
+  function qrOccluded(wp) {          /* true kapag may kamay/braso sa harap ng QR */
+    const list = [];
+    robot.traverseVisible(o => { if (o.isMesh && o !== qrMesh) list.push(o); });
+    _rd.copy(wp).sub(camera.position);
+    const dist = _rd.length(); _rd.normalize();
+    ray.set(camera.position, _rd);
+    const hit = ray.intersectObjects(list, false);
+    return hit.length > 0 && hit[0].distance < dist - 0.03;
+  }
+  document.body.classList.add('qr3d');
+  window.__robotQrUpdate();
+  /* === END: QR ON CHEST === */
   function placeQR() {
     if (!hb) return;
     _w.copy(CHEST).applyMatrix4(body.matrixWorld);
@@ -17226,7 +17267,10 @@ function rigAnimate(t) {
     hb.style.top = (61 + sy) + 'px';
     hb.style.transform = 'translate(-50%,-50%) scale(' + (k * Math.max(0.2, zn)) + ',' + k + ')';
     hb.style.opacity = vis;
-    hb.style.pointerEvents = zn > 0.35 ? '' : 'none';
+    /* === START: OCCLUSION HIT-TEST (10x/sec) === */
+    if (zn > 0.35 && ++_occT % 6 === 0) _occ = qrOccluded(_w);
+    hb.style.pointerEvents = (zn > 0.35 && !_occ) ? '' : 'none';
+    /* === END: OCCLUSION HIT-TEST === */
   }
 
   /* ── palette (Robot Colors picker) ── */
@@ -17473,7 +17517,7 @@ function flRender() {
 function flAddChoice() {
   const ico = p => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
   const rows = auInviteRow('#4A9DE0', ico('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'), 'Add file', "closeAuGenericModal('flAddOverlay');setTimeout(()=>flOpen(''),260);")
-             + auInviteRow('#E8CC7A', ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>').replace('#fff', '#1c1c1e'), 'New note', "closeAuGenericModal('flAddOverlay');setTimeout(()=>openNoteEditor(null),260);");
+             + auInviteRow('#E8CC7A', ico('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>').replace('#fff', '#1c1c1e'), 'New AI note', "closeAuGenericModal('flAddOverlay');setTimeout(()=>openNoteEditor(null),260);");
   auMakeSheet('flAddOverlay', 'Add', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${rows}</div>`);
 }
 
@@ -17608,7 +17652,15 @@ function flDelete() {
       os.classList.remove('entering');
       os.style.animation = 'none'; os.style.transition = 'none';
     }
-    st.dx = Math.max(0, dx);
+    /* === START: SMOOTH FOLLOW (no jump, velocity, parallax, threshold tick) === */
+    st.dx = Math.max(0, dx - 8);
+    const _n = performance.now();
+    if (st.lt != null) st.vx = (st.vx || 0) * 0.6 + ((e.clientX - st.lx) / Math.max(1, _n - st.lt)) * 0.4;
+    st.lx = e.clientX; st.lt = _n;
+    const _past = st.dx > Wd() * COMMIT; if (_past !== !!st.past) { st.past = _past; haptic('light'); }
+    const _sc = document.getElementById('screenCard');
+    if (_sc) { _sc.style.transition = 'none'; _sc.style.transform = 'translateX(' + (st.dx * 0.25) + 'px)'; }
+    /* === END: SMOOTH FOLLOW === */
     os.style.transform = 'translateX(' + (st.dx - Wd()) + 'px)';
     os.style.boxShadow = '0 0 40px rgba(0,0,0,' + (0.18 * Math.min(1, st.dx / Wd())) + ')';
     e.preventDefault();
@@ -17619,16 +17671,27 @@ function flDelete() {
     if (!st || e.pointerId !== st.id) return;
     const s = st; st = null;
     if (!s.on || !os) return;
-    const vel = s.dx / Math.max(1, performance.now() - s.t);
-    const open = s.dx > Wd() * COMMIT || vel > FLICK;
-    os.style.transition = 'transform .32s cubic-bezier(.16,1,.3,1)';
-    os.style.transform = open ? 'translateX(0)' : 'translateX(-' + Wd() + 'px)';
+    /* === START: SPRING SETTLE (open) === */
+    const W = Wd(), pos = s.dx, v = Math.max(s.vx || 0, 0);
+    const open = (pos + v * 140) > W * COMMIT || v > FLICK;        /* momentum projection */
+    const remain = open ? (W - pos) : pos;
+    const dur = Math.round(Math.min(460, Math.max(260, remain / Math.max(Math.abs(v), 0.7) * 0.9)));
+    os.style.transition = 'transform ' + dur + 'ms cubic-bezier(0.32,0.72,0,1), box-shadow ' + dur + 'ms ease-out';
+    os.style.transform = open ? 'translateX(0)' : 'translateX(-' + W + 'px)';
+    os.style.boxShadow = '0 0 40px rgba(0,0,0,0)';
+    const sc = document.getElementById('screenCard');
+    if (sc) {
+      sc.style.transition = 'transform ' + dur + 'ms ' + (open ? 'cubic-bezier(0.32,0.72,0,1)' : 'cubic-bezier(0.25,1.15,0.5,1)');
+      sc.style.transform = 'translateX(0)';
+      setTimeout(() => { sc.style.transition = ''; sc.style.transform = ''; }, dur + 40);
+    }
     haptic(open ? 'medium' : 'light');
     const o = os; os = null;
     setTimeout(() => {
       if (!open) o.classList.remove('active');
       o.style.transform = ''; o.style.transition = ''; o.style.animation = ''; o.style.boxShadow = '';
-    }, 340);
+    }, dur + 20);
+    /* === END: SPRING SETTLE (open) === */
   }
   window.addEventListener('pointerup', end);
   window.addEventListener('pointercancel', end);
@@ -17684,7 +17747,13 @@ function flDelete() {
       st.pg.el.style.animation = 'none'; st.pg.el.style.transition = 'none';
       const ho = st.pg.el.closest('.share-overlay'); if (ho) ho.style.setProperty('background', 'transparent', 'important');
     }
-    st.dx = Math.min(0, dx);
+    /* === START: SMOOTH FOLLOW (back) === */
+    st.dx = Math.min(0, dx + 8);
+    const _n = performance.now();
+    if (st.lt != null) st.vx = (st.vx || 0) * 0.6 + ((e.clientX - st.lx) / Math.max(1, _n - st.lt)) * 0.4;
+    st.lx = e.clientX; st.lt = _n;
+    const _past = -st.dx > Wd() * COMMIT; if (_past !== !!st.past) { st.past = _past; haptic('light'); }
+    /* === END: SMOOTH FOLLOW (back) === */
     st.pg.el.style.transform = 'translateX(' + st.dx + 'px)';
     st.pg.el.style.boxShadow = '0 0 40px rgba(0,0,0,' + (0.18 * Math.min(1, -st.dx / Wd())) + ')';
     e.preventDefault();
@@ -17695,24 +17764,79 @@ function flDelete() {
     if (!st || e.pointerId !== st.id) return;
     const s = st; st = null;
     if (!s.on) return;
-    const el = s.pg.el, dist = -s.dx;
-    const vel = dist / Math.max(1, performance.now() - s.t);
-    let close = dist > Wd() * COMMIT || vel > FLICK;
+    /* === START: SPRING SETTLE (back) === */
+    const el = s.pg.el, dist = -s.dx, W = Wd(), v = Math.max(-(s.vx || 0), 0);
+    let close = (dist + v * 140) > W * COMMIT || v > FLICK;       /* momentum projection */
     let dirty = false;
     if (close && s.pg.guard && s.pg.guard() === 'dirty') { close = false; dirty = true; }
-    el.style.transition = 'transform .32s cubic-bezier(.16,1,.3,1)';
-    el.style.transform = close ? 'translateX(-' + Wd() + 'px)' : 'translateX(0)';
+    const remain = close ? (W - dist) : dist;
+    const dur = Math.round(Math.min(460, Math.max(260, remain / Math.max(v, 0.7) * 0.9)));
+    el.style.transition = 'transform ' + dur + 'ms ' + (close ? 'cubic-bezier(0.32,0.72,0,1)' : 'cubic-bezier(0.25,1.15,0.5,1)') + ', box-shadow ' + dur + 'ms ease-out';
+    el.style.transform = close ? 'translateX(-' + W + 'px)' : 'translateX(0)';
+    el.style.boxShadow = '0 0 40px rgba(0,0,0,0)';
     haptic(close ? 'medium' : 'light');
     if (close) {
-      setTimeout(() => { s.pg.close(); setTimeout(() => reset(el), 350); }, 300);
+      setTimeout(() => { s.pg.close(); setTimeout(() => reset(el), 350); }, dur);
     } else {
-      setTimeout(() => { reset(el); if (dirty) s.pg.close(); }, 330);
+      setTimeout(() => { reset(el); if (dirty) s.pg.close(); }, dur + 10);
     }
+    /* === END: SPRING SETTLE (back) === */
   }
   window.addEventListener('pointerup', end);
   window.addEventListener('pointercancel', end);
 })();
 /* === END: SWIPE LEFT → CLOSE / BACK === */
+
+/* === START: SWIPE LEFT ON BARE FRONT CARD → PROTOCOL === */
+(function protoSwipe() {
+  const MIN_DX = 60, MIN_V = 0.4;   /* px at px/ms. Mabilis na flick lang, para hindi mag-conflict sa robot rotate-drag */
+  const shown = id => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none'; };
+  const OPEN = '.share-overlay.show,.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#screenGate.show,#screenOS.active,#screenAccount.active,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#confirmDialogOverlay,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardFilterOverlay,#physOrderOverlay,#requestMgrScreen,#contactDetailScreen,#cardMenuOverlay[style*="flex"]';
+  function onBareFront() {
+    if (document.body.classList.contains('public-mode') || !currentEntry) return false;
+    const c = document.getElementById('card');
+    if (!c || c.classList.contains('flipped')) return false;
+    if (document.querySelector(OPEN)) return false;
+    return !['addContactScreen', 'noteEditorScreen', 'fileEditorScreen', 'personalInfoScreen'].some(shown);
+  }
+  let st = null, supp = 0;
+  document.addEventListener('pointerdown', e => {
+    if (st) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const t = e.target;
+    if (!t.closest || !t.closest('#screenCard') || t.closest('button,a,input,textarea,select,.glass-pill,#pillVisToggleTrack')) return;
+    if (!onBareFront()) return;
+    st = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), dx: 0 };
+  }, true);
+  window.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id) return;
+    const dx = e.clientX - st.x, dy = e.clientY - st.y;
+    if ((Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) || dx > 12) { st = null; return; }
+    st.dx = dx;
+  });
+  const end = e => {
+    if (!st || e.pointerId !== st.id) return;
+    const s = st; st = null;
+    if (e.type === 'pointercancel') return;
+    const dt = Math.max(1, performance.now() - s.t), dist = -s.dx;
+    if (dist >= MIN_DX && dist / dt >= MIN_V && onBareFront()) {
+      supp = performance.now() + 500;      /* huwag mag-flip ang card pagkatapos ng swipe */
+      haptic('medium');
+      /* === START: NUDGE + SLIGHT DELAY === */
+      const _scn = document.querySelector('#screenCard .scene');
+      if (_scn && _scn.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        _scn.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-22px)', offset: .35 }, { transform: 'translateX(0)' }],
+          { duration: 420, easing: 'cubic-bezier(0.22,1,0.36,1)' });
+      }
+      setTimeout(() => { if (onBareFront()) openProtocol(); }, 110);
+      /* === END: NUDGE + SLIGHT DELAY === */
+    }
+  };
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+  document.addEventListener('click', e => { if (performance.now() < supp) { e.stopPropagation(); e.preventDefault(); } }, true);
+})();
+/* === END: SWIPE LEFT ON BARE FRONT CARD → PROTOCOL === */
 
 /* === START: FILES + AI NOTES PARITY (from Protocol) === */
 var ntScope='', ntSelMode=false, ntSel=new Set(), ntCur=null, ntTimer=null, ntMv=null, ntSideKeys=[''], ntMvList=[], ntMtList=[], ntMtDirty=false, ntMtTm=null, ntPackText='', ntPackName='';
@@ -17814,7 +17938,7 @@ function ntSideHtml(){
   ntSideKeys=[''].concat(fs);
   var rows=ntSideKeys.map(function(k,i){
     var on=ntScope===k, cnt=NOTES.filter(function(n){ return n.folder===k; }).length;
-    return '<div class="os-row" style="cursor:pointer;" onclick="ntSetScope('+i+')"><div class="os-row-text"><div class="os-row-title"'+(on?' style="font-weight:700;"':'')+'>'+auEsc(k||'Notes')+'</div></div><span class="os-row-value">'+cnt+'</span>'+(on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+'</div>';
+    return '<div class="os-row" style="cursor:pointer;" onclick="ntSetScope('+i+')"><div class="os-row-text"><div class="os-row-title"'+(on?' style="font-weight:700;"':'')+'>'+auEsc(k||'AI Notes')+'</div></div><span class="os-row-value">'+cnt+'</span>'+(on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+'</div>';
   }).join('');
   return '<div class="os-group" style="margin-bottom:6px;">'+rows+'</div>';
 }
@@ -17823,7 +17947,7 @@ function ntSetScope(i){ haptic('light'); ntScope=ntSideKeys[i]||''; ntSelMode=fa
 function noteRowHtml(n){
   ntFix1(n);
   var c=noteColor(n.id), ls=String(n.text||'').trim().split('\n');
-  var title=ls[0]||'Empty note', pv=ls.slice(1).join(' ').trim().slice(0,60);
+  var title=ls[0]||'Empty AI note', pv=ls.slice(1).join(' ').trim().slice(0,60);
   var on=ntSel.has(n.id);
   var lead=ntSelMode
     ? '<div class="os-row-icon" style="background:'+(on?'#1c1c1e':'rgba(60,60,67,0.14)')+';">'+(on?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ECE4D6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+'</div>'
@@ -17865,12 +17989,12 @@ function flRender(){
     }).join('')+'</div>';
   }
   if(notes.length){
-    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 4px 8px;"><div class="ab-section-header" style="padding:0;margin:0;">'+auEsc(q?'Notes':(ntScope||'Notes'))+'</div><div style="display:flex;gap:14px;align-items:center;">'+
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 4px 8px;"><div class="ab-section-header" style="padding:0;margin:0;">'+auEsc(q?'AI Notes':(ntScope||'AI Notes'))+'</div><div style="display:flex;gap:14px;align-items:center;">'+
       (ntSelMode?'<button type="button" class="nt-lnk" onclick="ntSelAll()">All</button><button type="button" class="nt-lnk" style="font-weight:700;" onclick="ntMitoOpen()">Mitochondria'+(ntSel.size?' · '+ntSel.size:'')+'</button>':'')+
       '<button type="button" class="nt-lnk" onclick="ntSelToggle()">'+(ntSelMode?'Cancel':'Select')+'</button></div></div>'+
       '<div class="ab-section-group">'+notes.map(noteRowHtml).join('')+'</div>';
   }
-  if(!h) h='<div class="up-empty-card">'+(q?'No match':'No files or notes yet. Tap + Add')+'</div>';
+  if(!h) h='<div class="up-empty-card">'+(q?'No match':'No files or AI notes yet. Tap + Add')+'</div>';
   w.innerHTML=h;
 }
 
@@ -17886,12 +18010,12 @@ function ntBuildEditor(){
       '<span style="flex:1"></span>'+
       '<button type="button" id="ntHistBtn" class="nt-lnk" onclick="haptic(\'light\');ntVsToggle()" style="display:none;">Versions</button>'+
       '<div class="nt-pill">'+
-        '<button type="button" aria-label="Share note" onclick="haptic(\'light\');ntShareOpen()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg></button>'+
+        '<button type="button" aria-label="Share AI note" onclick="haptic(\'light\');ntShareOpen()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg></button>'+
         '<button type="button" aria-label="More actions" onclick="haptic(\'light\');ntMoreOpen()"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg></button>'+
       '</div>'+
-      '<button type="button" id="ntStBtn" class="nt-st" aria-label="Save note" onclick="haptic(\'success\');ntDone()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></button>'+
+      '<button type="button" id="ntStBtn" class="nt-st" aria-label="Save AI note" onclick="haptic(\'success\');ntDone()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></button>'+
     '</div>'+
-    '<textarea id="ntX" aria-label="Note" placeholder="Start typing…" spellcheck="false" style="flex:1;min-height:0;width:100%;border:0;background:#ECE4D6;color:#1c1c1e;padding:10px 20px max(24px,env(safe-area-inset-bottom));font:16px/1.6 -apple-system,\'SF Pro Text\',sans-serif;resize:none;outline:0;box-sizing:border-box;"></textarea>'+
+    '<textarea id="ntX" aria-label="AI note" placeholder="Write your AI note…" spellcheck="false" style="flex:1;min-height:0;width:100%;border:0;background:#ECE4D6;color:#1c1c1e;padding:10px 20px max(24px,env(safe-area-inset-bottom));font:16px/1.6 -apple-system,\'SF Pro Text\',sans-serif;resize:none;outline:0;box-sizing:border-box;"></textarea>'+
     '<div id="ntVs" hidden style="flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;"></div>';
   document.getElementById('ntX').addEventListener('input', function(){
     ntStat(false); clearTimeout(ntTimer);
@@ -17990,7 +18114,7 @@ function ntMoreOpen(){
   if(!ntCur||!x||!x.value.trim()){ haptic('error'); showToast('Write something first','error'); return; }
   ntSaveNow(false).then(function(){
     var n=ntCur; if(!n) return;
-    auMakeSheet('ntMoreOverlay','Note','<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">'+
+    auMakeSheet('ntMoreOverlay','AI Note','<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">'+
       ntRow(n.pin?'Unpin':'Pin','ntMorePin()')+ntRow('Duplicate','ntMoreDup()')+ntRow('Move to folder','ntMoreMove()')+ntRow('Delete','ntMoreDel()',true)+'</div>');
   });
 }
@@ -18018,7 +18142,7 @@ function ntMoreDel(){
   closeAuGenericModal('ntMoreOverlay');
   var n=ntCur; if(!n) return;
   setTimeout(function(){
-    confirmDialog({title:'Delete this note?', message:'This note will be removed from this device.', confirmLabel:'Delete', danger:true, onConfirm:function(){ ntDeleteNow(n); }});
+    confirmDialog({title:'Delete this AI note?', message:'This AI note will be removed from this device.', confirmLabel:'Delete', danger:true, onConfirm:function(){ ntDeleteNow(n); }});
   },280);
 }
 function ntDeleteNow(n){
@@ -18039,9 +18163,9 @@ function toggleNotePin(){ ntMorePin(); }
 function ntMoveOpen(n){
   ntMv=n; ntMvList=[''].concat(ntFolders());
   var rows=ntMvList.map(function(f,i){
-    return '<div class="os-row" style="cursor:pointer;" onclick="ntMoveIdx('+i+')"><div class="os-row-text"><div class="os-row-title">'+auEsc(f||'Notes')+'</div></div>'+(n.folder===f?'<span class="os-row-value">Here</span>':'')+'</div>';
+    return '<div class="os-row" style="cursor:pointer;" onclick="ntMoveIdx('+i+')"><div class="os-row-text"><div class="os-row-title">'+auEsc(f||'AI Notes')+'</div></div>'+(n.folder===f?'<span class="os-row-value">Here</span>':'')+'</div>';
   }).join('');
-  auMakeSheet('ntMoveOverlay','Move note','<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;">'+rows+'</div>'+
+  auMakeSheet('ntMoveOverlay','Move AI note','<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;">'+rows+'</div>'+
     '<div style="display:flex;gap:8px;"><input id="ntMvNew" class="am-input" type="text" maxlength="40" placeholder="New folder" aria-label="New folder name" style="flex:1;" onkeydown="if(event.key===\'Enter\')ntMoveNew()"><button type="button" onclick="ntMoveNew()" style="flex-shrink:0;padding:0 18px;border-radius:12px;border:none;background:#1c1c1e;color:#ECE4D6;font-weight:700;cursor:pointer;">Move</button></div>');
 }
 function ntMoveIdx(i){ ntMoveTo(ntMvList[i]||''); }
@@ -18081,7 +18205,7 @@ function ntShareOpen(){
   if(!ntCur||!x||!x.value.trim()){ haptic('error'); showToast('Write something first','error'); return; }
   var chips=function(g){ return NT_SHA.map(function(a,i){ return a.g===g?'<button type="button" class="nt-chip" onclick="ntShareTo('+i+')">'+auEsc(a.n)+'</button>':''; }).join(''); };
   var lab='font:700 11px -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:0 2px 8px;';
-  auMakeSheet('ntShareOverlay','Share note',
+  auMakeSheet('ntShareOverlay','Share AI note',
     '<div style="'+NT_F+'font-size:12.5px;color:rgba(60,60,67,0.55);line-height:1.5;margin:-6px 2px 14px;">Some apps can\'t receive text from a web page. For those, the note is copied first, then the app opens so you can paste.</div>'+
     '<div style="'+lab+'">AI models</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">'+chips('ai')+'</div>'+
     '<div style="'+lab+'">Send to</div><div style="display:flex;flex-wrap:wrap;gap:8px;">'+chips('ap')+'</div>');
@@ -18122,7 +18246,7 @@ function ntMitoBuild(list,obj,ty){
 }
 function ntMitoOpen(){
   var l=NOTES.filter(function(n){ return ntSel.has(n.id); });
-  if(!l.length){ haptic('error'); showToast('Select at least one note','error'); return; }
+  if(!l.length){ haptic('error'); showToast('Select at least one AI note','error'); return; }
   if(!l.some(function(n){ return n.text.trim(); })){ haptic('error'); showToast('Selected notes are empty','error'); return; }
   ntMtList=l; ntMtDirty=false; haptic('light');
   var lab='font:700 11px -apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,0.4);margin:14px 2px 8px;';
@@ -18333,4 +18457,3 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
-

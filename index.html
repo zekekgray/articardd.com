@@ -18750,11 +18750,15 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) VT_KI
 
 /* === START: AFFINITY (replaces Discover tab, MyDay-style stories) === */
 const AF_KEY = 'affinity-v1', AF_DEMO = true, AF_TTL = 864e5;   /* AF_DEMO=false sa production */
+const afIc = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const AF_REACTS = [
-  { id:'celebrate', l:'Celebrate', e:'🎉' }, { id:'inspired', l:'Inspired', e:'💡' },
-  { id:'respect',   l:'Respect',   e:'🙌' }, { id:'relate',   l:'Relate',   e:'🫂' },
-  { id:'support',   l:'Support',   e:'💪' }, { id:'curious',  l:'Curious',  e:'👀' },
-  { id:'bond',      l:'Bond',      e:'🤝' }
+  { id:'celebrate', l:'Celebrate', e:afIc('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>') },
+  { id:'inspired',  l:'Inspired',  e:afIc('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>') },
+  { id:'respect',   l:'Respect',   e:afIc('<path d="M8 13V6a1.5 1.5 0 0 1 3 0v5m0-6.5a1.5 1.5 0 0 1 3 0V11m0-4.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L4 14.5a1.5 1.5 0 0 1 2.4-1.7L8 14"/>') },
+  { id:'relate',    l:'Relate',    e:afIc('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>') },
+  { id:'support',   l:'Support',   e:afIc('<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/>') },
+  { id:'curious',   l:'Curious',   e:afIc('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>') },
+  { id:'bond',      l:'Bond',      e:afIc('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>') }
 ];
 /* i-edit dito ang treats depende sa café system mo */
 const AF_TREATS = [
@@ -18772,7 +18776,7 @@ const AF_DEMO_DATA = [
   { id:'d6', name:'Thiago', role:'Football Coach',      text:'We won! What a match ⚽', bg:2, av:'#27AE60', allowBond:true, off:612e5 },
   { id:'d7', name:'Lila',   role:'Founder',             text:'Went to Lake Tahoe this weekend! Freshies', bg:0, av:'#9B59B6', allowBond:true, off:72e6 }
 ];
-let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Date.now(), afDraftImg = '', afView = null;
+let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Date.now(), afDraftImgs = [], afView = null;
 
 (function afCss() {
   const st = document.createElement('style');
@@ -18780,12 +18784,12 @@ let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Dat
   .af-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 10px;padding:6px 0 28px;}
   .af-tile{background:none;border:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:0;font-family:-apple-system,'SF Pro Text',sans-serif;-webkit-tap-highlight-color:transparent;transition:transform .12s;}
   .af-tile:active{transform:scale(.95);}
-  .af-card{position:relative;width:100%;max-width:104px;aspect-ratio:1;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.14);transform:rotate(var(--r,0deg));background:#fff;}
+  .af-card{position:relative;width:100%;max-width:104px;aspect-ratio:1;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.10);transform:rotate(var(--r,0deg));background:#fff;}
   .af-card .in{position:absolute;inset:0;border-radius:16px;overflow:hidden;display:flex;align-items:center;padding:9px;box-sizing:border-box;font:700 11.5px/1.25 -apple-system,'SF Pro Text',sans-serif;text-align:left;}
   .af-card .in img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .af-card .cl{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
   .af-badge{position:absolute;right:-7px;bottom:-7px;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.18);}
-  .af-plus{width:100%;max-width:104px;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.72);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.06);color:rgba(60,60,67,.6);}
+  .af-plus{width:100%;max-width:104px;aspect-ratio:1;border-radius:16px;border:1.5px dashed rgba(60,60,67,.35);background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:rgba(60,60,67,.6);box-sizing:border-box;}
   .af-nm{font-size:13px;font-weight:600;color:#1c1c1e;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .af-ago{font-size:11px;color:rgba(60,60,67,.5);margin-top:-3px;}
   .af-rbar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
@@ -18795,7 +18799,28 @@ let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Dat
   .af-r:active{transform:scale(.92);}
   .af-r.on{background:#E8CC7A;color:#1c1c1e;border-color:#E8CC7A;}
   .af-treat{width:100%;padding:14px;border-radius:14px;border:none;background:#F3EDE4;color:#1c1c1e;font:700 15px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;margin-bottom:8px;}
-  .af-del{width:100%;padding:12px;border-radius:14px;border:none;background:rgba(255,69,58,.14);color:#FF6B61;font:600 14px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;}`;
+  .af-del{width:100%;padding:12px;border-radius:14px;border:none;background:rgba(255,69,58,.14);color:#FF6B61;font:600 14px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;}
+  .af-card .cl{font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.28);}
+  .af-help{font-size:11px;color:rgba(60,60,67,.5);margin-top:-3px;max-width:100%;text-align:center;}
+  .af-empty{text-align:center;padding:26px 16px;margin:0 0 20px;border-radius:16px;background:rgba(255,255,255,.55);font:13.5px/1.5 -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.6);}
+  .af-row{min-height:60px;transition:background .12s;}
+  .af-row:active{background:rgba(0,0,0,.04);}
+  .af-tile:focus-visible,.af-r:focus-visible,.af-row:focus-visible{outline:2px solid #1c1c1e;outline-offset:3px;}
+  .af-add{width:44px;height:44px;border-radius:50%;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 2px 8px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.7);color:#1c1c1e;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;}
+  .af-add:active{transform:scale(.9);opacity:.75;}
+  .af-cnt{display:inline-flex;align-items:center;gap:5px;margin:0 9px;}
+  .af-cnt svg{width:16px;height:16px;}
+  .af-card .ly{position:absolute;inset:0;border-radius:16px;background-size:cover;background-position:center;border:2px solid #fff;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.14);}
+  .af-card .ly.a{transform:translate(7px,-5px) rotate(7deg);}
+  .af-card .ly.b{transform:translate(-6px,-3px) rotate(-6deg);}
+  .af-n{position:absolute;left:6px;top:6px;z-index:2;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;background:rgba(0,0,0,.55);color:#fff;font:700 11px/20px -apple-system,'SF Pro Text',sans-serif;text-align:center;}
+  .af-car{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;width:100%;border-radius:22px;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:#000;}
+  .af-car::-webkit-scrollbar{display:none;}
+  .af-car img{flex:0 0 100%;width:100%;max-height:56vh;object-fit:contain;scroll-snap-align:center;}
+  .af-dots{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+  .af-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);transition:all .2s;}
+  .af-dots i.on{width:18px;border-radius:3px;background:#fff;}
+  @media (prefers-reduced-motion:reduce){.af-tile,.af-r,.af-row{transition:none;}.af-tile:active,.af-r:active{transform:none;}.af-card{transform:none;}}`;
   document.head.appendChild(st);
 })();
 
@@ -18804,7 +18829,7 @@ let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Dat
   const body = document.getElementById('osBody'); if (!body || body.querySelector('[data-pane="affinity"]')) return;
   const p = document.createElement('div');
   p.className = 'os-pane'; p.dataset.pane = 'affinity';
-  p.innerHTML = `<div class="ab-pane-header"><div style="display:flex;align-items:baseline;"><div class="os-title" style="padding:6px 0 0 4px;">Affinity</div></div></div>
+  p.innerHTML = `<div class="ab-pane-header"><div style="display:flex;align-items:baseline;"><div class="os-title" style="padding:6px 0 0 4px;">Affinity</div></div><button type="button" class="af-add" aria-label="Share a story" onclick="haptic('light');afShare()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
     <div class="ab-seg" role="tablist" aria-label="Contacts sections"></div><div id="afBody"></div>`;
   body.appendChild(p);
 })();
@@ -18833,7 +18858,7 @@ abSegSelect = function (which) {
 (function () {
   const _sw = switchOSTab, _en = enterOS;
   switchOSTab = function (t) { _sw.apply(this, arguments); if (t === 'affinity') afRender(); afSegSync(); };
-  enterOS = function (t) { _en.apply(this, arguments); if (t === 'affinity') afRender(); afSegSync(); };
+  enterOS = function (t) { if (!t || t === 'address') t = 'affinity'; _en.call(this, t); if (t === 'affinity') afRender(); afSegSync(); };
 })();
 
 /* ── data ── */
@@ -18873,13 +18898,16 @@ const afAvOf = (s, px) => s.mine ? afAv(s.name, '#8E8E93', px, profilePhotoB64) 
 
 /* ── feed ── */
 function afTile(s) {
-  const r = ((String(s.id).charCodeAt(String(s.id).length - 1) % 5) - 2) * 1.6;
-  const inner = s.img
-    ? `<div class="in"><img src="${auEsc(s.img)}" alt=""></div>`
+  const r = ((String(s.id).charCodeAt(String(s.id).length - 1) % 5) - 2) * 0.6;
+  const im = afImgs(s);
+  const lay = im.length > 1 ? `<div class="ly a" style="background-image:url('${auEsc(im[1])}')"></div>` + (im.length > 2 ? `<div class="ly b" style="background-image:url('${auEsc(im[2])}')"></div>` : '') : '';
+  const cnt = im.length > 1 ? `<div class="af-n">${im.length}</div>` : '';
+  const inner = im.length
+    ? `<div class="in"><img src="${auEsc(im[0])}" alt=""></div>`
     : `<div class="in" style="background:${AF_BG[(s.bg || 0) % AF_BG.length]};color:#fff;"><span class="cl">${auEsc(s.text)}</span></div>`;
   const nm = s.mine ? 'You' : s.name;
   return `<button type="button" class="af-tile" aria-label="${auEsc(nm)}, ${afAgo(s.t)}" onclick="afOpen('${s.id}')">
-    <div class="af-card" style="--r:${r}deg">${inner}<div class="af-badge">${afAvOf(s, 28)}</div></div>
+    <div class="af-card" style="--r:${r}deg">${lay}${inner}${cnt}<div class="af-badge">${afAvOf(s, 28)}</div></div>
     <div class="af-nm">${auEsc(nm)}</div><div class="af-ago">${afAgo(s.t)}</div></button>`;
 }
 function afRender() {
@@ -18888,9 +18916,9 @@ function afRender() {
   const bIn = AF.bonds.filter(x => x.dir === 'in' && x.status === 'pending').length;
   const badge = n => n ? `<span style="background:#FF453A;color:#fff;font:600 13px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin-right:2px;">${n}</span>` : '';
   const chev = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
-  const row = (bg, e, t, s, js, n) => `<div class="os-row" style="cursor:pointer;" onclick="${js}"><div class="os-row-icon" style="background:${bg};font-size:18px;">${e}</div><div class="os-row-text"><div class="os-row-title">${t}</div><div class="os-row-sub">${s}</div></div>${badge(n)}${chev}</div>`;
-  b.innerHTML = `<div class="os-group" style="margin-bottom:12px;">${row('#FF9F0A', '☕', 'Treats', 'Claim vouchers sent to you', 'afTreatsSheet()', tIn)}${row('#4A9DE0', '🤝', 'Bond requests', 'People who want to bond with you', 'afBondsSheet()', bIn)}</div>
-    <div class="af-grid"><button type="button" class="af-tile" onclick="afShare()"><div class="af-plus"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="af-nm" style="opacity:.6">Share Story</div></button>${afStories().map(afTile).join('')}</div>`;
+  const row = (bg, e, t, s, js, n) => `<div class="os-row af-row" role="button" tabindex="0" style="cursor:pointer;" onclick="${js}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${js}}"><div class="os-row-icon" style="background:${bg};font-size:18px;">${e}</div><div class="os-row-text"><div class="os-row-title">${t}</div><div class="os-row-sub">${s}</div></div>${badge(n)}${chev}</div>`;
+  b.innerHTML = `<div class="os-group" style="margin-bottom:12px;">${row('#FF9F0A', '☕', 'Treats', tIn ? tIn + ' voucher' + (tIn > 1 ? 's' : '') + ' ready to claim' : 'No vouchers waiting', 'afTreatsSheet()', tIn)}${row('#4A9DE0', '🤝', 'Bond requests', bIn ? bIn + ' pending. Allow or dismiss' : 'No pending requests', 'afBondsSheet()', bIn)}</div>
+    <div class="af-grid">${afStories().map(afTile).join('')}</div>${afStories().length ? '' : '<div class="af-empty">No active stories yet. Tap + to share yours. It disappears after 24 hours.</div>'}`;
 }
 
 /* ── story viewer (walang comments: reactions at treat lang) ── */
@@ -18901,13 +18929,14 @@ function afOpen(id) {
   const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
   const mine = !!s.mine, my = AF.mine[id] || '';
   const bg = AF_BG[(s.bg || 0) % AF_BG.length];
-  const media = (s.img ? `<img src="${auEsc(s.img)}" alt="" style="max-width:100%;max-height:60vh;object-fit:contain;border-radius:22px;">` : '') +
-    (s.img && !s.text ? '' : (s.img
-      ? `<div style="${F}color:#fff;font-size:16px;line-height:1.4;text-align:center;word-break:break-word;">${auEsc(s.text)}</div>`
-      : `<div style="width:100%;border-radius:26px;padding:34px 26px;box-sizing:border-box;background:${bg};color:#fff;font:700 26px/1.3 -apple-system,'SF Pro Display',sans-serif;word-break:break-word;">${auEsc(s.text)}</div>`));
+  const im = afImgs(s), len = String(s.text || '').length, fs = len > 400 ? 15 : len > 200 ? 18 : 24;
+  const car = im.length ? `<div style="width:100%;"><div class="af-car" onscroll="afCarScroll(this)">${im.map(u => `<img src="${auEsc(u)}" alt="">`).join('')}</div>${im.length > 1 ? `<div class="af-dots" aria-hidden="true">${im.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}</div>` : '';
+  const media = car + (s.text ? (im.length
+    ? `<div style="${F}color:#fff;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;">${auEsc(s.text)}</div>`
+    : `<div style="width:100%;border-radius:26px;padding:34px 26px;box-sizing:border-box;background:${bg};color:#fff;font:700 ${fs}px/1.35 -apple-system,'SF Pro Display',sans-serif;white-space:pre-wrap;word-break:break-word;">${auEsc(s.text)}</div>`) : '');
   let foot;
   if (mine) {
-    const rc = s.rc || {}, cs = AF_REACTS.filter(r => rc[r.id]).map(r => r.e + ' ' + rc[r.id]).join('    ') || 'No reactions yet';
+    const rc = s.rc || {}, cs = AF_REACTS.filter(r => rc[r.id]).map(r => `<span class="af-cnt">${r.e}${rc[r.id]}</span>`).join('') || 'No reactions yet';
     const pend = AF.bonds.filter(x => x.dir === 'in' && x.storyId === id && x.status === 'pending').length;
     foot = `<div style="${F}color:rgba(255,255,255,.75);font-size:14px;text-align:center;margin-bottom:12px;">${cs}</div>
       ${pend ? `<button type="button" class="af-treat" onclick="afBondsSheet()">🤝 ${pend} bond request${pend > 1 ? 's' : ''}</button>` : ''}
@@ -18925,7 +18954,7 @@ function afOpen(id) {
     <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">${afAvOf(s, 40)}
       <div style="flex:1;min-width:0;"><div style="${F}font-size:15px;font-weight:700;color:#fff;">${auEsc(mine ? 'You' : s.name)}</div><div style="${F}font-size:12px;color:rgba(255,255,255,.55);">${auEsc(s.role || '')}${s.role ? ' · ' : ''}${afAgo(s.t)}</div></div>
       <button type="button" aria-label="Close story" onclick="afClose()" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:20px;cursor:pointer;">×</button></div>
-    <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px 0;overflow:auto;">${media}</div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:12px;padding:14px 0;overflow:auto;">${media}</div>
     <div style="flex-shrink:0;">${foot}</div></div>`;
   document.body.appendChild(ov);
 }
@@ -19062,13 +19091,13 @@ function afTreatBack(id) {
 
 /* ── share story ── */
 function afShare() {
-  haptic('light'); afDraftImg = '';
+  haptic('light'); afDraftImgs = [];
   const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
   auMakeSheet('afShareOverlay', 'Share Story', `
-    <textarea id="afTxt" class="am-input" maxlength="140" placeholder="What's on your mind?" style="min-height:90px;resize:none;" oninput="document.getElementById('afCnt').textContent=this.value.length+'/140'"></textarea>
-    <div id="afCnt" style="${F}font-size:11px;color:rgba(60,60,67,.4);text-align:right;margin:4px 2px 0;">0/140</div>
+    <textarea id="afTxt" class="am-input" maxlength="999" placeholder="What's on your mind?" style="min-height:130px;resize:vertical;" oninput="document.getElementById('afCnt').textContent=this.value.length+'/999'"></textarea>
+    <div id="afCnt" style="${F}font-size:11px;color:rgba(60,60,67,.4);text-align:right;margin:4px 2px 0;">0/999</div>
     <div id="afPhoto"></div>
-    <button type="button" class="dc-btn alt" style="margin:10px 0;" onclick="afPickPhoto()">Add photo</button>
+    <button type="button" class="dc-btn alt" style="margin:10px 0;" onclick="afPickPhoto()">Add photos (up to 20)</button>
     <label style="display:flex;align-items:center;gap:10px;${F}font-size:14px;color:#1c1c1e;margin:4px 2px 6px;cursor:pointer;"><input type="checkbox" id="afAllow" checked style="width:20px;height:20px;">Allow people to Bond with me</label>
     <div class="dc-note" style="margin:0 2px 14px;">Stories disappear after 24 hours. No comments, only reactions and treats.</div>
     <button type="button" class="dc-btn" onclick="afPost()">Post</button>`);
@@ -19117,6 +19146,62 @@ function afDelete(id) {
     if (!(await afCommit(() => { AF.stories = AF.stories.filter(x => x.id !== id); AF.bonds = AF.bonds.filter(b => b.storyId !== id); }))) return;
     haptic('success'); afClose(); showToast('Story deleted', 'neutral');
   } });
+}
+function afImgs(s) { return Array.isArray(s.imgs) && s.imgs.length ? s.imgs : (s.img ? [s.img] : []); }
+function afCarScroll(el) {
+  const i = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+  el.parentNode.querySelectorAll('.af-dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+}
+function afReadImg(f) {
+  return new Promise(res => {
+    const url = URL.createObjectURL(f), img = new Image();
+    img.onload = () => {
+      const sc = Math.min(1, 600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .6));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); res(''); };
+    img.src = url;
+  });
+}
+function afPhotoPaint() {
+  const w = document.getElementById('afPhoto'); if (!w) return;
+  if (!afDraftImgs.length) { w.innerHTML = ''; return; }
+  w.innerHTML = `<div style="font:600 12px -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.55);margin:10px 2px 6px;">${afDraftImgs.length} / 20 photos</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">${afDraftImgs.map((u, i) => `<div style="position:relative;aspect-ratio:1;"><img src="${u}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;"><button type="button" aria-label="Remove photo ${i + 1}" onclick="afDropPhoto(${i})" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;cursor:pointer;padding:0;">×</button></div>`).join('')}</div>`;
+}
+function afDropPhoto(i) { afDraftImgs.splice(i, 1); haptic('light'); afPhotoPaint(); }
+function afPickPhoto() {
+  const room = 20 - afDraftImgs.length;
+  if (room <= 0) { haptic('error'); showToast('Up to 20 photos', 'neutral'); return; }
+  haptic('light');
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+  inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+  inp.addEventListener('change', async () => {
+    const files = [...(inp.files || [])]; inp.remove();
+    if (files.length > room) showToast('Only ' + room + ' more fit. Max 20', 'neutral');
+    for (const f of files.slice(0, room)) {
+      const d = await afReadImg(f);
+      if (d) afDraftImgs.push(d); else showToast("Can't read " + f.name, 'error');
+    }
+    afPhotoPaint();
+  });
+  document.body.appendChild(inp); inp.click();
+}
+async function afPost() {
+  const txt = (document.getElementById('afTxt')?.value || '').trim().slice(0, 999), allow = document.getElementById('afAllow')?.checked !== false;
+  const imgs = afDraftImgs.slice(0, 20);
+  if (!txt && !imgs.length) { haptic('error'); showToast('Add a photo or a few words', 'error'); return; }
+  if (AF.stories.length >= 5) { haptic('error'); showToast('You can have up to 5 active stories', 'neutral'); return; }
+  const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const s = { id:'s' + Date.now(), mine:true, authorId:'me', name:nm, role:(currentEntry && currentEntry.pos) || '', text:txt, imgs:imgs, img:imgs[0] || '', bg:Math.floor(Math.random() * AF_BG.length), allowBond:allow, t:Date.now(), rc:{} };
+  if (AF_DEMO) s.rc = allow ? { celebrate:2, inspired:1, bond:1 } : { celebrate:2, inspired:1 };
+  if (!(await afCommit(() => {
+    AF.stories.push(s);
+    if (AF_DEMO && allow) AF.bonds.push({ id:'b' + Date.now(), storyId:s.id, dir:'in', who:AF_SIM, status:'pending', t:Date.now() });
+  }))) { showToast('Too many photos for this device. Try fewer', 'neutral'); return; }
+  haptic('success'); closeAuGenericModal('afShareOverlay'); afDraftImgs = []; afRender(); showToast('Story shared for 24 hours', 'success');
 }
 afSegSync();
 /* === END: AFFINITY === */

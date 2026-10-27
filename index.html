@@ -18748,6 +18748,379 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) VT_KI
 })();
 /* === END: VAULT CLOUD SYNC === */
 
+/* === START: AFFINITY (replaces Discover tab, MyDay-style stories) === */
+const AF_KEY = 'affinity-v1', AF_DEMO = true, AF_TTL = 864e5;   /* AF_DEMO=false sa production */
+const AF_REACTS = [
+  { id:'celebrate', l:'Celebrate', e:'🎉' }, { id:'inspired', l:'Inspired', e:'💡' },
+  { id:'respect',   l:'Respect',   e:'🙌' }, { id:'relate',   l:'Relate',   e:'🫂' },
+  { id:'support',   l:'Support',   e:'💪' }, { id:'curious',  l:'Curious',  e:'👀' },
+  { id:'bond',      l:'Bond',      e:'🤝' }
+];
+/* i-edit dito ang treats depende sa café system mo */
+const AF_TREATS = [
+  { id:'coffee', l:'Coffee', e:'☕', price:150 },
+  { id:'duo', l:'Coffee + pastry', e:'🥐', price:300 }
+];
+const AF_BG = ['linear-gradient(135deg,#3B6FB6,#7B5BD6)','linear-gradient(135deg,#D2691E,#E8A04A)','linear-gradient(135deg,#27AE60,#2E86C1)','linear-gradient(135deg,#A8326B,#E05C4A)','linear-gradient(135deg,#2F343A,#5A6270)'];
+const AF_SIM = { name:'Maya Reyes', role:'Brand Strategist', company:'Studio M', email:'maya@studiom.ph', mobile:'+63 917 555 0101' };
+const AF_DEMO_DATA = [
+  { id:'d1', name:'Chloe',  role:'Travel Photographer', text:'Northern lights tonight ✨', bg:2, av:'#3B6FB6', allowBond:true,  off:3e4 },
+  { id:'d2', name:'Jules',  role:'Surf Coach',          text:'Sunset session, who is in tomorrow?', bg:1, av:'#D2691E', allowBond:true, off:36e5 },
+  { id:'d3', name:'Teresa', role:'Trail Guide',         text:'Found a hidden lookout ⛰️', bg:0, av:'#16A085', allowBond:true, off:108e5 },
+  { id:'d4', name:'Soph',   role:'Interior Designer',   text:'New studio corner is done 🛋️', bg:3, av:'#A8326B', allowBond:true, off:144e5 },
+  { id:'d5', name:'Clyde',  role:'Chef',                text:'Testing a new menu tonight 🍝', bg:4, av:'#C9A227', allowBond:false, off:36e6 },
+  { id:'d6', name:'Thiago', role:'Football Coach',      text:'We won! What a match ⚽', bg:2, av:'#27AE60', allowBond:true, off:612e5 },
+  { id:'d7', name:'Lila',   role:'Founder',             text:'Went to Lake Tahoe this weekend! Freshies', bg:0, av:'#9B59B6', allowBond:true, off:72e6 }
+];
+let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Date.now(), afDraftImg = '', afView = null;
+
+(function afCss() {
+  const st = document.createElement('style');
+  st.textContent = `
+  .af-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 10px;padding:6px 0 28px;}
+  .af-tile{background:none;border:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-width:0;font-family:-apple-system,'SF Pro Text',sans-serif;-webkit-tap-highlight-color:transparent;transition:transform .12s;}
+  .af-tile:active{transform:scale(.95);}
+  .af-card{position:relative;width:100%;max-width:104px;aspect-ratio:1;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.14);transform:rotate(var(--r,0deg));background:#fff;}
+  .af-card .in{position:absolute;inset:0;border-radius:16px;overflow:hidden;display:flex;align-items:center;padding:9px;box-sizing:border-box;font:700 11.5px/1.25 -apple-system,'SF Pro Text',sans-serif;text-align:left;}
+  .af-card .in img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .af-card .cl{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
+  .af-badge{position:absolute;right:-7px;bottom:-7px;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+  .af-plus{width:100%;max-width:104px;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.72);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.06);color:rgba(60,60,67,.6);}
+  .af-nm{font-size:13px;font-weight:600;color:#1c1c1e;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .af-ago{font-size:11px;color:rgba(60,60,67,.5);margin-top:-3px;}
+  .af-rbar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .af-rbar::-webkit-scrollbar{display:none;}
+  .af-r{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font:600 11px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s;}
+  .af-r b{font-size:22px;font-weight:400;line-height:1.1;}
+  .af-r:active{transform:scale(.92);}
+  .af-r.on{background:#E8CC7A;color:#1c1c1e;border-color:#E8CC7A;}
+  .af-treat{width:100%;padding:14px;border-radius:14px;border:none;background:#F3EDE4;color:#1c1c1e;font:700 15px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;margin-bottom:8px;}
+  .af-del{width:100%;padding:12px;border-radius:14px;border:none;background:rgba(255,69,58,.14);color:#FF6B61;font:600 14px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;}`;
+  document.head.appendChild(st);
+})();
+
+/* ── Affinity pane (bago ang Contacts) ── */
+(function afPane() {
+  const body = document.getElementById('osBody'); if (!body || body.querySelector('[data-pane="affinity"]')) return;
+  const p = document.createElement('div');
+  p.className = 'os-pane'; p.dataset.pane = 'affinity';
+  p.innerHTML = `<div class="ab-pane-header"><div style="display:flex;align-items:baseline;"><div class="os-title" style="padding:6px 0 0 4px;">Affinity</div></div></div>
+    <div class="ab-seg" role="tablist" aria-label="Contacts sections"></div><div id="afBody"></div>`;
+  body.appendChild(p);
+})();
+
+/* ── segments: Affinity | My Contacts | Calendar | Files (lahat ng pane) ── */
+function afSegHtml(a) {
+  return [['affinity','Affinity'],['mine','My Contacts'],['calendar','Calendar'],['files','Files']].map(([k, l]) => {
+    const on = a === k;
+    return `<button type="button" role="tab"${on ? ' class="on"' : ''} aria-selected="${on}" onclick="${on ? "haptic('light')" : "abSegSelect('" + k + "')"}">${l}</button>`;
+  }).join('');
+}
+function afSegSync() {
+  const m = { affinity:'affinity', address:'mine', upcoming:'calendar', files:'files' }[currentOSPane];
+  if (!m) return;
+  document.querySelectorAll('#osBody .ab-seg[aria-label="Contacts sections"]').forEach(s => { s.innerHTML = afSegHtml(m); });
+}
+abSegSync = function () { afSegSync(); };
+abSegSelect = function (which) {
+  haptic('light');
+  const ov = document.getElementById('auOverlay'); if (ov && ov.classList.contains('show')) closeAuSearch();
+  if (which === 'affinity') return switchOSTab('affinity');
+  if (which === 'calendar') return switchOSTab('upcoming');
+  if (which === 'files') return switchOSTab('files');
+  if (currentOSPane !== 'address') switchOSTab('address');
+};
+(function () {
+  const _sw = switchOSTab, _en = enterOS;
+  switchOSTab = function (t) { _sw.apply(this, arguments); if (t === 'affinity') afRender(); afSegSync(); };
+  enterOS = function (t) { _en.apply(this, arguments); if (t === 'affinity') afRender(); afSegSync(); };
+})();
+
+/* ── data ── */
+async function afSave() { try { return !!(await window.storage.set(AF_KEY, JSON.stringify(AF), false)); } catch (e) { return false; } }
+async function afCommit(fn) {
+  const snap = JSON.stringify(AF); fn();
+  if (await afSave()) return true;
+  AF = JSON.parse(snap); haptic('error'); showToast("Couldn't save", 'error'); return false;
+}
+function afStories() {
+  const now = Date.now(), L = [];
+  if (AF_DEMO) AF_DEMO_DATA.forEach(d => L.push(Object.assign({}, d, { t: afBoot - d.off })));
+  AF.stories.forEach(s => L.push(s));
+  return L.filter(s => now - s.t < AF_TTL).sort((a, b) => b.t - a.t);
+}
+const afItem = id => AF_TREATS.find(x => x.id === id) || AF_TREATS[0];
+function afAgo(t) { const m = Math.floor((Date.now() - t) / 6e4); return m < 1 ? 'Just now' : m < 60 ? m + 'm ago' : Math.floor(m / 60) + 'h ago'; }
+function afCode() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', a = new Uint8Array(6); crypto.getRandomValues(a);
+  return 'AFT-' + [...a].map(n => c[n % c.length]).join('');
+}
+function afAv(name, bg, px, photo) {
+  return `<div style="width:${px}px;height:${px}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;color:#fff;font:700 ${Math.round(px * .4)}px -apple-system,'SF Pro Text',sans-serif;">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" alt="">` : auEsc(initials2(name))}</div>`;
+}
+const afAvOf = (s, px) => s.mine ? afAv(s.name, '#8E8E93', px, profilePhotoB64) : afAv(s.name, s.av || '#8E8E93', px);
+
+(async () => {
+  try { const r = await window.storage.get(AF_KEY, false); if (r && r.value) AF = Object.assign(AF, JSON.parse(r.value)); } catch (e) {}
+  AF.stories = AF.stories.filter(s => Date.now() - s.t < AF_TTL);
+  if (AF_DEMO && !AF.demoTreat) {
+    AF.demoTreat = 1;
+    AF.treats.push({ id:'tr-demo', dir:'in', who:{ name:'Maya Reyes' }, item:'coffee', status:'sent', code:'', reply:'', t: Date.now() - 72e5 });
+    await afSave();
+  }
+  afRender();
+})();
+
+/* ── feed ── */
+function afTile(s) {
+  const r = ((String(s.id).charCodeAt(String(s.id).length - 1) % 5) - 2) * 1.6;
+  const inner = s.img
+    ? `<div class="in"><img src="${auEsc(s.img)}" alt=""></div>`
+    : `<div class="in" style="background:${AF_BG[(s.bg || 0) % AF_BG.length]};color:#fff;"><span class="cl">${auEsc(s.text)}</span></div>`;
+  const nm = s.mine ? 'You' : s.name;
+  return `<button type="button" class="af-tile" aria-label="${auEsc(nm)}, ${afAgo(s.t)}" onclick="afOpen('${s.id}')">
+    <div class="af-card" style="--r:${r}deg">${inner}<div class="af-badge">${afAvOf(s, 28)}</div></div>
+    <div class="af-nm">${auEsc(nm)}</div><div class="af-ago">${afAgo(s.t)}</div></button>`;
+}
+function afRender() {
+  const b = document.getElementById('afBody'); if (!b) return;
+  const tIn = AF.treats.filter(t => t.dir === 'in' && t.status === 'sent').length;
+  const bIn = AF.bonds.filter(x => x.dir === 'in' && x.status === 'pending').length;
+  const badge = n => n ? `<span style="background:#FF453A;color:#fff;font:600 13px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin-right:2px;">${n}</span>` : '';
+  const chev = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  const row = (bg, e, t, s, js, n) => `<div class="os-row" style="cursor:pointer;" onclick="${js}"><div class="os-row-icon" style="background:${bg};font-size:18px;">${e}</div><div class="os-row-text"><div class="os-row-title">${t}</div><div class="os-row-sub">${s}</div></div>${badge(n)}${chev}</div>`;
+  b.innerHTML = `<div class="os-group" style="margin-bottom:12px;">${row('#FF9F0A', '☕', 'Treats', 'Claim vouchers sent to you', 'afTreatsSheet()', tIn)}${row('#4A9DE0', '🤝', 'Bond requests', 'People who want to bond with you', 'afBondsSheet()', bIn)}</div>
+    <div class="af-grid"><button type="button" class="af-tile" onclick="afShare()"><div class="af-plus"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="af-nm" style="opacity:.6">Share Story</div></button>${afStories().map(afTile).join('')}</div>`;
+}
+
+/* ── story viewer (walang comments: reactions at treat lang) ── */
+function afOpen(id) {
+  const s = afStories().find(x => x.id === id); if (!s) return;
+  haptic('light'); afView = id;
+  document.getElementById('afViewer')?.remove();
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const mine = !!s.mine, my = AF.mine[id] || '';
+  const bg = AF_BG[(s.bg || 0) % AF_BG.length];
+  const media = (s.img ? `<img src="${auEsc(s.img)}" alt="" style="max-width:100%;max-height:60vh;object-fit:contain;border-radius:22px;">` : '') +
+    (s.img && !s.text ? '' : (s.img
+      ? `<div style="${F}color:#fff;font-size:16px;line-height:1.4;text-align:center;word-break:break-word;">${auEsc(s.text)}</div>`
+      : `<div style="width:100%;border-radius:26px;padding:34px 26px;box-sizing:border-box;background:${bg};color:#fff;font:700 26px/1.3 -apple-system,'SF Pro Display',sans-serif;word-break:break-word;">${auEsc(s.text)}</div>`));
+  let foot;
+  if (mine) {
+    const rc = s.rc || {}, cs = AF_REACTS.filter(r => rc[r.id]).map(r => r.e + ' ' + rc[r.id]).join('    ') || 'No reactions yet';
+    const pend = AF.bonds.filter(x => x.dir === 'in' && x.storyId === id && x.status === 'pending').length;
+    foot = `<div style="${F}color:rgba(255,255,255,.75);font-size:14px;text-align:center;margin-bottom:12px;">${cs}</div>
+      ${pend ? `<button type="button" class="af-treat" onclick="afBondsSheet()">🤝 ${pend} bond request${pend > 1 ? 's' : ''}</button>` : ''}
+      <button type="button" class="af-del" onclick="afDelete('${id}')">Delete story</button>`;
+  } else {
+    foot = `<div class="af-rbar" role="group" aria-label="React">${AF_REACTS.map(r => `<button type="button" class="af-r${my === r.id ? ' on' : ''}" aria-pressed="${my === r.id}" onclick="afReact('${r.id}')"><b>${r.e}</b>${r.l}</button>`).join('')}</div>
+      <button type="button" class="af-treat" onclick="afTreatFor()">☕ Send a treat</button>`;
+  }
+  const ov = document.createElement('div');
+  ov.id = 'afViewer'; ov.className = 'share-overlay show';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Story from ' + (mine ? 'you' : s.name));
+  ov.style.cssText = 'background:#1c1c1e;align-items:stretch;backdrop-filter:none;-webkit-backdrop-filter:none;';
+  ov.onclick = e => { if (e.target === ov) afClose(); };
+  ov.innerHTML = `<div style="width:100%;max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:max(14px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;">
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">${afAvOf(s, 40)}
+      <div style="flex:1;min-width:0;"><div style="${F}font-size:15px;font-weight:700;color:#fff;">${auEsc(mine ? 'You' : s.name)}</div><div style="${F}font-size:12px;color:rgba(255,255,255,.55);">${auEsc(s.role || '')}${s.role ? ' · ' : ''}${afAgo(s.t)}</div></div>
+      <button type="button" aria-label="Close story" onclick="afClose()" style="width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:20px;cursor:pointer;">×</button></div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px 0;overflow:auto;">${media}</div>
+    <div style="flex-shrink:0;">${foot}</div></div>`;
+  document.body.appendChild(ov);
+}
+function afClose() { document.getElementById('afViewer')?.remove(); afView = null; haptic('light'); afRender(); }
+
+async function afReact(r) {
+  const id = afView, s = afStories().find(x => x.id === id); if (!s || s.mine) return;
+  if (r === 'bond') return afBond(s);
+  const had = AF.mine[id] === r;
+  if (!(await afCommit(() => { if (had) delete AF.mine[id]; else AF.mine[id] = r; }))) return;
+  haptic(had ? 'light' : 'success'); afOpen(id);
+}
+
+/* Bond: ang nag-share ng story ang magpapasya kung idadagdag sa Contacts niya */
+async function afBond(s) {
+  if (s.allowBond === false) { haptic('error'); showToast(String(s.name).split(' ')[0] + ' is not accepting bonds right now', 'neutral'); return; }
+  if (AF.mine[s.id] === 'bond') { haptic('light'); showToast('Bond already sent', 'neutral'); return; }
+  if (!(await afCommit(() => {
+    AF.mine[s.id] = 'bond';
+    AF.bonds.push({ id:'b' + Date.now(), storyId:s.id, dir:'out', who:{ name:s.name, role:s.role || '' }, status:'sent', t:Date.now() });
+  }))) return;
+  /* TODO backend: apiPost('affinityBond', { storyId: s.id, from: ownerInfo() }) para makarating sa nag-share */
+  haptic('success'); showToast('Bond sent. You are added to their Contacts only if they allow it.', 'success');
+  afOpen(s.id);
+}
+function afBondsSheet() {
+  haptic('light');
+  auMakeSheet('afBondsOverlay', 'Bond requests', '<div id="afBondsBody"></div>');
+  afBondsPaint();
+}
+function afBondsPaint() {
+  const w = document.getElementById('afBondsBody'); if (!w) return;
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const L = AF.bonds.filter(x => x.dir === 'in' && x.status === 'pending');
+  if (!L.length) { w.innerHTML = `<div style="${F}font-size:13.5px;color:rgba(60,60,67,.45);text-align:center;padding:30px 6px;">No bond requests right now</div>`; return; }
+  w.innerHTML = `<div style="${F}font-size:13px;color:rgba(60,60,67,.6);line-height:1.5;margin:-6px 2px 12px;">Allow adds them to your Contacts. They only see what you share.</div>
+    <div style="background:rgba(255,255,255,.72);border-radius:16px;overflow:hidden;">${L.map((b, i) => `<div style="padding:12px 14px;${i ? 'border-top:1px solid rgba(0,0,0,.07);' : ''}">
+      <div style="display:flex;align-items:center;gap:12px;">${afAv(b.who.name, avatarColorFromName(b.who.name), 40)}
+        <div style="flex:1;min-width:0;"><div style="${F}font-size:14.5px;font-weight:600;color:#1c1c1e;">${auEsc(b.who.name)}</div><div style="${F}font-size:12px;color:rgba(60,60,67,.55);">${auEsc([b.who.role, b.who.company].filter(Boolean).join(' · '))}</div></div></div>
+      <div style="display:flex;gap:8px;margin:10px 0 0 52px;"><button type="button" class="dc-btn" style="padding:10px;" onclick="afBondAllow('${b.id}')">Allow</button><button type="button" class="dc-btn alt" style="padding:10px;" onclick="afBondDismiss('${b.id}')">Dismiss</button></div></div>`).join('')}</div>`;
+}
+async function afBondAllow(id) {
+  const b = AF.bonds.find(x => x.id === id); if (!b || b.status !== 'pending') return;
+  const w = b.who;
+  const c = newContact({ source:'affinity', name:w.name, role:w.role || '', company:w.company || '', mobile:acNormalizePhone(w.mobile || ''), email:String(w.email || '').toLowerCase(), notes:'Bonded through Affinity', tag:'New', avatarBg:avatarColorFromName(w.name) });
+  const dup = (acFindMatch(c) || {}).match;
+  if (!dup) {
+    if (!planGate('contacts', 1)) return;
+    c.id = ADDRESS_BOOK.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1; ADDRESS_BOOK.push(c);
+    if (!(await saveAddressBook())) { const i = ADDRESS_BOOK.indexOf(c); if (i > -1) ADDRESS_BOOK.splice(i, 1); haptic('error'); showToast("Couldn't add contact", 'error'); return; }
+  }
+  if (!(await afCommit(() => { b.status = 'allowed'; }))) return;
+  haptic('success'); showToast(dup ? 'Already in your Contacts' : w.name + ' added to Contacts', 'success');
+  filterAddressBook(document.getElementById('abSearchInput')?.value || '');
+  afBondsPaint(); afRender(); if (afView) afOpen(afView);
+}
+async function afBondDismiss(id) {
+  const b = AF.bonds.find(x => x.id === id); if (!b) return;
+  if (!(await afCommit(() => { b.status = 'dismissed'; }))) return;
+  haptic('light'); afBondsPaint(); afRender(); if (afView) afOpen(afView);
+}
+
+/* ── Treat: send → claim (voucher code) → Thank you / send back ── */
+function afTreatFor() { const s = afStories().find(x => x.id === afView); if (s && !s.mine) afTreatSheet({ name:s.name, storyId:s.id }); }
+function afTreatSheet(t) {
+  haptic('light');
+  window._afT = { name:t.name, storyId:t.storyId || '', item:AF_TREATS[0].id };
+  auMakeSheet('afTreatOverlay', 'Send a treat', '<div id="afTreatBody"></div>');
+  afTreatPaint();
+}
+function afTreatPick(id) { haptic('light'); if (window._afT) window._afT.item = id; afTreatPaint(); }
+function afTreatPaint() {
+  const w = document.getElementById('afTreatBody'), T = window._afT; if (!w || !T) return;
+  const first = String(T.name).split(' ')[0], it = afItem(T.item);
+  w.innerHTML = `<div class="dc-note" style="margin:-4px 2px 12px;">${auEsc(first)} gets a voucher to claim at a participating café. ${auEsc(first)} can reply with a thank you or send a treat back.</div>
+    <div role="radiogroup" aria-label="Treat">${AF_TREATS.map(o => { const on = T.item === o.id; return `<button type="button" role="radio" aria-checked="${on}" class="dc-opt${on ? ' on' : ''}" onclick="afTreatPick('${o.id}')"><span class="dc-dot"></span><span style="display:flex;flex-direction:column;text-align:left;"><span class="dc-ot">${o.e} ${auEsc(o.l)}</span><span class="dc-os">₱${o.price}</span></span></button>`; }).join('')}</div>
+    <button type="button" class="dc-btn" style="margin-top:6px;" onclick="afTreatSend()">Send treat · ₱${it.price}</button>`;
+}
+async function afTreatSend() {
+  const T = window._afT; if (!T) return;
+  const it = afItem(T.item);
+  /* TODO backend: i-charge ang sender at apiPost('affinityTreatSend', {...}) sa café/voucher system mo */
+  if (!(await afCommit(() => { AF.treats.push({ id:'tr' + Date.now(), dir:'out', who:{ name:T.name }, storyId:T.storyId, item:it.id, status:'sent', code:'', reply:'', t:Date.now() }); }))) return;
+  haptic('success'); closeAuGenericModal('afTreatOverlay');
+  showToast(it.e + ' Treat sent to ' + String(T.name).split(' ')[0], 'success');
+}
+function afTreatsSheet() {
+  haptic('light');
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const L = AF.treats.filter(t => t.dir === 'in').sort((a, b) => b.t - a.t);
+  const chev = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  auMakeSheet('afTreatsOverlay', 'Treats', L.length
+    ? `<div style="background:rgba(255,255,255,.72);border-radius:16px;overflow:hidden;">${L.map(t => { const it = afItem(t.item); return `<div class="os-row" style="cursor:pointer;" onclick="afTreatOpen('${t.id}')"><div class="os-row-icon" style="background:#FF9F0A;font-size:18px;">${it.e}</div><div class="os-row-text"><div class="os-row-title">${auEsc(it.l)} from ${auEsc(t.who.name)}</div><div class="os-row-sub">${afAgo(t.t)} · ${t.status === 'sent' ? 'Ready to claim' : 'Claimed'}</div></div>${chev}</div>`; }).join('')}</div>`
+    : `<div style="${F}font-size:13.5px;color:rgba(60,60,67,.45);text-align:center;padding:30px 6px;">No treats yet</div>`);
+}
+function afTreatOpen(id) { closeAuGenericModal('afTreatsOverlay'); setTimeout(() => afTreatDetail(id), 260); }
+function afTreatDetail(id) {
+  const t = AF.treats.find(x => x.id === id); if (!t) return;
+  const it = afItem(t.item), first = String(t.who.name).split(' ')[0], F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  let body;
+  if (t.status === 'sent') {
+    body = `<div style="${F}font-size:14px;line-height:1.55;color:rgba(60,60,67,.7);margin:-4px 2px 16px;">${auEsc(first)} sent you a ${auEsc(it.l)} ${it.e}. Claim it to get your voucher code.</div>
+      <button type="button" class="dc-btn" onclick="afClaim('${id}')">Claim treat</button>`;
+  } else {
+    body = `<div style="background:#2F343A;border-radius:18px;padding:20px 16px;text-align:center;margin-bottom:12px;">
+        <div style="${F}font-size:10px;font-weight:700;letter-spacing:.16em;color:#E8CC7A;">VOUCHER CODE</div>
+        <div style="font:700 26px 'Space Mono',monospace;letter-spacing:.08em;color:#fff;margin:10px 0;user-select:all;">${auEsc(t.code)}</div>
+        <div style="${F}font-size:12px;color:#F3EDE4;opacity:.7;">Show this code at a participating café.</div></div>
+      <button type="button" class="dc-btn" onclick="ntCopy('${auEsc(t.code)}','Code copied')">Copy code</button>
+      ${t.reply ? `<div style="${F}font-size:13px;color:rgba(60,60,67,.6);text-align:center;margin:12px 0 4px;">You replied: “${auEsc(t.reply)}”</div>` : `<button type="button" class="dc-btn alt" style="margin-top:8px;" onclick="afThank('${id}')">Say “Thank you!”</button>`}
+      <button type="button" class="dc-btn alt" style="margin-top:8px;" onclick="afTreatBack('${id}')">Send a treat back</button>`;
+  }
+  auMakeSheet('afVoucherOverlay', it.e + ' ' + auEsc(it.l), body);
+}
+async function afClaim(id) {
+  const t = AF.treats.find(x => x.id === id); if (!t || t.status !== 'sent') return;
+  /* TODO backend: code = (await apiPost('affinityTreatClaim', { treatId: id })).code, para server ang gumagawa ng valid voucher */
+  const code = afCode();
+  if (!(await afCommit(() => { t.status = 'claimed'; t.code = code; t.claimedAt = Date.now(); }))) return;
+  haptic('success'); afRender();
+  closeAuGenericModal('afVoucherOverlay'); setTimeout(() => afTreatDetail(id), 260);
+}
+async function afThank(id) {
+  const t = AF.treats.find(x => x.id === id); if (!t || t.reply) return;
+  if (!(await afCommit(() => { t.reply = 'Thank you!'; }))) return;
+  /* TODO backend: apiPost('affinityTreatReply', { treatId: id, reply: 'Thank you!' }) */
+  haptic('success'); showToast('Thank you sent', 'success');
+  closeAuGenericModal('afVoucherOverlay'); setTimeout(() => afTreatDetail(id), 260);
+}
+function afTreatBack(id) {
+  const t = AF.treats.find(x => x.id === id); if (!t) return;
+  closeAuGenericModal('afVoucherOverlay'); setTimeout(() => afTreatSheet({ name:t.who.name }), 260);
+}
+
+/* ── share story ── */
+function afShare() {
+  haptic('light'); afDraftImg = '';
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  auMakeSheet('afShareOverlay', 'Share Story', `
+    <textarea id="afTxt" class="am-input" maxlength="140" placeholder="What's on your mind?" style="min-height:90px;resize:none;" oninput="document.getElementById('afCnt').textContent=this.value.length+'/140'"></textarea>
+    <div id="afCnt" style="${F}font-size:11px;color:rgba(60,60,67,.4);text-align:right;margin:4px 2px 0;">0/140</div>
+    <div id="afPhoto"></div>
+    <button type="button" class="dc-btn alt" style="margin:10px 0;" onclick="afPickPhoto()">Add photo</button>
+    <label style="display:flex;align-items:center;gap:10px;${F}font-size:14px;color:#1c1c1e;margin:4px 2px 6px;cursor:pointer;"><input type="checkbox" id="afAllow" checked style="width:20px;height:20px;">Allow people to Bond with me</label>
+    <div class="dc-note" style="margin:0 2px 14px;">Stories disappear after 24 hours. No comments, only reactions and treats.</div>
+    <button type="button" class="dc-btn" onclick="afPost()">Post</button>`);
+}
+function afPhotoPaint() {
+  const w = document.getElementById('afPhoto'); if (!w) return;
+  w.innerHTML = afDraftImg ? `<div style="position:relative;margin-top:10px;"><img src="${afDraftImg}" alt="" style="width:100%;max-height:200px;object-fit:cover;border-radius:14px;display:block;"><button type="button" aria-label="Remove photo" onclick="afDropPhoto()" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;">×</button></div>` : '';
+}
+function afDropPhoto() { afDraftImg = ''; afPhotoPaint(); }
+function afPickPhoto() {
+  haptic('light');
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+  inp.addEventListener('change', () => {
+    const f = inp.files && inp.files[0]; if (!f) { inp.remove(); return; }
+    const url = URL.createObjectURL(f), img = new Image();
+    img.onload = () => {
+      const sc = Math.min(1, 720 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); inp.remove();
+      afDraftImg = c.toDataURL('image/jpeg', .72); afPhotoPaint();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); inp.remove(); haptic('error'); showToast("Can't read that photo", 'error'); };
+    img.src = url;
+  });
+  document.body.appendChild(inp); inp.click();
+}
+async function afPost() {
+  const txt = (document.getElementById('afTxt')?.value || '').trim(), allow = document.getElementById('afAllow')?.checked !== false;
+  if (!txt && !afDraftImg) { haptic('error'); showToast('Add a photo or a few words', 'error'); return; }
+  if (AF.stories.length >= 5) { haptic('error'); showToast('You can have up to 5 active stories', 'neutral'); return; }
+  const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const s = { id:'s' + Date.now(), mine:true, authorId:'me', name:nm, role:(currentEntry && currentEntry.pos) || '', text:txt, img:afDraftImg, bg:Math.floor(Math.random() * AF_BG.length), allowBond:allow, t:Date.now(), rc:{} };
+  if (AF_DEMO) s.rc = allow ? { celebrate:2, inspired:1, bond:1 } : { celebrate:2, inspired:1 };
+  if (!(await afCommit(() => {
+    AF.stories.push(s);
+    if (AF_DEMO && allow) AF.bonds.push({ id:'b' + Date.now(), storyId:s.id, dir:'in', who:AF_SIM, status:'pending', t:Date.now() });
+  }))) return;
+  /* TODO backend: apiPost('affinityPost', s) para makita ng iba */
+  haptic('success'); closeAuGenericModal('afShareOverlay'); afRender(); showToast('Story shared for 24 hours', 'success');
+}
+function afDelete(id) {
+  haptic('medium');
+  confirmDialog({ title:'Delete this story?', message:'It will be removed right away.', confirmLabel:'Delete', danger:true, onConfirm: async () => {
+    if (!(await afCommit(() => { AF.stories = AF.stories.filter(x => x.id !== id); AF.bonds = AF.bonds.filter(b => b.storyId !== id); }))) return;
+    haptic('success'); afClose(); showToast('Story deleted', 'neutral');
+  } });
+}
+afSegSync();
+/* === END: AFFINITY === */
+
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */
 const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
 (function () {

@@ -18789,7 +18789,9 @@ let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Dat
   .af-card .in img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .af-card .cl{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
   .af-badge{position:absolute;right:-7px;bottom:-7px;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.18);}
-  .af-plus{width:100%;max-width:83px;aspect-ratio:1;border-radius:16px;border:1.5px dashed rgba(60,60,67,.35);background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:rgba(60,60,67,.6);box-sizing:border-box;}
+  /* === START: AF PLUS ROUND === */
+.af-plus{width:54px;height:54px;border-radius:50%;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 2px 8px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;color:#1c1c1e;box-sizing:border-box;margin:14px 0 0;}
+/* === END: AF PLUS ROUND === */
   .af-nm{font-size:13px;font-weight:600;color:#1c1c1e;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .af-ago{font-size:11px;color:rgba(60,60,67,.5);margin-top:-3px;}
   .af-rbar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
@@ -19290,6 +19292,10 @@ afShare = function () {
   const sh = document.getElementById('afShareOverlay-sheet'); if (!sh) return;
   const t = sh.querySelector('[style*="font-size:20px"]'); if (t) t.textContent = 'Add to your story';
   const p = [...sh.querySelectorAll('.dc-btn')].pop(); if (p) p.textContent = 'Add';
+/* === START: AF ADD NOTE === */
+{ const n = afImgs(m).length, x = sh.querySelector('#afTxt');
+  if (x) x.insertAdjacentHTML('beforebegin', `<div style="font:600 12.5px -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.6);margin:-4px 2px 10px;">Adding to your current story · ${n} photo${n === 1 ? '' : 's'} · <button type="button" class="dc-lnk" style="min-height:0;margin:0;font-size:12.5px;" onclick="closeAuGenericModal('afShareOverlay');setTimeout(()=>afManage('${m.id}'),260)">Manage</button></div>`); }
+/* === END: AF ADD NOTE === */
   const a = document.getElementById('afAllow'); if (a) { a.checked = m.allowBond !== false; const l = a.closest('label'); if (l) l.style.display = 'none'; }
 };
 
@@ -19301,8 +19307,8 @@ afPost = async function () {
   let ok;
   if (m) {
     const all = afImgs(m).concat(imgs).slice(0, 20);
-    const ntxt = [m.text, txt].filter(Boolean).join('\n\n').slice(0, 3000);
-    ok = await afCommit(() => { m.text = ntxt; m.imgs = all; m.img = all[0] || ''; m.u = now; });
+    const parts = afParts(m).concat(txt ? [txt] : []);
+    ok = await afCommit(() => { m.parts = parts; m.text = parts.join('\n\n').slice(0, 3000); m.imgs = all; m.img = all[0] || ''; m.u = now; });
   } else {
     const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     const s = { id: 's' + now, mine: true, authorId: 'me', name: nm, role: (currentEntry && currentEntry.pos) || '', text: txt, imgs: imgs, img: imgs[0] || '', bg: Math.floor(Math.random() * AF_BG.length), allowBond: allow, t: now, u: now, rx: [] };
@@ -19320,6 +19326,45 @@ afPost = async function () {
 };
 
 /* ── viewer: sa sariling story, Reactions button na lang (walang nakikitang listahan hanggang i-click) ── */
+/* === START: AFFINITY STORY MANAGE (delete per photo / per text) === */
+const afParts = s => Array.isArray(s.parts) ? s.parts : (s.text ? [s.text] : []);
+function afManage(id) {
+  const m = AF.stories.find(x => x.id === id && x.mine); if (!m) return;
+  haptic('light');
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const im = afImgs(m), ps = afParts(m);
+  const x = (js, l) => `<button type="button" aria-label="${l}" onclick="${js}" style="width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:16px;line-height:1;cursor:pointer;padding:0;">×</button>`;
+  const photos = im.length ? `<div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.4);margin:0 2px 8px;">Photos</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">${im.map((u, i) => `<div style="position:relative;aspect-ratio:1;"><img src="${auEsc(u)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"><div style="position:absolute;top:5px;right:5px;">${x(`afDelPhoto('${id}',${i})`, 'Delete photo ' + (i + 1))}</div></div>`).join('')}</div>` : '';
+  const texts = ps.length ? `<div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.4);margin:0 2px 8px;">Text</div>
+    <div style="background:rgba(255,255,255,.72);border-radius:16px;overflow:hidden;margin-bottom:16px;">${ps.map((t, i) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;${i ? 'border-top:1px solid rgba(0,0,0,.07);' : ''}"><div style="flex:1;${F}font-size:13.5px;color:#1c1c1e;white-space:pre-wrap;word-break:break-word;">${auEsc(t.slice(0, 200))}${t.length > 200 ? '…' : ''}</div>${x(`afDelPart('${id}',${i})`, 'Delete text ' + (i + 1))}</div>`).join('')}</div>` : '';
+  auMakeSheet('afManageOverlay', 'Manage story', `<div id="afManageBody">${photos}${texts}
+    <button type="button" class="dc-btn alt" style="margin-bottom:8px;" onclick="closeAuGenericModal('afManageOverlay');setTimeout(afShare,260)">Add more</button>
+    <button type="button" class="af-del" onclick="closeAuGenericModal('afManageOverlay');setTimeout(()=>afDelete('${id}'),260)">Delete whole story</button></div>`);
+}
+function afDelPhoto(id, i) {
+  haptic('medium');
+  confirmDialog({ title: 'Delete this photo?', message: 'The rest of your story stays.', confirmLabel: 'Delete', danger: true, onConfirm: () => afCut(id, 'photo', i) });
+}
+function afDelPart(id, i) {
+  haptic('medium');
+  confirmDialog({ title: 'Delete this text?', message: 'The rest of your story stays.', confirmLabel: 'Delete', danger: true, onConfirm: () => afCut(id, 'part', i) });
+}
+async function afCut(id, kind, i) {
+  const m = AF.stories.find(x => x.id === id && x.mine); if (!m) return;
+  const im = afImgs(m).slice(), ps = afParts(m).slice();
+  if (kind === 'photo') im.splice(i, 1); else ps.splice(i, 1);
+  const empty = !im.length && !ps.length;
+  if (!(await afCommit(() => {
+    if (empty) { AF.stories = AF.stories.filter(x => x.id !== id); AF.bonds = AF.bonds.filter(b => b.storyId !== id); return; }
+    m.imgs = im; m.img = im[0] || ''; m.parts = ps; m.text = ps.join('\n\n');
+  }))) return;
+  haptic('success');
+  closeAuGenericModal('afManageOverlay');
+  if (empty) { document.getElementById('afViewer')?.remove(); afView = null; afRender(true); showToast('Story removed', 'neutral'); return; }
+  afRender(true); afOpen(id); setTimeout(() => afManage(id), 60);
+}
+/* === END: AFFINITY STORY MANAGE === */
 const _afOpen0 = afOpen;
 afOpen = function (id) {
   _afOpen0.apply(this, arguments);
@@ -19329,7 +19374,7 @@ afOpen = function (id) {
   if (s.mine) {
     const n = (s.rx || []).length, c = foot.firstElementChild;
     if (c && !c.classList.contains('af-treat') && !c.classList.contains('af-del'))
-      c.outerHTML = `<button type="button" class="af-treat" onclick="afReactors('${id}')">Reactions${n ? ' · ' + n : ''}</button>`;
+      c.outerHTML = `<button type="button" class="af-treat" onclick="afReactors('${id}')">Reactions${n ? ' · ' + n : ''}</button><button type="button" class="af-treat" onclick="afManage('${id}')">Manage photos &amp; text</button>`;
   }
   foot.querySelectorAll('.af-treat').forEach(b => { b.textContent = b.textContent.replace(/(☕|🤝)\s*/g, ''); });
 };
@@ -19416,4 +19461,3 @@ window.__ATHNA_READY__ = true;
 </script>
 </body>
 </html>
-

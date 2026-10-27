@@ -1918,10 +1918,13 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
               .back-mascot{max-height:74%;top:46%;}
               .mascot-limited{bottom:58px;}
             </style>
-            <div id="backNotice" style="position:absolute;left:24px;right:24px;top:438px;height:54px;z-index:5;text-align:center;pointer-events:none;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;">
-              <div style="font-size:7px;font-weight:700;letter-spacing:.2em;color:#d0d0d0;opacity:.6;">THIS CARD IS THE PROPERTY OF</div>
-              <div id="bnName" style="font-size:11.5px;font-weight:600;letter-spacing:.08em;color:#fff;margin:3px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARDHOLDER</div>
-              <div style="font-size:7.5px;line-height:1.55;color:#d0d0d0;opacity:.75;">Authorized cardholder of ArtiByte Apostrophe Inc.<br>If lost or found, please contact support@artibytte.com</div>
+            <div id="backNotice" style="position:absolute;left:24px;right:24px;top:436px;height:60px;z-index:5;text-align:center;pointer-events:none;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;">
+              <div style="font-size:6.5px;line-height:8px;font-weight:500;letter-spacing:.1em;color:#8e939a;">PERSONAL DIGITAL IDENTITY</div>
+              <div id="bnName" style="font-size:13px;line-height:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARDHOLDER</div>
+              <div style="font-size:7.5px;line-height:9px;color:#b5b8bd;">Authorized Cardholder · Articardd</div>
+              <div style="height:1px;background:rgba(255,255,255,.16);margin:4px 8px;"></div>
+              <div style="font-size:7px;line-height:9px;color:#a9adb3;">If found, please contact</div>
+              <div style="font-size:8px;line-height:10px;color:#fff;">support@artibytte.com</div>
             </div>
             <button type="button" id="backShareBtn" aria-label="Share my card" onclick="event.stopPropagation();haptic('light');shareCard();"
               style="position:absolute;left:146px;top:496.2px;width:48px;height:48px;padding:0;border-radius:50%;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;"
@@ -1931,7 +1934,7 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
             </button>
             <div style="position:absolute;left:32px;top:569px;width:52px;height:1px;background:#fff;opacity:.22;z-index:5;pointer-events:none;"></div>
             <div style="position:absolute;left:256px;top:569px;width:52px;height:1px;background:#fff;opacity:.22;z-index:5;pointer-events:none;"></div>
-            <div id="backAthId" style="position:absolute;left:0;right:0;top:563px;line-height:12px;text-align:center;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;font-size:8.5px;font-weight:500;letter-spacing:1.1px;color:#d0d0d0;z-index:5;pointer-events:none;">ARTICARD-000000</div>
+            <div id="backAthId" style="position:absolute;left:0;right:0;top:563px;line-height:12px;text-align:center;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;font-size:8.5px;font-weight:500;letter-spacing:1.1px;color:#d0d0d0;z-index:5;pointer-events:none;">ARTICARDD · No. 000000</div>
           </div>
         </div>
       </div>
@@ -5338,7 +5341,7 @@ function fillConnectPreview() {
     document.getElementById('pillName').textContent = formatPillName(entry.name);
     document.getElementById('pillPos').textContent  = entry.pos.toUpperCase() + (entry.company ? ' | ' + entry.company.toUpperCase() : '');
 
-    document.getElementById('backAthId').textContent = entry.athid;
+    document.getElementById('backAthId').textContent = 'ARTICARDD · No. ' + String(entry.athid || '').replace(/\D/g, '');
     initHoldToOpen();
     renderPillAvatar();
 
@@ -18028,7 +18031,7 @@ function flDelete() {
   ];
   const BLOCK = '.share-overlay.show:not(#auOverlay),.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#confirmDialogOverlay,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardFilterOverlay,#physOrderOverlay,#requestMgrScreen,#screenGate.show';
   const shown = id => { const e = document.getElementById(id); return e && getComputedStyle(e).display !== 'none' ? e : null; };
-  const NO_START = '.ab-row-wrap,.ab-seg,.ab-recent-strip,.theme-switcher,input,textarea,select,.ab-scrubber,.up-cal-card,.cd-sheet,.dc-msgs';
+  const NO_START = '.af-rail,.ab-row-wrap,.ab-seg,.ab-recent-strip,.theme-switcher,input,textarea,select,.ab-scrubber,.up-cal-card,.cd-sheet,.dc-msgs';
 
   function topPage() {
     if (document.querySelector(BLOCK)) return null;
@@ -19284,7 +19287,7 @@ function afShare() {
     <div id="afPhoto"></div>
     <button type="button" class="dc-btn alt" style="margin:10px 0;" onclick="afPickPhoto()">Add photos (up to 20)</button>
     <label style="display:flex;align-items:center;gap:10px;${F}font-size:14px;color:#1c1c1e;margin:4px 2px 6px;cursor:pointer;"><input type="checkbox" id="afAllow" checked style="width:20px;height:20px;">Allow people to Bond with me</label>
-    <div class="dc-note" style="margin:0 2px 14px;">Stories disappear after 24 hours. No comments, only reactions and treats.</div>
+    <div class="dc-note" style="margin:0 2px 14px;">Stories disappear after 24 hours.</div>
     <button type="button" class="dc-btn" onclick="afPost()">Post</button>`);
 }
 function afPhotoPaint() {
@@ -19418,25 +19421,28 @@ afTile = function (s) {
 
 afRender = function (force) {
   const b = document.getElementById('afBody'); if (!b) return;
-  const L = afStories(), mine = L.find(s => s.mine), rest = L.filter(s => !s.mine);
+  const L = afStories(), mine = L.find(s => s.mine), mineAll = L.filter(s => s.mine), rest = L.filter(s => !s.mine);
   const tIn = AF.treats.filter(t => t.dir === 'in' && t.status === 'sent').length;
   const bIn = AF.bonds.filter(x => x.dir === 'in' && x.status === 'pending').length;
   const sig = [L.map(s => s.id + ':' + s.t + ':' + (s.rx || []).length + ':' + afImgs(s).length + ':' + (s.text || '').length).join(','), tIn, bIn, Math.floor(Date.now() / 6e4)].join('|');
   if (!force && sig === _afSig && b.firstChild) return;      /* walang binago = walang flicker */
   _afSig = sig;
   const ob = document.getElementById('osBody'), keep = ob ? ob.scrollTop : 0;
+const rl0 = document.querySelector('#afBody .af-rail')?.scrollLeft || 0;
   const ic = p => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
   const cup = ic('<path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3v2M12 3v2"/>');
   const bond = ic('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>');
   const badge = n => n ? `<span style="background:#1c1c1e;color:#fff;font:600 13px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin-right:2px;">${n}</span>` : '';
   const chev = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
   const row = (e, t, s, js, n) => `<div class="os-row af-row" role="button" tabindex="0" style="cursor:pointer;" onclick="${js}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${js}}"><div class="os-row-icon" style="background:#1c1c1e;">${e}</div><div class="os-row-text"><div class="os-row-title">${t}</div><div class="os-row-sub">${s}</div></div>${badge(n)}${chev}</div>`;
-  const plus = `<button type="button" class="af-tile" aria-label="${mine ? 'Add to your story' : 'Share a story'}" onclick="haptic('light');afShare()"><div class="af-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="af-nm">${mine ? 'Add more' : 'Add story'}</div></button>`;
+  const plus = `<button type="button" class="af-tile" aria-label="Share a story" onclick="haptic('light');afShare()"><div class="af-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1c1e" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="af-nm">Add story</div></button>`;
   b.innerHTML = `<div class="os-group" style="margin-bottom:12px;">${row(cup, 'Treats', tIn ? tIn + ' voucher' + (tIn > 1 ? 's' : '') + ' ready to claim' : 'No vouchers waiting', 'afTreatsSheet()', tIn)}${row(bond, 'Bond requests', bIn ? bIn + ' pending. Allow or dismiss' : 'No pending requests', 'afBondsSheet()', bIn)}</div>
-    <div class="af-grid">${plus}${mine ? afTile(mine) : ''}${rest.map(afTile).join('')}</div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:18px 4px 2px;"><div style="font:700 22px -apple-system,'SF Pro Display',sans-serif;letter-spacing:-.01em;color:#1c1c1e;">Your Affinities</div><button type="button" class="af-add" aria-label="Share a story" onclick="haptic('light');afShare()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+    <div class="af-rail" role="list" aria-label="Stories. Swipe to see more">${mineAll.map(afTile).join('')}${rest.map(afTile).join('')}</div>
     ${L.length ? '' : '<div class="af-empty">No active stories yet. Tap + to share yours. It disappears after 24 hours.</div>'}
     <div id="afMore" style="height:36px;text-align:center;font:12px -apple-system,'SF Pro Text',sans-serif;color:rgba(60,60,67,.4);"></div>`;
   if (ob) ob.scrollTop = keep;
+  const rl1 = document.querySelector('#afBody .af-rail'); if (rl1) rl1.scrollLeft = rl0;
 };
 
 /* ── auto refresh: bottom pull / interval / balik sa app ── */
@@ -19605,9 +19611,127 @@ async function afBondAccepted(id) {
   } finally { _afAcc.delete(id); }
 }
 /* Allow ng in-bond: nadadagdag na sa Contacts mo ng afBondAllow. TODO backend: apiPost('affinityBondAccept', { bondId, from: ownerInfo() }) para siya naman ang madagdagan */
+/* bawat post = hiwalay na story, walang merge */
+/* === START: AFFINITY STORY COMPOSER (choose first: Photos / Text) === */
+var afStep = 'pick', afDraftTxt = '';
+function afShSet(step) { afStep = step; haptic('light'); afShPaint(); }
+afShare = function () {
+  haptic('light'); afDraftImgs = []; afDraftTxt = ''; afStep = 'pick';
+  auMakeSheet('afShareOverlay', 'New story', '<div id="afShBody"></div>');
+  afShPaint();
+};
+function afShPaint() {
+  const w = document.getElementById('afShBody'); if (!w) return;
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const n = afDraftImgs.length;
+  const hid = `<textarea id="afTxt" hidden>${auEsc(afDraftTxt)}</textarea>`;
+  const allow = `<label style="display:flex;align-items:center;gap:10px;${F}font-size:14px;color:#1c1c1e;margin:12px 2px 6px;cursor:pointer;"><input type="checkbox" id="afAllow" checked style="width:20px;height:20px;">Allow people to Bond with me</label><div class="dc-note" style="margin:0 2px 14px;">Stories disappear after 24 hours.</div>`;
+  if (afStep === 'pick') {
+    w.innerHTML = `<div class="dc-note" style="margin:-4px 2px 12px;">What do you want to share?</div>
+      <button type="button" class="dc-btn" style="margin-bottom:8px;" onclick="afPickPhoto()">Photos</button>
+      <button type="button" class="dc-btn alt" onclick="afShSet('text')">Text only</button>${hid}`;
+    return;
+  }
+  const grid = n ? `<div style="${F}font-size:12px;font-weight:600;color:rgba(60,60,67,.55);margin:0 2px 6px;">${n} / 20 photos</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;">${afDraftImgs.map((u, i) => `<div style="position:relative;aspect-ratio:1;"><img src="${u}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;"><button type="button" aria-label="Remove photo ${i + 1}" onclick="afDropPhoto(${i})" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;cursor:pointer;padding:0;">×</button></div>`).join('')}</div>` : '';
+  if (afStep === 'review') {
+    w.innerHTML = `${grid}${hid}
+      <button type="button" class="dc-btn alt" style="margin-bottom:8px;" onclick="afShSet('text')">${afDraftTxt ? 'Edit text' : 'Add text (optional)'}</button>
+      ${n < 20 ? `<button type="button" class="dc-btn alt" onclick="afPickPhoto()">Add more photos</button>` : ''}
+      ${allow}<button type="button" class="dc-btn" onclick="afPost()">Post</button>`;
+    return;
+  }
+  /* text step */
+  w.innerHTML = `${grid}
+    <textarea id="afTxt" class="am-input" maxlength="999" placeholder="${n ? 'Add a caption…' : "What's on your mind?"}" style="min-height:130px;resize:vertical;" oninput="afDraftTxt=this.value;document.getElementById('afCnt').textContent=this.value.length+'/999'">${auEsc(afDraftTxt)}</textarea>
+    <div id="afCnt" style="${F}font-size:11px;color:rgba(60,60,67,.4);text-align:right;margin:4px 2px 0;">${afDraftTxt.length}/999</div>
+    ${allow}<button type="button" class="dc-btn" onclick="afPost()">Post</button>
+    <button type="button" class="dc-btn link" style="margin-top:4px;" onclick="afShSet(afDraftImgs.length?'review':'pick')">Back</button>`;
+  setTimeout(() => document.getElementById('afTxt')?.focus(), 80);
+}
+/* tinatawag ng afPickPhoto / afDropPhoto pagkatapos pumili o magtanggal ng photo */
+afPhotoPaint = function () {
+  if (afStep === 'pick' || afStep === 'review') afStep = afDraftImgs.length ? 'review' : 'pick';
+  afShPaint();
+};
 
+/* ── Stop watching (mute) ── */
+AF.muted = AF.muted || [];
+(function () {
+  const _s = afStories;
+  afStories = function () { return _s().filter(s => s.mine || !(AF.muted || []).includes(s.authorId || s.name)); };
+  const _o = afOpen;
+  afOpen = function (id) {
+    _o.apply(this, arguments);
+    const s = afStories().find(x => x.id === id), v = document.getElementById('afViewer');
+    if (!s || !v || s.mine) return;
+    const foot = v.firstElementChild.lastElementChild;
+    if (foot.querySelector('.af-mute')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'af-del af-mute'; b.style.marginTop = '8px';
+    b.textContent = 'Stop watching ' + String(s.name).split(' ')[0] + "'s stories";
+    b.onclick = () => afMute(id);
+    foot.appendChild(b);
+  };
+})();
+function afMute(id) {
+  const s = afStories().find(x => x.id === id); if (!s) return;
+  const key = s.authorId || s.name, first = String(s.name).split(' ')[0];
+  haptic('medium');
+  confirmDialog({ title: 'Stop watching ' + first + "'s stories?", message: 'Their stories will no longer show in your Affinity. You can undo this anytime.', confirmLabel: 'Stop watching', danger: true, onConfirm: async () => {
+    if (!(await afCommit(() => { AF.muted = AF.muted || []; if (!AF.muted.includes(key)) AF.muted.push(key); }))) return;
+    haptic('success'); document.getElementById('afViewer')?.remove(); afView = null; afRender(true);
+    showToast('Stopped watching ' + first, 'neutral');
+  } });
+}
+function afMutedSheet() {
+  haptic('light');
+  const L = AF.muted || [], F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  auMakeSheet('afMutedOverlay', 'Stopped watching', L.length
+    ? `<div style="background:rgba(255,255,255,.72);border-radius:16px;overflow:hidden;">${L.map(k => `<div class="os-row"><div class="os-row-text"><div class="os-row-title">${auEsc(k)}</div></div><button type="button" class="nt-lnk" onclick="afUnmute(decodeURIComponent('${encodeURIComponent(k).replace(/'/g, '%27')}'))">Watch again</button></div>`).join('')}</div>`
+    : `<div style="${F}font-size:13.5px;color:rgba(60,60,67,.45);text-align:center;padding:30px 6px;">No one muted</div>`);
+}
+async function afUnmute(k) {
+  if (!(await afCommit(() => { AF.muted = (AF.muted || []).filter(x => x !== k); }))) return;
+  haptic('success'); closeAuGenericModal('afMutedOverlay'); afRender(true); showToast('Watching again', 'success');
+}
+/* === END: AFFINITY STORY COMPOSER === */
+afPost = async function () {
+  const txt = (document.getElementById('afTxt')?.value || '').trim().slice(0, 999), imgs = afDraftImgs.slice(0, 20);
+  const allow = document.getElementById('afAllow')?.checked !== false;
+  if (!txt && !imgs.length) { haptic('error'); showToast('Add a photo or a few words', 'error'); return; }
+  if (AF.stories.filter(s => s.mine && afAlive(s)).length >= 5) { haptic('error'); showToast('You can have up to 5 active stories', 'neutral'); return; }
+  const now = Date.now();
+  const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const s = { id: 's' + now, mine: true, authorId: 'me', name: nm, role: (currentEntry && currentEntry.pos) || '', text: txt, parts: txt ? [txt] : [], imgs: imgs, img: imgs[0] || '', bg: Math.floor(Math.random() * AF_BG.length), allowBond: allow, t: now, rx: [] };
+  if (AF_DEMO) s.rx = [{ name: 'Chloe', r: 'celebrate', t: now }, { name: 'Jules', r: 'celebrate', t: now }, { name: 'Teresa', r: 'inspired', t: now }];
+  const ok = await afCommit(() => {
+    AF.stories = AF.stories.filter(x => !(x.mine && !afAlive(x)));
+    AF.stories.push(s);
+    if (AF_DEMO && allow) AF.bonds.push({ id: 'b' + now, storyId: s.id, dir: 'in', who: AF_SIM, status: 'pending', t: now });
+  });
+  if (!ok) { showToast('Too many photos for this device. Try fewer', 'neutral'); return; }
+  /* TODO backend: apiPost('affinityPost', s) */
+  haptic('success'); closeAuGenericModal('afShareOverlay'); afDraftImgs = []; afRender(true);
+  showToast('Story shared for 24 hours', 'success');
+};
 /* alisin ang lumang + sa taas-kanan (nasa grid na) */
 document.querySelector('#osBody [data-pane="affinity"] .af-add')?.remove();
+(function afRailCss() {
+  const st = document.createElement('style');
+  st.textContent = `
+  .af-rail{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y;margin:8px -16px 0 0;padding:8px 16px 26px 0;}
+  .af-rail::-webkit-scrollbar{display:none;}
+  .af-rail .af-tile{flex:0 0 calc((100% - 8px) / 2.25);scroll-snap-align:start;gap:8px;}
+  .af-rail .af-card{max-width:none;width:100%;border-radius:20px;}
+  .af-rail .af-card .in{border-radius:20px;padding:14px;font-size:15px;}
+  .af-rail .af-card .cl{font-size:15px;-webkit-line-clamp:6;}
+  .af-rail .af-card .ly{border-radius:20px;}
+  .af-rail .af-badge{right:-6px;bottom:-6px;}
+  .af-rail .af-nm{font-size:14px;}
+  .af-rail .af-ago{font-size:12px;}`;
+  document.head.appendChild(st);
+})();
 afRender(true);
 /* === END: AFFINITY v2 === */
 /* === END: AFFINITY === */

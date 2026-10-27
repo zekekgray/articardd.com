@@ -1914,6 +1914,15 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
               <button type="button" id="mascotLimitedBtn" class="mascot-limited" onclick="event.stopPropagation();haptic('light');openMascotLore();">LIMITED EDITION <i>Details ›</i></button>
               <button type="button" class="back-mascot-btn" aria-label="Choose mascot" onclick="event.stopPropagation();haptic('light');openMascotPicker();"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="#fff"/><circle cx="15" cy="10" r="1" fill="#fff"/><path d="M8.5 15c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/></svg></button>
             </div>
+            <style>
+              .back-mascot{max-height:74%;top:46%;}
+              .mascot-limited{bottom:58px;}
+            </style>
+            <div id="backNotice" style="position:absolute;left:24px;right:24px;top:438px;height:54px;z-index:5;text-align:center;pointer-events:none;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;">
+              <div style="font-size:7px;font-weight:700;letter-spacing:.2em;color:#d0d0d0;opacity:.6;">THIS CARD IS THE PROPERTY OF</div>
+              <div id="bnName" style="font-size:11.5px;font-weight:600;letter-spacing:.08em;color:#fff;margin:3px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">CARDHOLDER</div>
+              <div style="font-size:7.5px;line-height:1.55;color:#d0d0d0;opacity:.75;">Authorized cardholder of ArtiByte Apostrophe Inc.<br>If lost or found, please contact support@artibytte.com</div>
+            </div>
             <button type="button" id="backShareBtn" aria-label="Share my card" onclick="event.stopPropagation();haptic('light');shareCard();"
               style="position:absolute;left:146px;top:496.2px;width:48px;height:48px;padding:0;border-radius:50%;background:#F3EDE4;border:.6px solid rgba(0,0,0,0.08);box-sizing:border-box;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;"
               onpointerdown="this.style.transform='scale(0.92)';this.style.opacity='.8'" onpointerup="this.style.transform='';this.style.opacity=''" onpointerleave="this.style.transform='';this.style.opacity=''">
@@ -3013,6 +3022,11 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
     <!-- 3. PREFERENCES -->
     <div class="acct-section-label">Preferences</div>
     <div class="acct-group">
+      <div class="os-row" onclick="haptic('light');openAcctSettings()" style="cursor:pointer;">
+        <div class="os-row-icon" style="background:#8E8E93;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.4" fill="#8E8E93"/><circle cx="15" cy="17" r="2.4" fill="#8E8E93"/></svg></div>
+        <div class="os-row-text"><div class="os-row-title">Settings</div><div class="os-row-sub">Appearance, notifications, security</div></div>
+        <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
       <div class="os-row" onclick="haptic('light');openNotifPrefs()" style="cursor:pointer;">
         <div class="os-row-icon" style="background:#FF453A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
         <div class="os-row-text"><div class="os-row-title">Notifications</div><div class="os-row-sub">Meeting reminders, card views</div></div>
@@ -3039,6 +3053,11 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
     <!-- 5. ABOUT ARTICARDD -->
     <div class="acct-section-label">About articardd</div>
     <div class="acct-group">
+      <div class="os-row" onclick="haptic('light');openAuHelp()" style="cursor:pointer;">
+        <div class="os-row-icon" style="background:#B5583A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="os-row-text"><div class="os-row-title">Help &amp; Support</div><div class="os-row-sub">Help Center, FAQs, report a bug</div></div>
+        <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
       <div class="os-row" onclick="haptic('light');openStory()" style="cursor:pointer;">
         <div class="os-row-icon" style="background:#2F343A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#E8CC7A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></div>
         <div class="os-row-text"><div class="os-row-title">Our Story</div><div class="os-row-sub">Why articardd exists, and where it is going</div></div>
@@ -3065,10 +3084,6 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
       <div class="os-row" onclick="confirmSignOut()" style="cursor:pointer;">
         <div class="os-row-icon" style="background:#FF9F0A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
         <div class="os-row-text"><div class="os-row-title" style="color:#1c1c1e;">Sign Out</div></div>
-      </div>
-      <div class="os-row" onclick="confirmDeleteAccount()" style="cursor:pointer;">
-        <div class="os-row-icon" style="background:#FF453A;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
-        <div class="os-row-text"><div class="os-row-title" style="color:#FF453A;">Delete Account</div></div>
       </div>
     </div>
 
@@ -3187,6 +3202,7 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
       </div>
 
       <button onclick="closeSecuritySheet()" style="width:100%;padding:14px;border-radius:14px;border:none;background:rgba(0,0,0,0.06);font-family:-apple-system,'SF Pro Text',sans-serif;font-size:15px;font-weight:600;color:#1c1c1e;cursor:pointer;margin-top:4px;">Done</button>
+      <button onclick="closeSecuritySheet();setTimeout(openDeleteAccountFlow,280)" style="width:100%;background:none;border:none;padding:14px 0 6px;font-family:-apple-system,'SF Pro Text',sans-serif;font-size:12.5px;font-weight:500;color:rgba(60,60,67,0.5);cursor:pointer;">Delete account…</button>
     </div>
   </div>
 </div>
@@ -11103,7 +11119,7 @@ I would like to order a Physical NFC Card for my articardd membership.
 
   Card Type    : ${cardType}
   Card Theme   : ${(activeTheme && THEME_LABELS[activeTheme.id]) || '—'}
-  Mascot       : ${((MASCOTS.find(m => m.id === activeMascot)) || {}).name || '—'}
+  Mascot       : ${activeMascot === 'none' ? 'None (no mascot)' : (((MASCOTS.find(m => m.id === activeMascot)) || {}).name || '—')}
   Quantity     : ${qty} pc${qty > 1 ? 's' : ''}
   Price        : ${isRepl ? '₱999 (replacement)' : 'Included in Annual License (shipping included)'}
   Delivery     : Within 21 days of ordering
@@ -11891,7 +11907,133 @@ function licRow(label, val) {
       <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`;
   }
-  /* === START: NOTIFICATION PREFERENCES === */
+  /* === START: ACCOUNT SETTINGS SHEET === */
+function openAcctSettings() {
+  haptic('light');
+  const go = js => "closeAuGenericModal('acctSettingsOverlay');setTimeout(()=>{" + js + "},260);";
+  const ic = p => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const icLook  = ic('<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="#fff"/><circle cx="12" cy="7.5" r="1" fill="#fff"/><circle cx="15.5" cy="10" r="1" fill="#fff"/><path d="M12 21c-1.5 0-2-1-2-2s1-2 2-2h2a2 2 0 0 0 2-2"/>');
+  const icBell  = ic('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>');
+  const icLock  = ic('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>');
+  const icBook  = ic('<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 17c.6-2 2-3 4-3s3.4 1 4 3"/>');
+  const rows =
+    auInviteRow('#9B59B6', icLook, 'Card Appearance',  go('openColorwaySheet()')) +
+    auInviteRow('#FF453A', icBell, 'Notifications',   go('openNotifPrefs()')) +
+    auInviteRow('#8E8E93', icLock, 'Sign-In & Security', go('openSecuritySheet()')) +
+    auInviteRow('#34C759', icBook, 'Contact Options (import, export, duplicates)', go('openContactsMoreMenu()'));
+  auMakeSheet('acctSettingsOverlay', 'Settings', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${rows}</div>`);
+}
+/* === END: ACCOUNT SETTINGS SHEET === */
+/* === START: DELETE ACCOUNT FLOW (hidden in Security, export first) === */
+let _dxExported = false, _dxBusy = false;
+
+function dxZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload = () => res(window.JSZip);
+    s.onerror = () => rej(new Error('Could not load the ZIP tool. Check your connection.'));
+    document.head.appendChild(s);
+  });
+}
+const dxSafe = s => String(s || '').replace(/[\\/:*?"<>|\n\r]+/g, '-').trim().slice(0, 60) || 'untitled';
+
+async function exportAllData() {
+  if (_dxBusy) return;
+  _dxBusy = true;
+  const btn = document.getElementById('dxExportBtn');
+  if (btn) { btn.textContent = 'Preparing your export…'; btn.style.opacity = '.6'; btn.style.pointerEvents = 'none'; }
+  try {
+    const JSZip = await dxZip(), z = new JSZip(), P = PERSONAL_INFO;
+
+    /* profile */
+    z.file('profile/profile.json', JSON.stringify({
+      card: currentEntry ? { name: currentEntry.name, position: currentEntry.pos, company: currentEntry.company, articardd_id: currentEntry.athid, card_id: currentEntry.cardId } : null,
+      personal_information: P
+    }, null, 2));
+    if (profilePhotoB64 && /^data:image\/\w+;base64,/.test(profilePhotoB64)) z.file('profile/photo.jpg', profilePhotoB64.split(',')[1], { base64: true });
+
+    /* contacts: CSV + VCF + JSON */
+    const head = ['Name','First Name','Last Name','Role','Company','Tags','Phones','Emails','LinkedIn','Address','Met At','Last Reached Out','Notes'];
+    const rows = ADDRESS_BOOK.map(c => [c.name, c.firstName, c.lastName, c.role, c.company, c.tags.join('; '), c.phones.join('; '), c.emails.join('; '), c.linkedin, c.address, c.metAt, c.lastContactedAt, c.notes].map(csvEscape).join(','));
+    z.file('contacts/contacts.csv', '\ufeff' + [head.join(',')].concat(rows).join('\r\n'));
+    z.file('contacts/contacts.vcf', ADDRESS_BOOK.map(c => [
+      'BEGIN:VCARD', 'VERSION:3.0', 'FN:' + vcfEsc(c.name), 'N:' + vcfEsc(c.lastName) + ';' + vcfEsc(c.firstName) + ';;;',
+      c.company ? 'ORG:' + vcfEsc(c.company) : '', c.role ? 'TITLE:' + vcfEsc(c.role) : '',
+      ...c.phones.map(p => 'TEL;TYPE=CELL:' + p.replace(/\s/g, '')), ...c.emails.map(e => 'EMAIL;TYPE=WORK:' + e),
+      c.linkedin ? 'URL:' + c.linkedin : '', c.address ? 'ADR;TYPE=WORK:;;' + vcfEsc(c.address) + ';;;;' : '',
+      c.notes ? 'NOTE:' + vcfEsc(c.notes) : '', 'END:VCARD'
+    ].filter(Boolean).join('\r\n')).join('\r\n'));
+    z.file('contacts/contacts.json', JSON.stringify(ADDRESS_BOOK, null, 2));
+
+    /* AI notes */
+    NOTES.forEach((n, i) => z.file('notes/' + String(i + 1).padStart(3, '0') + '-' + dxSafe((n.text || n.title || '').split('\n')[0]) + '.md', n.text || ((n.title || '') + '\n' + (n.body || ''))));
+    z.file('notes/notes.json', JSON.stringify(NOTES, null, 2));
+
+    /* files: latest + every version */
+    Object.keys(FL_DB).forEach(name => {
+      const f = FL_DB[name]; if (!f.vs || !f.vs.length) return;
+      z.file('files/' + dxSafe(name), f.vs[f.vs.length - 1].text);
+      f.vs.forEach(v => z.file('files/versions/' + dxSafe(name) + '-v' + v.v + '.txt', v.text));
+    });
+
+    /* meetings: galing sa server kung kaya, fallback sa local */
+    let mt = [];
+    try { if (rmToken()) mt = await apiPost('ownerListMeetings', { token: rmToken() }); } catch (e) {}
+    if (!mt || !mt.length) mt = MEETINGS.map(m => ({ meetingId: m.id, guestName: m.name, date: m.date, time: m.time, type: m.type, requestStatus: m.status || '' }));
+    const mh = ['Meeting ID','Guest','Organization','Email','Phone','Date','Time','Duration','Type','Location','Status','Notes'];
+    z.file('meetings/meetings.csv', '\ufeff' + [mh.join(',')].concat(mt.map(m => [m.meetingId, m.guestName, m.guestOrg, m.guestEmail, m.guestPhone, m.date, m.time, m.duration, m.type, m.location, m.requestStatus, m.notes].map(csvEscape).join(','))).join('\r\n'));
+
+    /* affinity */
+    z.file('affinity/affinity.json', JSON.stringify(AF, null, 2));
+
+    z.file('README.txt', 'articardd. data export\nGenerated: ' + new Date().toISOString() + '\nArticardd ID: ' + ((currentEntry && currentEntry.athid) || '') + '\n\nfolders:\n  profile/   your card details and photo\n  contacts/  CSV, VCF (import to any phone) and JSON\n  notes/     your AI notes (.md)\n  files/     your files, latest + all versions\n  meetings/  meeting requests and bookings (CSV)\n  affinity/  your stories, bonds and treats\n');
+
+    const blob = await z.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = 'articardd-export-' + todayKey() + '.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+    _dxExported = true;
+    haptic('success'); showToast('Export downloaded', 'success');
+    if (btn) { btn.textContent = '✓ Exported. Download again'; btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+  } catch (e) {
+    haptic('error'); showToast(String((e && e.message) || "Couldn't build the export"), 'error');
+    if (btn) { btn.textContent = 'Export my data (ZIP)'; btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+  }
+  _dxBusy = false;
+}
+
+function openDeleteAccountFlow() {
+  haptic('medium');
+  _dxExported = false;
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  auMakeSheet('dxOverlay', 'Delete account', `
+    <div style="${F}font-size:13.5px;line-height:1.6;color:rgba(60,60,67,0.75);margin:-4px 2px 14px;">This permanently deletes your articardd ID, card, contacts, notes, files and meetings. It cannot be undone.</div>
+    <div style="background:rgba(255,255,255,0.72);border-radius:16px;padding:14px 16px;margin-bottom:12px;">
+      <div style="${F}font-size:14px;font-weight:700;color:#1c1c1e;margin-bottom:4px;">Keep a copy first</div>
+      <div style="${F}font-size:12.5px;color:rgba(60,60,67,0.6);line-height:1.5;margin-bottom:12px;">One ZIP with your profile, contacts (CSV and VCF), AI notes, files with all versions, meetings, and Affinity activity.</div>
+      <button id="dxExportBtn" type="button" onclick="exportAllData()" style="width:100%;padding:13px;border-radius:12px;border:none;background:#1c1c1e;color:#ECE4D6;${F}font-size:14px;font-weight:700;cursor:pointer;">Export my data (ZIP)</button>
+    </div>
+    <div style="${F}font-size:12.5px;font-weight:600;color:#1c1c1e;margin:0 2px 6px;">Type DELETE to confirm</div>
+    <input id="dxType" class="am-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DELETE" oninput="dxCheck()">
+    <button id="dxDelBtn" type="button" disabled onclick="dxDelete()" style="width:100%;margin-top:12px;padding:14px;border-radius:14px;border:none;background:#FF453A;color:#fff;${F}font-size:14.5px;font-weight:700;cursor:pointer;opacity:.35;">Delete forever</button>
+    <button type="button" onclick="closeAuGenericModal('dxOverlay')" style="width:100%;margin-top:8px;padding:13px;border-radius:14px;border:none;background:rgba(0,0,0,0.06);color:#1c1c1e;${F}font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>`);
+}
+function dxCheck() {
+  const ok = (document.getElementById('dxType')?.value || '').trim() === 'DELETE';
+  const b = document.getElementById('dxDelBtn'); if (!b) return;
+  b.disabled = !ok; b.style.opacity = ok ? '1' : '.35';
+}
+function dxDelete() {
+  const go = () => { closeAuGenericModal('dxOverlay'); setTimeout(executeDeleteAccount, 260); };
+  if (_dxExported) { go(); return; }
+  confirmDialog({ title: "You haven't exported your data", message: 'Once deleted, it cannot be recovered.', confirmLabel: 'Delete anyway', cancelLabel: 'Go back', danger: true, onConfirm: go });
+}
+/* === END: DELETE ACCOUNT FLOW === */
+/* === START: NOTIFICATION PREFERENCES === */
 const NOTIF_KEY = 'notif-prefs-v1';
 const NOTIF_ITEMS = [
   ['requests',    'Meeting requests',   'When someone requests a meeting from your card', true],
@@ -13156,7 +13298,7 @@ function applyRemoteCard(d, owner, fromCache) {
    else if (profilePhotoB64 && rmToken()) apiPost('ownerUpdateCard', { token: rmToken(), fields: { photo: profilePhotoB64 } }).catch(function () {});
    if (owner) window.__LICENSE__ = d.license || null;
     if (owner) { if (d.plan) planApply(d.plan); else planRefresh(); }
-   if (d.mascotId && MASCOTS.some(function (m) { return m.id === d.mascotId; })) { activeMascot = d.mascotId; window.__MASCOT_REMOTE__ = true; }
+   if (d.mascotId && (d.mascotId === 'none' || MASCOTS.some(function (m) { return m.id === d.mascotId; }))) { activeMascot = d.mascotId; window.__MASCOT_REMOTE__ = true; }
 
     showCard(currentEntry);
     applyMascot();
@@ -14459,7 +14601,7 @@ function applyMascot() {
 }
 async function loadMascot() {
   if (document.body.classList.contains('public-mode') || window.__MASCOT_REMOTE__) { applyMascot(); return; }
-  try { const r = await window.storage.get(MASCOT_KEY, false); if (r && r.value && MASCOTS.some(x => x.id === r.value)) activeMascot = r.value; } catch (e) {}
+  try { const r = await window.storage.get(MASCOT_KEY, false); if (r && r.value && (r.value === 'none' || MASCOTS.some(x => x.id === r.value))) activeMascot = r.value; } catch (e) {}
   applyMascot();
 }
 async function pickMascot(id) {
@@ -14477,7 +14619,9 @@ function openMascotPicker() {
     const on = m.id === activeMascot;
     return `<button type="button" onclick="pickMascot('${m.id}')" aria-label="${auEsc(m.name)}" style="border-radius:16px;padding:10px;cursor:pointer;background:#2F343A;border:${on ? '2.5px solid #1c1c1e' : '1px solid rgba(0,0,0,0.1)'};box-shadow:${on ? '0 0 0 2px #E8CC7A' : 'none'};-webkit-tap-highlight-color:transparent;"><img src="${m.src}" alt="" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;"/></button>`;
   }).join('');
-  auMakeSheet('mascotOverlay', 'Choose Mascot', `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">${cells}</div>`);
+  const offOn = activeMascot === 'none';
+  const offCell = `<button type="button" onclick="pickMascot('none')" aria-label="No mascot" aria-pressed="${offOn}" style="grid-column:1/-1;border-radius:16px;padding:14px;cursor:pointer;background:rgba(255,255,255,0.72);color:#1c1c1e;font:600 14px -apple-system,'SF Pro Text',sans-serif;border:${offOn ? '2.5px solid #1c1c1e' : '1px solid rgba(0,0,0,0.1)'};-webkit-tap-highlight-color:transparent;">No mascot${offOn ? ' ✓' : ''}</button>`;
+  auMakeSheet('mascotOverlay', 'Choose Mascot', `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">${offCell}${cells}</div>`);
 }
 var MASCOT_LORE = {
   m05: {
@@ -18626,6 +18770,45 @@ function flPackRefresh(){
 
 ntFix(); try{ flRender(); }catch(e){}
 /* === END: FILES + AI NOTES PARITY === */
+/* === START: MASCOT OFF + BACK NOTICE === */
+/* applyMascot: sinusuportahan na ang 'none' */
+applyMascot = function () {
+  const off = activeMascot === 'none';
+  const m = MASCOTS.find(x => x.id === activeMascot) || MASCOTS[0];
+  const im = document.getElementById('backMascot');
+  if (im) {
+    if (off) { im.style.display = 'none'; }
+    else { im.style.display = ''; im.src = m.src; im.alt = m.name; }
+  }
+  const lb = document.getElementById('mascotLimitedBtn');
+  if (lb) lb.classList.toggle('show', !off && !!(m && window.MASCOT_LORE && window.MASCOT_LORE[m.id]));
+};
+
+/* CardKit step 1: dagdag na "Off" button bago ang mga mascot */
+(function () {
+  const base = cfmMascotBtns;
+  cfmMascotBtns = function () {
+    const on = activeMascot === 'none';
+    const off = `<button type="button" onclick="cfmSelectMascot('none')" aria-label="No mascot" aria-pressed="${on}" style="flex-shrink:0;width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,0.72);color:#1c1c1e;font:700 12px -apple-system,'SF Pro Text',sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;border:${on ? '2.5px solid #1c1c1e' : '1px solid rgba(0,0,0,0.1)'};box-shadow:${on ? '0 0 0 2px #E8CC7A' : 'none'};">Off</button>`;
+    return off + base();
+  };
+})();
+
+/* Ownership notice sa likod: laging sumusunod sa pangalan ng card */
+function updateBackNotice() {
+  const el = document.getElementById('bnName');
+  if (!el || !currentEntry) return;
+  el.textContent = String(currentEntry.name || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+(function () {
+  const sc = showCard;
+  showCard = function () { const r = sc.apply(this, arguments); updateBackNotice(); return r; };
+  const pr = piRefreshSurfaces;
+  piRefreshSurfaces = function () { const r = pr.apply(this, arguments); updateBackNotice(); return r; };
+})();
+updateBackNotice();
+applyMascot();
+/* === END: MASCOT OFF + BACK NOTICE === */
 /* === START: READY FLAG === */
 /* === START: VAULT CLOUD SYNC (files + AI notes → Supabase) === */
 const VT_KINDS = ['file', 'note'], VT_ROW_MAX = 5000000, VT_BATCH_BYTES = 2500000;

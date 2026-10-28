@@ -13544,7 +13544,7 @@ async function submitFreeSignup() {
         if (!(await verifyOwnerKey(v))) { fail(window.__KEYERR__ || 'That key is not valid.'); return; }
         sessionStorage.setItem(SESSION, '1');
         /* === START: RM OPEN AFTER LOGIN === */
-        if (window.__OPEN_RM__) { window.__OPEN_RM__ = false; setTimeout(openRequestManager, 700); }
+        if (window.__OPEN_RM__) { window.__OPEN_RM__ = false; setTimeout(openRequestManager, 700); } else setTimeout(bootAffinity, 60);
         /* === END: RM OPEN AFTER LOGIN === */
         setPublic(false);
       }
@@ -13571,7 +13571,7 @@ document.addEventListener('DOMContentLoaded', function () {
 if (idFromUrl()) { setPublic(true); window.__AUTO_CONNECT__ = true; syncCardOnBoot(false, idFromUrl()); }
 /* === END: PUBLIC LINK AUTO-OPEN === */
   /* === START: RM DEEP LINK (WITH SESSION) === */
-else if (sessionStorage.getItem(SESSION)) { setPublic(false); syncCardOnBoot(true, ''); if (wantsRM()) setTimeout(openRequestManager, 600); }
+else if (sessionStorage.getItem(SESSION)) { setPublic(false); syncCardOnBoot(true, ''); if (wantsRM()) setTimeout(openRequestManager, 600); else bootAffinity(); }
 /* === END: RM DEEP LINK (WITH SESSION) === */
   /* === START: RM DEEP LINK (NO SESSION) === */
 else showGate();
@@ -19129,7 +19129,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) VT_KI
 /* === END: VAULT CLOUD SYNC === */
 
 /* === START: AFFINITY (replaces Discover tab, MyDay-style stories) === */
-const AF_KEY = 'affinity-v1', AF_DEMO = true, AF_TTL = 864e5;
+const AF_KEY = 'affinity-v1', AF_DEMO = false, AF_TTL = 864e5;
 const AF_TREATS_ON = false;   /* gawing true kapag may payment + voucher backend na */   /* AF_DEMO=false sa production */
 const afIc = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const AF_REACTS = [
@@ -21025,7 +21025,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ac
 
 var ACR = { tid: null, reply: null, edit: null }, _acPoll = false;
 const acIsG = t => !!(t && t.isGroup);
-const acAttName = m => ({ img: '📷 Photo', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
+const acAttName = m => ({ img: '📷 Photo', vid: '🎬 Video', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
 const acMapsUrl = a => {
   const P2 = 'https:' + String.fromCharCode(47, 47), q = a.lat + ',' + a.lng;
   return /iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) ? P2 + 'maps.apple.com/?ll=' + q + '&q=Shared%20location' : P2 + 'www.google.com/maps/search/?api=1&query=' + q;
@@ -21508,7 +21508,7 @@ acNew = function () {
 /* === END: AFFINITY === */
 
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */
-const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
+const APP_BUILD = '20261028-1';   /* PALITAN ito at ang version.json sa bawat deploy */
 (function () {
   let last = 0;
   async function check() {

@@ -20656,7 +20656,7 @@ const AC_SW = 208;
 })();
 
 /* ── server plumbing ── */
-const acOk = () => !!rmToken() && !document.body.classList.contains('public-mode');
+function acOk() { return !!rmToken() && !document.body.classList.contains('public-mode'); }
 function acSrv(a, p) { return apiPost(a, Object.assign({ token: rmToken() }, p || {})); }
 function acPerson(r) {
   return { key: r.peer, name: r.name, role: r.position || '', av: '#8E8E93', verified: !!r.verified,

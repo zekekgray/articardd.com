@@ -21025,7 +21025,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ac
 
 var ACR = { tid: null, reply: null, edit: null }, _acPoll = false;
 const acIsG = t => !!(t && t.isGroup);
-const acAttName = m => ({ img: '📷 Photo', vid: '🎬 Video', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
+const acAttName = m => ({ img: '📷 Photo', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
 const acMapsUrl = a => {
   const P2 = 'https:' + String.fromCharCode(47, 47), q = a.lat + ',' + a.lng;
   return /iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) ? P2 + 'maps.apple.com/?ll=' + q + '&q=Shared%20location' : P2 + 'www.google.com/maps/search/?api=1&query=' + q;
@@ -21508,7 +21508,7 @@ acNew = function () {
 /* === END: AFFINITY === */
 
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */
-const APP_BUILD = '20261028-1';   /* PALITAN ito at ang version.json sa bawat deploy */
+const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
 (function () {
   let last = 0;
   async function check() {

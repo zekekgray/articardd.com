@@ -13544,7 +13544,7 @@ async function submitFreeSignup() {
         if (!(await verifyOwnerKey(v))) { fail(window.__KEYERR__ || 'That key is not valid.'); return; }
         sessionStorage.setItem(SESSION, '1');
         /* === START: RM OPEN AFTER LOGIN === */
-        if (window.__OPEN_RM__) { window.__OPEN_RM__ = false; setTimeout(openRequestManager, 700); } else setTimeout(bootAffinity, 60);
+        if (window.__OPEN_RM__) { window.__OPEN_RM__ = false; setTimeout(openRequestManager, 700); }
         /* === END: RM OPEN AFTER LOGIN === */
         setPublic(false);
       }
@@ -13571,7 +13571,7 @@ document.addEventListener('DOMContentLoaded', function () {
 if (idFromUrl()) { setPublic(true); window.__AUTO_CONNECT__ = true; syncCardOnBoot(false, idFromUrl()); }
 /* === END: PUBLIC LINK AUTO-OPEN === */
   /* === START: RM DEEP LINK (WITH SESSION) === */
-else if (sessionStorage.getItem(SESSION)) { setPublic(false); syncCardOnBoot(true, ''); if (wantsRM()) setTimeout(openRequestManager, 600); else bootAffinity(); }
+else if (sessionStorage.getItem(SESSION)) { setPublic(false); syncCardOnBoot(true, ''); if (wantsRM()) setTimeout(openRequestManager, 600); }
 /* === END: RM DEEP LINK (WITH SESSION) === */
   /* === START: RM DEEP LINK (NO SESSION) === */
 else showGate();
@@ -19129,7 +19129,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) VT_KI
 /* === END: VAULT CLOUD SYNC === */
 
 /* === START: AFFINITY (replaces Discover tab, MyDay-style stories) === */
-const AF_KEY = 'affinity-v1', AF_DEMO = false, AF_TTL = 864e5;
+const AF_KEY = 'affinity-v1', AF_DEMO = true, AF_TTL = 864e5;
 const AF_TREATS_ON = false;   /* gawing true kapag may payment + voucher backend na */   /* AF_DEMO=false sa production */
 const afIc = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const AF_REACTS = [
@@ -21025,7 +21025,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ac
 
 var ACR = { tid: null, reply: null, edit: null }, _acPoll = false;
 const acIsG = t => !!(t && t.isGroup);
-const acAttName = m => ({ img: '📷 Photo', vid: '🎬 Video', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
+const acAttName = m => ({ img: '📷 Photo', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
 const acMapsUrl = a => {
   const P2 = 'https:' + String.fromCharCode(47, 47), q = a.lat + ',' + a.lng;
   return /iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) ? P2 + 'maps.apple.com/?ll=' + q + '&q=Shared%20location' : P2 + 'www.google.com/maps/search/?api=1&query=' + q;
@@ -21508,7 +21508,7 @@ acNew = function () {
 /* === END: AFFINITY === */
 
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */
-const APP_BUILD = '20261028-1';   /* PALITAN ito at ang version.json sa bawat deploy */
+const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
 (function () {
   let last = 0;
   async function check() {
@@ -21534,330 +21534,7 @@ const APP_BUILD = '20261028-1';   /* PALITAN ito at ang version.json sa bawat de
   setTimeout(check, 4000);
 })();
 /* === END: UPDATE WATCH === */
-/* === START: HOME=AFFINITY + STORIES v2 (server, video, mutual contacts) + ARTICHATS MEDIA === */
-const MM_KEY = 'sb_publishable_JJ2noP-kKRH0xprsO5-Y7w_e4W7rAfn';
-const MM_LIM = { img: 10485760, vid: 26214400, file: 26214400 }, MM_VID_SEC = 60;
-const MM_BLOCK = /\.(exe|bat|cmd|com|msi|scr|js|jar|vbs|apk|ps1|sh|dll)$/i;
-let AFS = [], _afSyncing = false, _afSeen = {}, afDraftVids = [], _afPosting = false;
-try { _afSeen = JSON.parse(localStorage.getItem('af-seen-v1') || '{}') || {}; } catch (e) {}
-
-/* ── 1. default screen = Affinity (Back → card) ── */
-function bootAffinity() {
-  if (document.body.classList.contains('public-mode') || !sessionStorage.getItem('athna-owner-token')) return;
-  enterOS('affinity');
-  const o = document.getElementById('screenOS'); if (!o) return;
-  o.classList.remove('entering');
-  o.style.animation = 'screenFadeIn .25s ease forwards';
-  setTimeout(() => { o.style.animation = ''; }, 300);
-}
-
-(function () {
-  const st = document.createElement('style');
-  st.textContent = `
-  .af-play{position:absolute;right:8px;bottom:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;}
-  .af-play::after{content:'';border-left:8px solid #fff;border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:2px;}
-  .af-car video{flex:0 0 100%;width:100%;max-height:56vh;background:#000;scroll-snap-align:center;object-fit:contain;}`;
-  document.head.appendChild(st);
-})();
-
-/* ── 2. stories from the server (mutual contacts only) ── */
-const afMedia = s => (Array.isArray(s.media) && s.media.length) ? s.media : afImgs(s).map(u => ({ k: 'img', u: u }));
-function afNorm(r) {
-  const md = Array.isArray(r.media) ? r.media : [], imgs = md.filter(m => m.k === 'img').map(m => m.u);
-  let h = 0; for (let i = 0; i < r.id.length; i++) h = (h * 31 + r.id.charCodeAt(i)) & 0xffff;
-  return { id: r.id, mine: !!r.mine, authorId: r.key, cardId: r.key, name: String(r.name || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()),
-    role: r.role || '', av: '#8E8E93', text: r.text || '', parts: r.parts || [], media: md, imgs: imgs, img: imgs[0] || '',
-    bg: h % AF_BG.length, allowBond: r.allowBond !== false, t0: r.t, t: r.u || r.t, u: r.u || r.t, rx: [] };
-}
-afStories = function () {
-  const bl = AF.blocked || [], hd = AF.hidden || [], mu = AF.muted || [], L = [];
-  if (AF_DEMO) AF_DEMO_DATA.forEach(d => L.push(Object.assign({}, d, { t: afBoot - d.off, t0: afBoot - d.off })));
-  AF.stories.forEach(s => L.push(s)); AFS.forEach(s => L.push(s));
-  return L.filter(afAlive).filter(s => s.mine || (!bl.includes(afKey(s)) && !hd.includes(s.id) && !mu.includes(afKey(s))))
-    .sort((a, b) => (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || b.t - a.t);
-};
-afPhotoFor = function (name) {
-  if (!name) return ''; const k = abNorm(name);
-  try {
-    const c = ADDRESS_BOOK.find(x => abNorm(x.name) === k), p = c && CP[c.id];
-    if (p && CP_OK.test(p)) return p;
-    const t = AC.threads.find(x => x.person && abNorm(x.person.name) === k);
-    if (t && t.person.photo && CP_OK.test(t.person.photo)) return t.person.photo;
-  } catch (e) {}
-  return '';
-};
-async function afSyncStories(force) {
-  if (_afSyncing || !rmToken() || document.body.classList.contains('public-mode')) return;
-  _afSyncing = true;
-  try {
-    const r = await apiPost('affinityFeed', { token: rmToken() });
-    const L = ((r && r.stories) || []).map(afNorm);
-    AF.stories = L.filter(s => s.mine); AFS = L.filter(s => !s.mine);
-    afRender(!!force);
-    if (ACV.open) acDecorate();
-  } catch (e) { if (/session|sign in/i.test(String(e && e.message))) rmExpired(); }
-  finally { _afSyncing = false; }
-}
-(function () {
-  const _sw = switchOSTab; switchOSTab = function (t) { _sw.apply(this, arguments); if (t === 'affinity') afSyncStories(true); };
-  const _en = enterOS;     enterOS = function (t) { _en.apply(this, arguments); if (!t || t === 'affinity' || t === 'address') afSyncStories(true); };
-  const _rf = afRefresh;   afRefresh = async function () { await afSyncStories(true); return _rf.apply(this, arguments); };
-  const _om = acOpenModal; acOpenModal = function () { afSyncStories(true); return _om.apply(this, arguments); };
-  const _cl = afClose;     afClose = function () { _cl.apply(this, arguments); if (ACV.open) acDecorate(); };
-})();
-setInterval(() => { if (!document.hidden && rmToken() && (currentOSPane === 'affinity' || ACV.open)) afSyncStories(false); }, 45000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && rmToken()) afSyncStories(false); });
-
-/* ── 3. tiles + viewer with video ── */
-afTile = function (s) {
-  const r = ((String(s.id).charCodeAt(String(s.id).length - 1) % 5) - 2) * 0.6, md = afMedia(s), f = md[0];
-  const L = i => (md[i] && md[i].k === 'img') ? `<div class="ly ${i === 1 ? 'a' : 'b'}" style="background-image:url('${auEsc(md[i].u)}')"></div>` : '';
-  const lay = md.length > 1 ? L(1) + (md.length > 2 ? L(2) : '') : '';
-  const cnt = md.length > 1 ? `<div class="af-n">${md.length}</div>` : '';
-  const inner = !f ? `<div class="in" style="background:${AF_BG[(s.bg || 0) % AF_BG.length]};color:#fff;"><span class="cl">${auEsc(s.text)}</span></div>`
-    : f.k === 'vid' ? `<div class="in"><video src="${auEsc(f.u)}#t=0.1" muted playsinline preload="metadata" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;"></video><div class="af-play"></div></div>`
-    : `<div class="in"><img src="${auEsc(f.u)}" alt=""></div>`;
-  const nm = s.mine ? 'You' : s.name;
-  return `<button type="button" class="af-tile" aria-label="${auEsc(nm)}, ${afAgo(s.t)}" onclick="afOpen('${s.id}')">
-    <div class="af-card" style="--r:${r}deg">${lay}${inner}${cnt}<div class="af-badge">${afAvOf(s, 24)}</div></div>
-    <div class="af-nm">${auEsc(nm)}</div><div class="af-ago">${afAgo(s.t)}</div></button>`;
-};
-(function () {
-  const _o = afOpen;
-  afOpen = function (id) {
-    _o.apply(this, arguments);
-    const s = afStories().find(x => x.id === id), v = document.getElementById('afViewer'); if (!s || !v) return;
-    if (!s.mine) { _afSeen[s.id] = s.u || s.t; try { localStorage.setItem('af-seen-v1', JSON.stringify(_afSeen)); } catch (e) {} }
-    if (ACV.open) v.style.zIndex = '9855';                 /* above ArtiChats, below its sheets */
-    const md = afMedia(s); if (!md.some(m => m.k === 'vid')) return;
-    const box = v.firstElementChild.children[1]; if (!box) return;
-    const old = box.querySelector('.af-car'); if (old) old.parentNode.remove();
-    const it = md.map((m, i) => m.k === 'vid'
-      ? `<video src="${auEsc(m.u)}" controls playsinline preload="metadata" ${i === 0 ? 'autoplay muted' : ''}></video>` : `<img src="${auEsc(m.u)}" alt="">`).join('');
-    box.insertAdjacentHTML('afterbegin', `<div style="width:100%;"><div class="af-car" onscroll="afCarScroll(this)">${it}</div>${md.length > 1 ? `<div class="af-dots" aria-hidden="true">${md.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}</div>`);
-    const tx = box.lastElementChild;
-    if (tx && !tx.querySelector('.af-car') && /border-radius:32px/.test(tx.getAttribute('style') || ''))
-      tx.setAttribute('style', "font-family:-apple-system,'SF Pro Text',sans-serif;color:#fff;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;");
-  };
-})();
-
-/* ── 4. upload plumbing ── */
-function mmPickFiles(accept, multiple, cb) {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = accept; inp.multiple = !!multiple;
-  inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
-  inp.addEventListener('change', () => { const fs = [...(inp.files || [])]; inp.remove(); if (fs.length) cb(fs); });
-  document.body.appendChild(inp); inp.click();
-}
-function mmImgBlob(file, max, q) {
-  return new Promise(res => {
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      const sc = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
-      c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-      c.toBlob(b => res(b), 'image/jpeg', q);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
-    img.src = url;
-  });
-}
-function mmDuration(f) {
-  return new Promise((res, rej) => {
-    const v = document.createElement('video'), u = URL.createObjectURL(f); v.preload = 'metadata';
-    v.onloadedmetadata = () => { const d = v.duration; URL.revokeObjectURL(u); res(isFinite(d) ? d : 0); };
-    v.onerror = () => { URL.revokeObjectURL(u); rej(new Error('unreadable')); };
-    v.src = u;
-  });
-}
-async function mmUpload(kind, blob, mime, name) {
-  const r = await apiPost('affinitySignUpload', { token: rmToken(), kind: kind, mime: mime, size: blob.size, name: name });
-  let res;
-  try { res = await fetch(r.signedUrl, { method: 'PUT', headers: { 'Content-Type': mime, 'apikey': MM_KEY }, body: blob }); }
-  catch (e) { throw new Error('Upload failed. Check your connection.'); }
-  if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
-  return r.path;
-}
-
-/* ── 5. story composer: photos + video ── */
-(function () {
-  const _share = afShare;
-  afShare = function () { afDraftVids.forEach(v => URL.revokeObjectURL(v.url)); afDraftVids = []; _share.apply(this, arguments); };
-  const _paint = afShPaint;
-  afShPaint = function () {
-    _paint.apply(this, arguments);
-    const w = document.getElementById('afShBody'); if (!w) return;
-    const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
-    if (afDraftVids.length) w.insertAdjacentHTML('afterbegin', `<div style="${F}font-size:12px;font-weight:600;color:rgba(60,60,67,.55);margin:0 2px 6px;">${afDraftVids.length} video${afDraftVids.length > 1 ? 's' : ''}</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;">${afDraftVids.map((v, i) => `<div style="position:relative;aspect-ratio:1;"><video src="${v.url}#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;"></video><div class="af-play"></div><button type="button" aria-label="Remove video ${i + 1}" onclick="afDropVid(${i})" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;cursor:pointer;padding:0;">×</button></div>`).join('')}</div>`);
-    const btns = [...w.querySelectorAll('.dc-btn')], vbtn = '<button type="button" class="dc-btn alt" style="margin-top:8px;" onclick="afPickVideo()">Add video (max 60s)</button>';
-    if (afStep === 'pick' && btns[0]) btns[0].insertAdjacentHTML('afterend', vbtn);
-    else if (afStep === 'review' && afDraftVids.length < 5 && afDraftImgs.length + afDraftVids.length < 20) {
-      const post = btns.find(b => b.textContent.trim() === 'Post'); if (post) post.insertAdjacentHTML('beforebegin', vbtn);
-    }
-  };
-})();
-afPhotoPaint = function () {
-  if (afStep === 'pick' || afStep === 'review') afStep = (afDraftImgs.length || afDraftVids.length) ? 'review' : 'pick';
-  afShPaint();
-};
-function afDropVid(i) { const v = afDraftVids.splice(i, 1)[0]; if (v) URL.revokeObjectURL(v.url); haptic('light'); afPhotoPaint(); }
-function afPickVideo() {
-  if (afDraftVids.length >= 5) { haptic('error'); showToast('Up to 5 videos per story', 'neutral'); return; }
-  haptic('light');
-  mmPickFiles('video/*', false, async fs => {
-    const f = fs[0];
-    if (f.size > MM_LIM.vid) { haptic('error'); showToast('Video is too large (max 25 MB)', 'error'); return; }
-    let d = 0; try { d = await mmDuration(f); } catch (e) { haptic('error'); showToast("Can't read that video", 'error'); return; }
-    if (d > MM_VID_SEC) { haptic('error'); showToast('Story videos are up to 60 seconds', 'error'); return; }
-    afDraftVids.push({ file: f, url: URL.createObjectURL(f), d: Math.round(d), mime: f.type || 'video/mp4' });
-    afPhotoPaint();
-  });
-}
-afPost = async function () {
-  if (_afPosting) return;
-  const txt = (document.getElementById('afTxt')?.value || '').trim().slice(0, 999);
-  const allow = document.getElementById('afAllow')?.checked !== false;
-  const imgs = afDraftImgs.slice(), vids = afDraftVids.slice();
-  if (!txt && !imgs.length && !vids.length) { haptic('error'); showToast('Add a photo, a video or a few words', 'error'); return; }
-  if (!rmToken()) { rmExpired(); return; }
-  _afPosting = true;
-  const btn = [...document.querySelectorAll('#afShBody .dc-btn')].find(b => b.textContent.trim() === 'Post');
-  const say = t => { if (btn) { btn.textContent = t; btn.style.opacity = '.6'; btn.style.pointerEvents = 'none'; } };
-  const total = imgs.length + vids.length; let n = 0, ok = false;
-  try {
-    const media = [];
-    for (const d of imgs) { say('Uploading ' + (++n) + '/' + total + '…'); const b = await (await fetch(d)).blob(); media.push({ k: 'img', p: await mmUpload('story', b, 'image/jpeg', 'photo.jpg') }); }
-    for (const v of vids) { say('Uploading ' + (++n) + '/' + total + '…'); media.push({ k: 'vid', p: await mmUpload('story', v.file, v.mime, v.file.name), d: v.d }); }
-    say('Posting…');
-    await apiPost('affinityPost', { token: rmToken(), text: txt, media: media, allowBond: allow });
-    ok = true;
-  } catch (e) {
-    haptic('error'); showToast(String((e && e.message) || "Couldn't post your story"), 'error');
-    if (btn) { btn.textContent = 'Post'; btn.style.opacity = ''; btn.style.pointerEvents = ''; }
-  }
-  _afPosting = false; if (!ok) return;
-  afDraftVids.forEach(v => URL.revokeObjectURL(v.url)); afDraftVids = []; afDraftImgs = [];
-  haptic('success'); closeAuGenericModal('afShareOverlay');
-  await afSyncStories(true); showToast('Story shared for 24 hours', 'success');
-};
-
-/* ── 6. manage / delete (server) ── */
-afManage = function (id) {
-  const m = AF.stories.find(x => x.id === id && x.mine); if (!m) return;
-  haptic('light');
-  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;", md = afMedia(m), ps = afParts(m);
-  const x = (js, l) => `<button type="button" aria-label="${l}" onclick="${js}" style="width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:16px;line-height:1;cursor:pointer;padding:0;">×</button>`;
-  const photos = md.length ? `<div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.4);margin:0 2px 8px;">Photos &amp; videos</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">${md.map((q, i) => `<div style="position:relative;aspect-ratio:1;">${q.k === 'vid' ? `<video src="${auEsc(q.u)}#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;"></video><div class="af-play"></div>` : `<img src="${auEsc(q.u)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;">`}<div style="position:absolute;top:5px;right:5px;">${x(`afDelPhoto('${id}',${i})`, 'Delete item ' + (i + 1))}</div></div>`).join('')}</div>` : '';
-  const texts = ps.length ? `<div style="${F}font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.4);margin:0 2px 8px;">Text</div>
-    <div style="background:rgba(255,255,255,.72);border-radius:16px;overflow:hidden;margin-bottom:16px;">${ps.map((t, i) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;${i ? 'border-top:1px solid rgba(0,0,0,.07);' : ''}"><div style="flex:1;${F}font-size:13.5px;color:#1c1c1e;white-space:pre-wrap;word-break:break-word;">${auEsc(t.slice(0, 200))}${t.length > 200 ? '…' : ''}</div>${x(`afDelPart('${id}',${i})`, 'Delete text ' + (i + 1))}</div>`).join('')}</div>` : '';
-  auMakeSheet('afManageOverlay', 'Manage story', `<div id="afManageBody">${photos}${texts}
-    <button type="button" class="dc-btn alt" style="margin-bottom:8px;" onclick="closeAuGenericModal('afManageOverlay');setTimeout(afShare,260)">Add more</button>
-    <button type="button" class="af-del" onclick="closeAuGenericModal('afManageOverlay');setTimeout(()=>afDelete('${id}'),260)">Delete whole story</button></div>`);
-};
-afCut = async function (id, kind, i) {
-  const m = AF.stories.find(x => x.id === id && x.mine); if (!m) return;
-  const md = afMedia(m).slice(), ps = afParts(m).slice();
-  if (kind === 'photo') md.splice(i, 1); else ps.splice(i, 1);
-  let r;
-  try { r = await apiPost('affinityEdit', { token: rmToken(), id: id, parts: ps, media: md.filter(q => q.p).map(q => ({ k: q.k, p: q.p, d: q.d || 0 })) }); }
-  catch (e) { haptic('error'); showToast(String((e && e.message) || "Couldn't update story"), 'error'); return; }
-  haptic('success'); closeAuGenericModal('afManageOverlay');
-  await afSyncStories(true);
-  if (r && r.deleted) { document.getElementById('afViewer')?.remove(); afView = null; showToast('Story removed', 'neutral'); return; }
-  afOpen(id); setTimeout(() => afManage(id), 60);
-};
-afDelete = function (id) {
-  haptic('medium');
-  confirmDialog({ title: 'Delete this story?', message: 'It will be removed right away.', confirmLabel: 'Delete', danger: true, onConfirm: async () => {
-    try { await apiPost('affinityDelete', { token: rmToken(), id: id }); }
-    catch (e) { haptic('error'); showToast("Couldn't delete story", 'error'); return; }
-    haptic('success'); document.getElementById('afViewer')?.remove(); afView = null;
-    await afSyncStories(true); showToast('Story deleted', 'neutral');
-  } });
-};
-
-/* ── 7. ArtiChats: story ring on avatars ── */
-function acStoryFor(key) { return afStories().find(s => !s.mine && afKey(s) === key) || null; }
-function acOpenStory(key) { const s = acStoryFor(key); if (!s) return; haptic('light'); afOpen(s.id); }
-function acRing(el, key) {
-  if (!el || el.dataset.ring || !/^C-/.test(String(key))) return;
-  const s = acStoryFor(key); if (!s) return;
-  const unseen = !_afSeen[s.id] || _afSeen[s.id] < (s.u || s.t);
-  el.dataset.ring = '1';
-  el.style.boxShadow = '0 0 0 2px #ECE4D6, 0 0 0 4.5px ' + (unseen ? '#C9A227' : 'rgba(60,60,67,.3)');
-  el.style.cursor = 'pointer'; el.setAttribute('role', 'button'); el.setAttribute('tabindex', '0'); el.setAttribute('aria-label', 'View story of ' + s.name);
-  el.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); acOpenStory(key); });
-  el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); acOpenStory(key); } });
-}
-function acDecorate() {
-  const sc = document.getElementById('artichatsScreen'); if (!sc) return;
-  sc.querySelectorAll('.ac-wrap').forEach(w => acRing(w.querySelector('.ac-row > div:first-child'), w.dataset.id));
-  if (ACV.tid) { const hb = sc.querySelector('button[aria-label^="Open info of"]'); if (hb) acRing(hb.firstElementChild, ACV.tid); }
-}
-(function () {
-  const _r = acRender;    acRender = function () { _r.apply(this, arguments); acDecorate(); };
-  const _p = acPaintList; acPaintList = function () { _p.apply(this, arguments); acDecorate(); };
-})();
-
-/* ── 8. ArtiChats: photos / videos / files (Messenger-style limits) ── */
-(function () {
-  const _a = acAttHtml;
-  acAttHtml = function (m) {
-    const a = m.a;
-    if (!a || !a.p) return _a(m);
-    if (!a.u) return '<div class="ac-file">' + auEsc(acAttName(m)) + ' unavailable</div>';
-    if (a.k === 'img') return `<img class="ac-img" alt="Photo" loading="lazy" src="${auEsc(a.u)}" onclick="event.stopPropagation();acViewImg(this.src)">`;
-    if (a.k === 'vid') return `<video class="ac-img" src="${auEsc(a.u)}#t=0.1" controls playsinline preload="metadata" onclick="event.stopPropagation()" style="background:#000;max-height:320px;"></video>`;
-    return `<a class="ac-file" href="${auEsc(a.u)}" target="_blank" rel="noopener" download="${auEsc(a.n)}" onclick="event.stopPropagation()">📎 ${auEsc(a.n)}<br><small>${flKb(a.s || 0)} · Tap to open</small></a>`;
-  };
-})();
-async function mmSendAtt(k, blob, mime, name, d) {
-  if (!acCur()) return false;
-  try {
-    showToast('Uploading…', 'neutral');
-    const p = await mmUpload('chat', blob, mime, name);
-    await acSendAtt({ k: k, p: p, n: name, s: blob.size, m: mime, d: d || 0 }, '');
-    return true;
-  } catch (e) { haptic('error'); showToast(String((e && e.message) || 'Upload failed'), 'error'); return false; }
-}
-acPickPhoto = function () {
-  mmPickFiles('image/*', true, async fs => {
-    for (const f of fs.slice(0, 10)) {
-      const b = await mmImgBlob(f, 1600, .82);
-      if (!b || b.size > MM_LIM.img) { haptic('error'); showToast("Can't use " + f.name + ' (max 10 MB)', 'error'); continue; }
-      if (!(await mmSendAtt('img', b, 'image/jpeg', f.name.replace(/\.[^.]+$/, '') + '.jpg'))) break;
-    }
-  });
-};
-function acPickVideo() {
-  mmPickFiles('video/*', true, async fs => {
-    for (const f of fs.slice(0, 5)) {
-      if (f.size > MM_LIM.vid) { haptic('error'); showToast(f.name + ' is over 25 MB', 'error'); continue; }
-      let d = 0; try { d = await mmDuration(f); } catch (e) {}
-      if (!(await mmSendAtt('vid', f, f.type || 'video/mp4', f.name, Math.round(d)))) break;
-    }
-  });
-}
-acPickFile = function () {
-  mmPickFiles('*/*', true, async fs => {
-    for (const f of fs.slice(0, 10)) {
-      if (f.size > MM_LIM.file) { haptic('error'); showToast(f.name + ' is over 25 MB', 'error'); continue; }
-      if (MM_BLOCK.test(f.name)) { haptic('error'); showToast("That file type isn't allowed", 'error'); continue; }
-      if (!(await mmSendAtt('file', f, f.type || 'application/octet-stream', f.name))) break;
-    }
-  });
-};
-acPlus = function () {
-  const t = acCur(); if (!t) return; haptic('light');
-  const tile = (bg, e, l, js) => `<button type="button" class="ac-tile" onclick="closeAuGenericModal('acPlusOverlay');setTimeout(()=>{${js}},260)"><span style="background:${bg};">${e}</span>${l}</button>`;
-  auMakeSheet('acPlusOverlay', 'Add to chat', `<div class="ac-grid">${tile('#FF9F0A', '📷', 'Photos', 'acPickPhoto()')}${tile('#FF453A', '🎬', 'Videos', 'acPickVideo()')}${tile('#4A9DE0', '📎', 'Files', 'acPickFile()')}${tile('#34C759', '📍', 'Location', 'acShareLoc()')}${tile('#8E8E93', '🧮', 'Calculator', 'acCalc()')}${acIsG(t) ? '' : tile('#FF453A', '📅', 'Book a meeting', 'acBookMeeting()')}${tile('#9B59B6', '🎮', 'Play games', 'acGames()')}</div>
-    <div class="dc-note" style="text-align:center;margin-top:6px;">Photos up to 10 MB · Videos and files up to 25 MB</div>`);
-};
-/* === END: HOME=AFFINITY + STORIES v2 + ARTICHATS MEDIA === */
-/* === START: READY FLAG SET === */
 window.__ATHNA_READY__ = true;
-/* === END: READY FLAG SET === */
 /* === END: READY FLAG === */
 </script>
 </body>

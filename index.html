@@ -20362,15 +20362,12 @@ function acList() {
 function acMount() {
   const b = document.getElementById('afBody'); if (!b) return;
   b.querySelector('#acEntry')?.remove();
-  const c = acCounts(), l = c.last && acLast(c.last);
-  const badge = n => n ? `<span style="background:#1c1c1e;color:#fff;font:600 13px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin-right:2px;">${n}</span>` : '';
-  const chev = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
-  const ic = p => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
-  const row = (icon, t, s, js, n) => `<div class="os-row af-row" role="button" tabindex="0" style="cursor:pointer;" onclick="${js}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${js}}"><div class="os-row-icon" style="background:#1c1c1e;">${icon}</div><div class="os-row-text"><div class="os-row-title">${t}</div><div class="os-row-sub">${s}</div></div>${badge(n)}${chev}</div>`;
-  const prev = l ? ((l.m ? 'You: ' : '') + l.x).slice(0, 60) : 'No messages yet';
-  const html = `<div id="acEntry">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:8px 4px 10px;"><div style="font:700 22px -apple-system,'SF Pro Display',sans-serif;letter-spacing:-.01em;color:#1c1c1e;">ArtiChats</div><button type="button" class="af-add" aria-label="New ArtiChat" onclick="haptic('light');acOpenModal().then(acNew)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
-    <div class="os-group" style="margin-bottom:12px;">${row(ic('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/>'), 'Inbox', auEsc(prev), "acOpenModal({tab:'inbox'})", c.unread)}${row(ic('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1z"/>'), 'Requests', c.req ? c.req + ' from people you are not connected with' : 'No pending requests', "acOpenModal({tab:'requests'})", c.req)}</div></div>`;
+  const c = acCounts(), n = c.unread + c.req;
+  const tab = (!c.unread && c.req) ? 'requests' : 'inbox';
+  const dot = n ? `<span style="position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#FF453A;border:2px solid #ECE4D6;color:#fff;font:700 11px/16px -apple-system,'SF Pro Text',sans-serif;text-align:center;">${n > 99 ? '99+' : n}</span>` : '';
+  const html = `<div id="acEntry" style="display:flex;justify-content:center;padding:6px 0 26px;">
+    <button type="button" aria-label="ArtiChats${n ? ', ' + n + ' new' : ''}" onclick="haptic('light');acOpenModal({tab:'${tab}'})" style="position:relative;width:64px;height:64px;border-radius:50%;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 2px 8px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.7);color:#1c1c1e;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;" onpointerdown="this.style.transform='scale(.9)';this.style.opacity='.75'" onpointerup="this.style.transform='';this.style.opacity=''" onpointerleave="this.style.transform='';this.style.opacity=''">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/></svg>${dot}</button></div>`;
   const more = b.querySelector('#afMore');
   if (more) more.insertAdjacentHTML('beforebegin', html); else b.insertAdjacentHTML('beforeend', html);
 }

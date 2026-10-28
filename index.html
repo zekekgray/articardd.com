@@ -7402,6 +7402,56 @@ function abSegSelect(which) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  /* === START: CONTACT PROFILE PHOTOS === */
+  (function () { const s = document.createElement('style'); s.textContent = '.ab-avatar,.ab-recent-avatar,#cdfs-avatar{overflow:hidden;}'; document.head.appendChild(s); })();
+  let CP = {}, _cpSig = '', _cpAt = 0, _cpT = null, _cpBusy = false;
+  const CP_OK = /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/;
+  /* photo kung may articardd account na may profile, kung wala: initials */
+  function cpInner(c) {
+    const p = c && CP[c.id];
+    return (p && CP_OK.test(p))
+      ? '<img src="' + p + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;">'
+      : auEsc(initials2(c.name));
+  }
+  function cpRepaint() {
+    filterAddressBook(document.getElementById('abSearchInput')?.value || '');
+    const a = document.getElementById('cdfs-avatar');
+    if (a && activeContact) a.innerHTML = cpInner(activeContact);
+  }
+  async function cpSync(force) {
+    if (_cpBusy || !rmToken() || document.body.classList.contains('public-mode') || !currentEntry || !currentEntry.cardId) return;
+    const cid = currentEntry.cardId, CK = 'contact-photos-v1';
+    if (!Object.keys(CP).length) {   /* instant render galing cache */
+      try {
+        const r = await window.storage.get(CK, false), o = r && r.value ? JSON.parse(r.value) : null;
+        if (o && o.cid === cid) { CP = o.photos || {}; _cpSig = o.sig || ''; cpRepaint(); }
+      } catch (e) {}
+    }
+    const items = ADDRESS_BOOK.filter(c => c.emails.length || c.phones.length).slice(0, 300)
+      .map(c => ({ id: c.id, emails: c.emails.slice(0, 3), phones: c.phones.slice(0, 3) }));
+    if (!items.length) { if (Object.keys(CP).length) { CP = {}; cpRepaint(); } return; }
+    const sig = JSON.stringify(items);
+    if (!force && sig === _cpSig && Date.now() - _cpAt < 1800000) return;   /* walang binago at <30 min = skip */
+    _cpBusy = true;
+    try {
+      const r = await apiPost('ownerContactPhotos', { token: rmToken(), items: items });
+      CP = (r && r.photos) || {}; _cpSig = sig; _cpAt = Date.now();
+      try { const j = JSON.stringify({ cid: cid, sig: sig, photos: CP }); if (j.length < 1500000) await window.storage.set(CK, j, false); } catch (e) {}
+      cpRepaint();
+    } catch (e) { /* silent: initials na lang */ }
+    finally { _cpBusy = false; }
+  }
+  /* kapag may nadagdag/nabago na contact, mag-resync pagkatapos ng save */
+  (function () {
+    const sv = saveAddressBook;
+    saveAddressBook = async function () {
+      const ok = await sv.apply(this, arguments);
+      if (ok) { clearTimeout(_cpT); _cpT = setTimeout(cpSync, 2500); }
+      return ok;
+    };
+  })();
+  /* === END: CONTACT PROFILE PHOTOS === */
+
   // tracks recently tapped contacts (last 4, by id)
   /* "Recents" = recently OPENED contacts (contact detail viewed), most recent first.
    Tracks the last 10; the strip shows 3, "See All" shows the rest.
@@ -7437,7 +7487,7 @@ const RECENT_IDS_KEY = 'ab-recent-ids';
     const recents = recentIds.map(id => ADDRESS_BOOK.find(c => c.id === id)).filter(Boolean);
     const rows = recents.map(c => `
       <div class="os-row" style="cursor:pointer;" onclick="closeAuGenericModal('recentsAllOverlay');setTimeout(()=>openContactDetail(${c.id}),260);" onpointerdown="this.style.background='rgba(0,0,0,0.04)'" onpointerup="this.style.background=''" onpointerleave="this.style.background=''">
-        <div class="ab-avatar" style="background:${c.avatarBg};width:36px;height:36px;font-size:13px;">${initials2(c.name)}</div>
+        <div class="ab-avatar" style="background:${c.avatarBg};width:36px;height:36px;font-size:13px;">${cpInner(c)}</div>
         <div class="os-row-text"><div class="os-row-title">${auEsc(c.name)}</div><div class="os-row-sub">${auEsc(c.subline)}</div></div>
         <svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`).join('');
@@ -7486,7 +7536,7 @@ const RECENT_IDS_KEY = 'ab-recent-ids';
         html += `
         <div class="ab-row-wrap" data-id="${c.id}" style="position:relative;overflow:hidden;">
           ${abSwipeActions(c)}<div class="ab-row" data-id="${c.id}" style="display:flex;align-items:center;gap:13px;padding:12px 14px;background:#fff;position:relative;cursor:pointer;will-change:transform;">
-            <div class="ab-avatar" style="background:${c.avatarBg};width:36px;height:36px;font-size:13px;flex-shrink:0;">${initials2(c.name)}</div>
+            <div class="ab-avatar" style="background:${c.avatarBg};width:36px;height:36px;font-size:13px;flex-shrink:0;">${cpInner(c)}</div>
             <div style="flex:1;min-width:0;">
               <div class="ab-row-name" style="font-size:15px;">${auEsc(c.name)}</div>
             </div>
@@ -7915,7 +7965,7 @@ function buildScrubberRaw(activeLetters) {
 
         <!-- AVATAR + NAME -->
         <div style="display:flex;flex-direction:column;align-items:center;margin:0 0 24px;gap:12px;">
-          <div id="cdfs-avatar" style="width:92px;height:92px;border-radius:50%;background:${c.avatarBg};display:flex;align-items:center;justify-content:center;font-family:-apple-system,'SF Pro Display',sans-serif;font-size:34px;font-weight:700;color:#fff;user-select:none;">${auEsc(ini)}</div>
+          <div id="cdfs-avatar" style="width:92px;height:92px;border-radius:50%;background:${c.avatarBg};display:flex;align-items:center;justify-content:center;font-family:-apple-system,'SF Pro Display',sans-serif;font-size:34px;font-weight:700;color:#fff;user-select:none;">${cpInner(c)}</div>
           <div style="text-align:center;">
             <div id="cdfs-name" style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:22px;font-weight:700;color:${textPrimary};letter-spacing:.01em;">${auEsc(c.name)}</div>
             <div id="cdfs-role" style="font-family:-apple-system,'SF Pro Text',sans-serif;font-size:13px;color:${textSecondary};margin-top:4px;">${auEsc(c.subline)}</div>
@@ -8450,7 +8500,7 @@ function toggleContactEdit() {
       if (renamed) saveMeetings();
     }
     document.getElementById('cdfs-role').textContent = `${c.subline}`;
-    document.getElementById('cdfs-avatar').textContent = initials2(c.name);
+    document.getElementById('cdfs-avatar').innerHTML = cpInner(c);
     const nv = document.getElementById('cdfs-notes-view');
     nv.textContent = c.notes || 'No notes';
     nv.style.color = c.notes ? '#1c1c1e' : 'rgba(60,60,67,0.35)';
@@ -13309,7 +13359,7 @@ function applyRemoteCard(d, owner, fromCache) {
     if (owner) { savePI(); try { window.storage.set(EP_STORE_KEY, JSON.stringify(X), false); } catch (e) {} }
     if (!owner) publicConnectSync(); /* PUBLIC AUTO-OPEN */
     if (owner) loadMeetings(); /* UNIFIED MEETINGS: kunin sa Meetings sheet pagka-login/boot */
-    if (owner) abCloudPull().then(function () { setTimeout(syncLeads, 300); });
+    if (owner) abCloudPull().then(function () { setTimeout(syncLeads, 300); cpSync(); });
     if (owner) vtPullAll();
     if (!fromCache) cardCacheWrite(d, owner);
     return true;
@@ -18772,6 +18822,150 @@ function flPackRefresh(){
 }
 
 ntFix(); try{ flRender(); }catch(e){}
+/* === START: FILES TOOLS v2 (interactive export / import / context pack) === */
+ntDownload = function (name, text, type) {
+  var mime = type || 'text/plain', blob = new Blob([text], { type: mime });
+  var mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var dl = function () {
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 4000);
+  };
+  try {
+    var file = new File([blob], name, { type: mime });
+    if (mobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: name }).catch(function (e) { if (!e || e.name !== 'AbortError') dl(); });
+      return;
+    }
+  } catch (e) {}
+  dl();
+};
+
+/* ── EXPORT: sheet with counts, then Download / Copy ── */
+flExport = function () {
+  var nf = 0, nv = 0;
+  Object.keys(FL_DB).forEach(function (n) { if (FL_DB[n].vs && FL_DB[n].vs.length) { nf++; nv += FL_DB[n].vs.length; } });
+  if (!nf && !NOTES.length) { haptic('error'); showToast('Nothing to export yet', 'error'); return; }
+  haptic('light');
+  window._ntBk = JSON.stringify({ app: 'articardd-files', v: 1, t: Date.now(), files: FL_DB, notes: NOTES });
+  var kb = flKb(new Blob([window._ntBk]).size);
+  var row = function (a, b) { return '<div style="display:flex;justify-content:space-between;padding:12px 14px;border-top:1px solid rgba(0,0,0,0.07);' + NT_F + 'font-size:14px;"><span style="color:rgba(60,60,67,0.6);">' + a + '</span><b>' + b + '</b></div>'; };
+  auMakeSheet('flExpOverlay', 'Export backup',
+    '<div style="' + NT_F + 'font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-6px 2px 12px;">One .json file with your files (all versions) and AI notes. Import it on any device.</div>' +
+    '<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:14px;">' +
+      row('Files', nf).replace('border-top:1px solid rgba(0,0,0,0.07);', '') + row('Versions', nv) + row('AI notes', NOTES.length) + row('Size', kb) + '</div>' +
+    '<button type="button" onclick="ntExpGo(\'dl\')" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;' + NT_F + 'font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:8px;">Download .json</button>' +
+    '<button type="button" onclick="ntExpGo(\'copy\')" style="width:100%;padding:13px;border-radius:14px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.72);color:#1c1c1e;' + NT_F + 'font-size:14px;font-weight:600;cursor:pointer;">Copy JSON</button>');
+};
+function ntExpGo(k) {
+  if (!window._ntBk) return;
+  if (k === 'copy') { ntCopy(window._ntBk, 'Backup copied'); return; }
+  ntDownload('articardd-files-' + todayKey() + '.json', window._ntBk, 'application/json');
+  haptic('success'); closeAuGenericModal('flExpOverlay');
+  showToast('Backup ready', 'success');
+}
+
+/* ── IMPORT: attached input (iOS-safe) → preview → confirm ── */
+function ntImpCount(o) {
+  var r = { files: 0, vers: 0, notes: 0, skipV: 0, skipN: 0, bad: false };
+  if (!o || typeof o !== 'object' || (!o.files && !o.notes)) { r.bad = true; return r; }
+  var files = o.files || {};
+  Object.keys(files).forEach(function (n) {
+    var f = files[n]; if (!f || !Array.isArray(f.vs)) return;
+    var have = FL_DB[n] ? FL_DB[n].vs.map(function (x) { return x.text; }) : [], add = 0;
+    f.vs.forEach(function (v) {
+      if (!v || typeof v.text !== 'string') return;
+      if (have.indexOf(v.text) > -1) r.skipV++; else { add++; have.push(v.text); }
+    });
+    if (add) { r.vers += add; r.files++; }
+  });
+  (Array.isArray(o.notes) ? o.notes : []).forEach(function (m) {
+    if (!m || typeof m !== 'object' || !m.id) return;
+    if (NOTES.some(function (x) { return x.id === m.id; })) r.skipN++; else r.notes++;
+  });
+  return r;
+}
+flImportPick = function () {
+  haptic('light');
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json,text/plain';
+  inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+  inp.addEventListener('change', async function () {
+    var f = inp.files && inp.files[0]; inp.remove();
+    if (!f) return;
+    if (f.size > 25 * 1048576) { haptic('error'); showToast('File is too large (max 25 MB)', 'error'); return; }
+    var o; try { o = JSON.parse(await f.text()); } catch (x) { haptic('error'); showToast('Not a valid backup file', 'error'); return; }
+    ntImpPreview(o, f.name);
+  });
+  document.body.appendChild(inp); inp.click();
+};
+function ntImpPreview(o, fname) {
+  var r = ntImpCount(o);
+  if (r.bad) { haptic('error'); showToast('Not a valid articardd backup', 'error'); return; }
+  window._ntImp = o;
+  var nothing = !r.vers && !r.notes;
+  var row = function (a, b, first) { return '<div style="display:flex;justify-content:space-between;padding:12px 14px;' + (first ? '' : 'border-top:1px solid rgba(0,0,0,0.07);') + NT_F + 'font-size:14px;"><span style="color:rgba(60,60,67,0.6);">' + a + '</span><b>' + b + '</b></div>'; };
+  auMakeSheet('flImpOverlay', 'Review import',
+    '<div style="' + NT_F + 'font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-6px 2px 12px;word-break:break-all;">' + auEsc(fname || 'backup.json') + '. Nothing changes until you confirm. Existing items are never overwritten.</div>' +
+    '<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:14px;">' +
+      row('New file versions', r.vers + (r.files ? ' in ' + r.files + ' file' + (r.files > 1 ? 's' : '') : ''), 1) + row('New AI notes', r.notes) +
+      row('Already here (skipped)', (r.skipV + r.skipN)) + '</div>' +
+    '<button type="button" ' + (nothing ? 'disabled' : '') + ' onclick="ntImpGo()" style="width:100%;padding:14px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;' + NT_F + 'font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:8px;' + (nothing ? 'opacity:.35;cursor:not-allowed;' : '') + '">' + (nothing ? 'Nothing new to import' : 'Import') + '</button>' +
+    '<button type="button" onclick="closeAuGenericModal(\'flImpOverlay\')" style="width:100%;padding:13px;border-radius:14px;border:none;background:rgba(0,0,0,0.06);color:rgba(60,60,67,0.6);' + NT_F + 'font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>');
+}
+async function ntImpGo() {
+  var o = window._ntImp; if (!o) return;
+  closeAuGenericModal('flImpOverlay');
+  await flImportRun(o);
+  window._ntImp = null;
+}
+
+/* ── CONTEXT PACK: files + (optional) AI notes ── */
+flPackOpen = function () {
+  var names = Object.keys(FL_DB).filter(function (n) { return FL_DB[n].vs && FL_DB[n].vs.length; }).sort();
+  if (!names.length && !NOTES.length) { haptic('error'); showToast('No files or AI notes yet', 'error'); return; }
+  haptic('light');
+  var radio = function (v, l, s, on) { return '<label style="display:block;background:rgba(255,255,255,0.72);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;"><input type="radio" name="flps" value="' + v + '"' + (on ? ' checked' : '') + ' onchange="flPackRefresh()" style="margin-right:8px;"><b style="' + NT_F + 'font-size:14px;">' + l + '</b>' + (s ? '<div style="' + NT_F + 'font-size:12px;color:rgba(60,60,67,0.55);margin:3px 0 0 24px;">' + s + '</div>' : '') + '</label>'; };
+  var chk = names.map(function (n) { return '<label style="display:flex;align-items:center;gap:10px;min-height:40px;' + NT_F + 'font-size:13.5px;overflow-wrap:anywhere;"><input type="checkbox" class="flpc" value="' + auEsc(n) + '" checked onchange="flPackRefresh()">' + auEsc(n) + '</label>'; }).join('');
+  var filesPart = names.length
+    ? radio('all', 'All files, every version', '', true) + radio('lat', 'Latest versions only', 'Smallest handoff', false) + radio('sel', 'Selected files only', '', false) +
+      '<div id="flPackF" hidden style="background:rgba(255,255,255,0.72);border-radius:14px;padding:4px 14px;max-height:26vh;overflow:auto;margin-bottom:8px;">' + chk + '</div>'
+    : '<div style="' + NT_F + 'font-size:13px;color:rgba(60,60,67,0.55);margin:0 2px 10px;">No saved files. The pack will contain AI notes only.</div>';
+  var notesPart = NOTES.length
+    ? '<label style="display:flex;align-items:center;gap:10px;min-height:44px;background:rgba(255,255,255,0.72);border-radius:14px;padding:0 14px;margin-bottom:8px;' + NT_F + 'font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="flpN" checked onchange="flPackRefresh()">Include AI notes (' + NOTES.length + ')</label>' : '';
+  auMakeSheet('flPackOverlay', 'Export Context Pack',
+    filesPart + notesPart +
+    '<div id="flPackS" style="' + NT_F + 'font-size:12.5px;color:rgba(60,60,67,0.55);margin:8px 2px 12px;"></div>' +
+    '<div style="display:flex;gap:10px;"><button type="button" onclick="ntPackAct(\'dl\')" style="flex:1;padding:13px;border-radius:14px;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.72);color:#1c1c1e;font-weight:600;cursor:pointer;">Download .md</button><button type="button" onclick="ntPackAct(\'copy\')" style="flex:1;padding:13px;border-radius:14px;border:none;background:#1c1c1e;color:#ECE4D6;font-weight:700;cursor:pointer;">Copy</button></div>');
+  flPackRefresh();
+};
+flPackRefresh = function () {
+  var m = document.querySelector('input[name="flps"]:checked'), mode = m ? m.value : 'lat';
+  var pf = document.getElementById('flPackF'); if (pf) pf.hidden = mode !== 'sel';
+  var picked = [].slice.call(document.querySelectorAll('.flpc:checked')).map(function (c) { return c.value; });
+  var ns = Object.keys(FL_DB).filter(function (n) { return FL_DB[n].vs && FL_DB[n].vs.length; }).sort();
+  if (!m) ns = ns.slice(0, 0); else if (mode === 'sel') ns = ns.filter(function (n) { return picked.indexOf(n) > -1; });
+  var withNotes = (document.getElementById('flpN') || {}).checked;
+  var out = ['# articardd Context Pack', 'Generated: ' + new Date().toISOString(), ''], nv = 0, nn = 0;
+  ns.forEach(function (n) {
+    var f = FL_DB[n], vs = mode === 'lat' ? [flLast(f)] : f.vs;
+    vs.forEach(function (v) { nv++; out.push('## ' + n + ' (v' + v.v + ', ' + new Date(v.t).toISOString().slice(0, 10) + ')', NT_FENCE + 'text', v.text, NT_FENCE, ''); });
+  });
+  if (withNotes) NOTES.slice().sort(function (a, b) { return b.t - a.t; }).forEach(function (n) {
+    ntFix1(n); if (!String(n.text || '').trim()) return; nn++;
+    out.push('## AI note: ' + ((n.text.trim().split('\n')[0] || 'Untitled').slice(0, 80)) + ' (' + new Date(n.t).toISOString().slice(0, 10) + ')', NT_FENCE + 'text', n.text, NT_FENCE, '');
+  });
+  ntPackText = (nv || nn) ? out.join('\n') : ''; ntPackName = 'articardd-context-pack-' + todayKey() + '.md';
+  var b = new Blob([ntPackText]).size, s = document.getElementById('flPackS');
+  if (s) s.textContent = (nv || nn) ? ns.length + ' files · ' + nv + ' versions · ' + nn + ' AI notes · ' + flKb(b) + ' · ~' + Math.ceil(b / 4).toLocaleString() + ' tokens' : 'Nothing selected';
+};
+function ntPackAct(k) {
+  if (!ntPackText.trim()) { haptic('error'); showToast('Nothing selected', 'error'); return; }
+  if (k === 'copy') { ntCopy(ntPackText, 'Context Pack copied'); return; }
+  ntDownload(ntPackName, ntPackText, 'text/markdown'); haptic('success');
+}
+/* === END: FILES TOOLS v2 === */
 /* === END: FILES + AI NOTES PARITY === */
 /* === START: MASCOT OFF + BACK NOTICE === */
 /* applyMascot: sinusuportahan na ang 'none' */
@@ -20010,6 +20204,104 @@ function afActivitySheet() {
   };
 })();
 /* === END: AFFINITY SAFETY + ACTIVITY + SHORTCUTS === */
+/* === START: AFFINITY VIEWER v3 (header ... menu, reactions, message bar) === */
+(function () {
+  if (document.getElementById('afV3Css')) return;
+  const st = document.createElement('style'); st.id = 'afV3Css';
+  st.textContent = `
+  #afViewer .af-r{border-radius:20px;padding:12px 16px;min-width:76px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#e5e5ea;font-weight:600;}
+  #afViewer .af-r b{font-size:22px;margin-bottom:2px;}
+  #afViewer .af-r.on{background:#E8CC7A;color:#1c1c1e;border-color:#E8CC7A;}
+  .af-hbtn{width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;}
+  .af-hbtn:active{transform:scale(.9);opacity:.7;}
+  .af-msg{display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:0 6px 0 18px;height:52px;box-sizing:border-box;background:rgba(255,255,255,.04);}
+  .af-msg input{flex:1;min-width:0;background:none;border:none;outline:none;color:#fff;font:16px -apple-system,'SF Pro Text',sans-serif;}
+  .af-msg input::placeholder{color:rgba(255,255,255,.4);}
+  .af-send{width:40px;height:40px;border-radius:50%;border:none;background:#E8CC7A;color:#1c1c1e;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;}
+  .af-send.on{display:flex;}`;
+  document.head.appendChild(st);
+})();
+
+afOpen = function (id) {
+  const s = afStories().find(x => x.id === id); if (!s) return;
+  haptic('light'); afView = id;
+  document.getElementById('afViewer')?.remove();
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const mine = !!s.mine, my = AF.mine[id] || '';
+  const bg = AF_BG[(s.bg || 0) % AF_BG.length];
+  const im = afImgs(s), len = String(s.text || '').length, fs = len > 400 ? 15 : len > 200 ? 18 : 26;
+  const car = im.length ? `<div style="width:100%;"><div class="af-car" onscroll="afCarScroll(this)">${im.map(u => `<img src="${auEsc(u)}" alt="">`).join('')}</div>${im.length > 1 ? `<div class="af-dots" aria-hidden="true">${im.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}</div>` : '';
+  const media = car + (s.text ? (im.length
+    ? `<div style="${F}color:#fff;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;">${auEsc(s.text)}</div>`
+    : `<div style="width:100%;border-radius:32px;padding:44px 28px;box-sizing:border-box;background:${bg};color:#fff;font:700 ${fs}px/1.3 -apple-system,'SF Pro Display',sans-serif;white-space:pre-wrap;word-break:break-word;">${auEsc(s.text)}</div>`) : '');
+
+  let foot;
+  if (mine) {
+    const rc = (s.rx || []).length;
+    foot = `<button type="button" class="af-treat" style="background:rgba(255,255,255,.1);color:#fff;" onclick="afReactors('${id}')">Reactions${rc ? ' · ' + rc : ''}</button>`;
+  } else {
+    foot = `<div class="af-rbar" role="group" aria-label="React">${AF_REACTS.map(r => `<button type="button" class="af-r${my === r.id ? ' on' : ''}" aria-pressed="${my === r.id}" onclick="afReact('${r.id}')"><b>${r.e}</b>${r.l}</button>`).join('')}</div>
+      <div class="af-msg"><input id="afMsgIn" type="text" maxlength="500" enterkeyhint="send" autocomplete="off" aria-label="Message" placeholder="${AF_TREATS_ON ? 'Send a treat or type a message...' : 'Type a message...'}" oninput="document.getElementById('afSendBtn').classList.toggle('on',!!this.value.trim())" onkeydown="if(event.key==='Enter')afMsgSend('${id}')"><button type="button" id="afSendBtn" class="af-send" aria-label="Send" onclick="afMsgSend('${id}')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button></div>`;
+  }
+
+  const ov = document.createElement('div');
+  ov.id = 'afViewer'; ov.className = 'share-overlay show';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Story from ' + (mine ? 'you' : s.name));
+  ov.style.cssText = 'background:#1c1c1e;align-items:stretch;backdrop-filter:none;-webkit-backdrop-filter:none;';
+  ov.onclick = e => { if (e.target === ov) afClose(); };
+  ov.innerHTML = `<div style="width:100%;max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:max(14px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;">
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <div style="padding:3px;border-radius:50%;border:2px solid rgba(74,157,224,.7);flex:none;">${afAvOf(s, 46)}</div>
+      <div style="flex:1;min-width:0;"><div style="${F}font-size:18px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${auEsc(mine ? 'You' : s.name)}</div><div style="${F}font-size:14px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${auEsc(s.role || '')}${s.role ? ' · ' : ''}${afAgo(s.t)}</div></div>
+      <button type="button" class="af-hbtn" aria-label="More options" onclick="afMenu('${id}')"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+      <button type="button" class="af-hbtn" aria-label="Close story" onclick="afClose()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:12px;padding:14px 0;overflow:auto;">${media}</div>
+    <div style="flex-shrink:0;">${foot}</div></div>`;
+  document.body.appendChild(ov);
+};
+
+/* ... menu: Report / Block / Stop watching (o Reactions / Manage / Delete sa sarili mong story) */
+function afMenu(id) {
+  const s = afStories().find(x => x.id === id); if (!s) return;
+  haptic('light');
+  const ic = p => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const go = js => "closeAuGenericModal('afMenuOverlay');setTimeout(()=>{" + js + "},260);";
+  const row = (bg, icon, label, js, color) => `<div class="os-row" style="cursor:pointer;" onclick="${go(js)}"><div class="os-row-icon" style="background:${bg};">${icon}</div><div class="os-row-text"><div class="os-row-title"${color ? ` style="color:${color};"` : ''}>${label}</div></div></div>`;
+  const first = String(s.name).split(' ')[0];
+  const nm = "decodeURIComponent('" + afEnc(s.name) + "')";
+  let rows;
+  if (s.mine) {
+    rows = `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;">
+        ${row('#4A9DE0', ic('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'), 'Reactions', "afReactors('" + id + "')")}
+        ${row('#8E8E93', ic('<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/>'), 'Manage photos &amp; text', "afManage('" + id + "')")}</div>
+      <div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">
+        ${row('#FF453A', ic('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'), 'Delete story', "afDelete('" + id + "')", '#FF453A')}</div>`;
+  } else {
+    const bonded = afConnected(s) ? `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;">
+        ${row('#34C759', ic('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/>'), 'Message', "afGo(" + nm + ",'message')")}
+        ${row('#FF9F0A', ic('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>'), 'Book a meeting', "afGo(" + nm + ",'book')")}</div>` : '';
+    rows = bonded + `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;">
+        ${row('#8E8E93', ic('<circle cx="12" cy="12" r="9"/><line x1="4" y1="4" x2="20" y2="20"/>'), 'Stop watching ' + auEsc(first), "afMute('" + id + "')")}
+        ${row('#FF9F0A', ic('<path d="M4 22V4h12l-2 4 2 4H4"/>'), 'Report story', "afReport('" + id + "')")}</div>
+      <div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">
+        ${row('#FF453A', ic('<circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>'), 'Block ' + auEsc(first), "afBlock('" + id + "')", '#FF453A')}</div>`;
+  }
+  auMakeSheet('afMenuOverlay', s.mine ? 'Your story' : auEsc(s.name), rows);
+}
+
+/* message bar: bubukas ang Messages kung bonded na */
+function afMsgSend(id) {
+  const inp = document.getElementById('afMsgIn'), t = (inp && inp.value || '').trim(); if (!t) return;
+  const s = afStories().find(x => x.id === id); if (!s || s.mine) return;
+  const c = afConnected(s) ? afContactOf(s.name) : null;
+  if (!c || !String(c.mobile || '').trim()) { haptic('error'); showToast(c ? 'No phone number saved for ' + String(s.name).split(' ')[0] : 'Bond first to send a message', 'neutral'); return; }
+  haptic('success');
+  const m = String(c.mobile).replace(/\s/g, ''), intl = m.startsWith('+') ? m : '+63' + m.replace(/^0/, '');
+  const apple = /iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent);
+  afLog('msg', s.name, 'You sent a message');
+  window.location.href = 'sms:' + intl + (apple ? '&' : '?') + 'body=' + encodeURIComponent(t);
+}
+/* === END: AFFINITY VIEWER v3 === */
 /* === END: AFFINITY === */
 
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */

@@ -13544,7 +13544,7 @@ async function submitFreeSignup() {
         if (!(await verifyOwnerKey(v))) { fail(window.__KEYERR__ || 'That key is not valid.'); return; }
         sessionStorage.setItem(SESSION, '1');
         /* === START: RM OPEN AFTER LOGIN === */
-        if (window.__OPEN_RM__) { window.__OPEN_RM__ = false; setTimeout(openRequestManager, 700); } else setTimeout(bootAffinity, 60);
+        if (window.__OPEN_RM__) { window.__OPEN_RM__ = false; setTimeout(openRequestManager, 700); }
         /* === END: RM OPEN AFTER LOGIN === */
         setPublic(false);
       }
@@ -13571,7 +13571,7 @@ document.addEventListener('DOMContentLoaded', function () {
 if (idFromUrl()) { setPublic(true); window.__AUTO_CONNECT__ = true; syncCardOnBoot(false, idFromUrl()); }
 /* === END: PUBLIC LINK AUTO-OPEN === */
   /* === START: RM DEEP LINK (WITH SESSION) === */
-else if (sessionStorage.getItem(SESSION)) { setPublic(false); syncCardOnBoot(true, ''); if (wantsRM()) setTimeout(openRequestManager, 600); else bootAffinity(); }
+else if (sessionStorage.getItem(SESSION)) { setPublic(false); syncCardOnBoot(true, ''); if (wantsRM()) setTimeout(openRequestManager, 600); }
 /* === END: RM DEEP LINK (WITH SESSION) === */
   /* === START: RM DEEP LINK (NO SESSION) === */
 else showGate();
@@ -19129,7 +19129,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) VT_KI
 /* === END: VAULT CLOUD SYNC === */
 
 /* === START: AFFINITY (replaces Discover tab, MyDay-style stories) === */
-const AF_KEY = 'affinity-v1', AF_DEMO = false, AF_TTL = 864e5;
+const AF_KEY = 'affinity-v1', AF_DEMO = true, AF_TTL = 864e5;
 const AF_TREATS_ON = false;   /* gawing true kapag may payment + voucher backend na */   /* AF_DEMO=false sa production */
 const afIc = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const AF_REACTS = [
@@ -21507,6 +21507,109 @@ acNew = function () {
 /* === END: ARTICHATS === */
 /* === END: AFFINITY === */
 
+/* === START: AFFINITY BIG STORY + ARTICHATS GLOBAL FAB === */
+(function () {
+  if (document.getElementById('acFabCss')) return;
+  const st = document.createElement('style'); st.id = 'acFabCss';
+  st.textContent = `
+  /* 1 malaking story kada view */
+  #afBody .af-rail{gap:14px;margin:8px 0 0;padding:8px 0 26px;}
+  #afBody .af-rail .af-tile{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;gap:10px;}
+  #afBody .af-rail .af-card{width:100%;max-width:none;aspect-ratio:4/5;max-height:62vh;border-radius:28px;transform:none;box-shadow:0 10px 30px rgba(0,0,0,.16);}
+  #afBody .af-rail .af-card .in{border-radius:28px;padding:26px;font-size:24px;line-height:1.3;}
+  #afBody .af-rail .af-card .cl{font-size:24px;-webkit-line-clamp:10;}
+  #afBody .af-rail .af-card .ly{border-radius:28px;}
+  #afBody .af-rail .af-badge{right:14px;bottom:14px;}
+  #afBody .af-rail .af-badge > div{width:52px !important;height:52px !important;font-size:20px !important;}
+  #afBody .af-rail .af-nm{font-size:17px;}
+  #afBody .af-rail .af-ago{font-size:13px;}
+  /* ArtiChats global floating button */
+  #acFab{position:fixed;left:0;top:0;z-index:9790;width:56px;height:56px;border-radius:50%;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 16px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.7);color:#1c1c1e;display:none;align-items:center;justify-content:center;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer;will-change:transform;}
+  #acFab.show{display:flex;}
+  #acFab.snap{transition:transform .38s cubic-bezier(.34,1.3,.5,1);}
+  #acFab.drag{opacity:.9;box-shadow:0 8px 24px rgba(0,0,0,.28);}
+  #acFab .b{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#FF453A;border:2px solid #ECE4D6;color:#fff;font:700 11px/16px -apple-system,'SF Pro Text',sans-serif;text-align:center;display:none;}
+  #acFab .b.on{display:block;}
+  body.public-mode #acFab{display:none !important;}`;
+  document.head.appendChild(st);
+
+  const SZ = 56, M = 8, KEY = 'ac-fab-pos';
+  const fab = document.createElement('button');
+  fab.id = 'acFab'; fab.type = 'button'; fab.setAttribute('aria-label', 'ArtiChats');
+  fab.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/></svg><span class="b" id="acFabB"></span>';
+  document.body.appendChild(fab);
+
+  let pos = { s: 'r', y: .72 };
+  try { const j = JSON.parse(localStorage.getItem(KEY) || 'null'); if (j && (j.s === 'l' || j.s === 'r') && typeof j.y === 'number') pos = j; } catch (e) {}
+  const minY = () => 60, maxY = () => Math.max(minY(), innerHeight - SZ - 96);
+  const clampY = y => Math.min(maxY(), Math.max(minY(), y));
+  const place = (x, y) => { fab.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)'; };
+  function home(anim) {
+    const x = pos.s === 'l' ? M : innerWidth - SZ - M, y = clampY(pos.y * innerHeight);
+    fab.classList.toggle('snap', !!anim); place(x, y);
+  }
+  home(false);
+  window.addEventListener('resize', () => home(false));
+
+  let d = null, moved = false;
+  fab.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const r = fab.getBoundingClientRect();
+    d = { id: e.pointerId, ox: e.clientX - r.left, oy: e.clientY - r.top, sx: e.clientX, sy: e.clientY };
+    moved = false;
+    try { fab.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  fab.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    if (!moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return;
+    if (!moved) { moved = true; fab.classList.remove('snap'); fab.classList.add('drag'); haptic('light'); }
+    const x = Math.min(innerWidth - SZ - 2, Math.max(2, e.clientX - d.ox));
+    const y = clampY(e.clientY - d.oy);
+    place(x, y);
+    d.x = x; d.y = y;
+    e.preventDefault();
+  });
+  const end = e => {
+    if (!d || e.pointerId !== d.id) return;
+    const s = d; d = null;
+    try { fab.releasePointerCapture(e.pointerId); } catch (_) {}
+    fab.classList.remove('drag');
+    if (moved) {
+      pos = { s: (s.x + SZ / 2) < innerWidth / 2 ? 'l' : 'r', y: s.y / innerHeight };
+      try { localStorage.setItem(KEY, JSON.stringify(pos)); } catch (_) {}
+      haptic('light'); home(true);
+      return;
+    }
+    if (e.type === 'pointercancel') return;
+    haptic('medium');
+    const c = acCounts();
+    acOpenModal({ tab: (!c.unread && c.req) ? 'requests' : 'inbox' });
+  };
+  fab.addEventListener('pointerup', end);
+  fab.addEventListener('pointercancel', end);
+
+  function badge() {
+    const b = document.getElementById('acFabB'); if (!b) return;
+    let n = 0; try { const c = acCounts(); n = c.unread + c.req; } catch (e) {}
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.classList.toggle('on', n > 0);
+    fab.setAttribute('aria-label', 'ArtiChats' + (n ? ', ' + n + ' new' : ''));
+  }
+  function vis() {
+    const gate = document.getElementById('screenGate');
+    const on = acOk() && !ACV.open && !document.body.classList.contains('public-mode') && !(gate && gate.classList.contains('show'));
+    fab.classList.toggle('show', !!on);
+    if (on) badge();
+  }
+  setInterval(vis, 600);
+  vis();
+
+  /* alisin ang dating bilog sa loob ng Affinity; badge na lang ang ina-update */
+  acMount = function () { const o = document.getElementById('acEntry'); if (o) o.remove(); badge(); };
+  acMount();
+  try { afRender(true); } catch (e) {}
+})();
+/* === END: AFFINITY BIG STORY + ARTICHATS GLOBAL FAB === */
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */
 const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
 (function () {
@@ -21534,78 +21637,6 @@ const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat de
   setTimeout(check, 4000);
 })();
 /* === END: UPDATE WATCH === */
- /* === START: UI LOCK (final word: Affinity compact stories + ArtiChats stable) ===
-   ILAGAY SA PINAKADULO NG HUling <script>, MISMO BAGO ANG:
-   /* === START: UPDATE WATCH ... */  (o bago ang  window.__ATHNA_READY__ = true;)
-   Dahil ito ang pinakahuli, ito ang mananaig sa lahat ng naunang override. */
-(function uiLock() {
-  var old = document.getElementById('uiLockCss'); if (old) old.remove();
-  var st = document.createElement('style'); st.id = 'uiLockCss';
-  st.textContent = [
-    /* ── Affinity: maliliit na stories (gaya ng dati, ~84px) ── */
-    '#osBody{overflow-x:hidden;overscroll-behavior-y:contain;}',
-    '#afBody .af-rail{gap:14px !important;margin:6px -16px 0 0 !important;padding:6px 16px 14px 0 !important;scroll-snap-type:x proximity !important;}',
-    '#afBody .af-rail .af-tile{flex:0 0 84px !important;width:84px !important;gap:6px !important;scroll-snap-align:start;}',
-    '#afBody .af-rail .af-card{width:84px !important;max-width:84px !important;border-radius:16px !important;}',
-    '#afBody .af-rail .af-card .in{border-radius:16px !important;padding:9px !important;font-size:11.5px !important;}',
-    '#afBody .af-rail .af-card .cl{font-size:10px !important;-webkit-line-clamp:4 !important;}',
-    '#afBody .af-rail .af-card .ly{border-radius:16px !important;}',
-    '#afBody .af-rail .af-nm{font-size:12.5px !important;}',
-    '#afBody .af-rail .af-ago{font-size:11px !important;}',
-    '#afBody .af-rail .af-badge{right:-7px !important;bottom:-7px !important;}',
-    /* ayos ng seksyon: Your Affinities -> Treats/Bond/Privacy -> ArtiChats */
-    '#afBody{display:flex;flex-direction:column;}',
-    '#afBody > *{order:1;}',
-    '#afBody > .os-group{order:3;margin:8px 0 12px;}',
-    '#afBody > #acEntry{order:4;}',
-    '#afBody > #afMore{order:5;}',
-    /* ── ArtiChats: walang gumagalaw na nav ── */
-    'html.ac-lock,html.ac-lock body{overflow:hidden !important;overscroll-behavior:none;}',
-    '#artichatsScreen{overflow:hidden;overscroll-behavior:contain;touch-action:pan-y;}',
-    '#artichatsScreen button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}',
-    '#artichatsScreen .dc-msgs,#artichatsScreen [style*="overflow-y:auto"]{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}'
-  ].join('\n');
-  document.head.appendChild(st);   /* huling style tag = panalo kahit magkapareho ang specificity */
-
-  /* sundan ang totoong visible area (keyboard) para hindi umangat/gumalaw ang buong modal */
-  function fit() {
-    var s = document.getElementById('artichatsScreen'); if (!s) return;
-    var v = window.visualViewport;
-    if (v) { s.style.top = v.offsetTop + 'px'; s.style.bottom = 'auto'; s.style.height = v.height + 'px'; }
-    if (window.scrollY) window.scrollTo(0, 0);
-    var m = document.getElementById('acMsgs'), a = document.activeElement;
-    if (m && a && a.id === 'acMsg') m.scrollTop = m.scrollHeight;
-  }
-  if (window.visualViewport) {
-    visualViewport.addEventListener('resize', fit);
-    visualViewport.addEventListener('scroll', fit);
-  }
-  document.addEventListener('focusin', function (e) {
-    if (e.target.closest && e.target.closest('#artichatsScreen')) setTimeout(fit, 50);
-  });
-
-  /* lock ang page sa likod habang bukas ang ArtiChats */
-  if (typeof acOpenModal === 'function') {
-    var _open = acOpenModal;
-    acOpenModal = function () {
-      document.documentElement.classList.add('ac-lock');
-      var r = _open.apply(this, arguments);
-      fit();
-      return r;
-    };
-  }
-  if (typeof acClose === 'function') {
-    var _close = acClose;
-    acClose = function () {
-      var r = _close.apply(this, arguments);
-      document.documentElement.classList.remove('ac-lock');
-      return r;
-    };
-  }
-
-  try { afRender(true); } catch (e) {}
-})();
-/* === END: UI LOCK === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */
 </script>

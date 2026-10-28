@@ -20989,10 +20989,627 @@ setInterval(() => {
   if (!_acLoaded || ACV.open || currentOSPane === 'affinity') acSync();
 }, 4000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && acOk()) acSync(); });
+/* === START: ARTICHATS v3 (+ extensions, reply/forward/edit/pin, status, live, groups) === */
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `
+  .ac-b{max-width:82%;}
+  .ac-t{white-space:pre-wrap;word-break:break-word;}
+  .ac-meta{display:block;font-size:10px;opacity:.6;margin-top:3px;text-align:right;}
+  .ac-q{border-left:3px solid #E8CC7A;padding:3px 8px;margin-bottom:6px;font-size:12px;border-radius:6px;background:rgba(0,0,0,.06);word-break:break-word;}
+  .dc-bub.me .ac-q{background:rgba(255,255,255,.14);}
+  .ac-q b{display:block;font-size:11px;}
+  .ac-who{font-size:11px;font-weight:700;color:#8a6e1a;margin-bottom:2px;}
+  .ac-img{display:block;max-width:100%;border-radius:12px;margin-bottom:4px;}
+  .ac-file{display:block;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.08);color:inherit;text-decoration:none;font-size:13px;margin-bottom:4px;word-break:break-all;}
+  .dc-bub.me .ac-file{background:rgba(255,255,255,.14);}
+  .ac-file small{opacity:.7;}
+  .ac-plus{width:44px;height:44px;border-radius:50%;border:none;background:#1c1c1e;color:#ECE4D6;font-size:26px;line-height:1;cursor:pointer;flex:none;padding:0;align-self:center;}
+  .ac-rb{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.8);border-left:3px solid #E8CC7A;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:12.5px;color:rgba(60,60,67,.8);}
+  .ac-rb span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ac-rb b{display:block;color:#1c1c1e;font-size:12px;}
+  .ac-rb button{border:none;background:none;font-size:20px;cursor:pointer;color:rgba(60,60,67,.6);}
+  .ac-pin{margin:0 16px 4px;padding:8px 12px;border-radius:12px;background:rgba(232,204,122,.3);font-size:12.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:4px 0 8px;}
+  .ac-tile{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:8px;font:600 12px -apple-system,'SF Pro Text',sans-serif;color:#1c1c1e;cursor:pointer;padding:6px 0;}
+  .ac-tile span{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .ac-disp{background:#2F343A;border-radius:16px;padding:12px 16px;text-align:right;margin-bottom:12px;color:#fff;min-height:70px;}
+  .ac-disp small{display:block;font-size:12px;opacity:.55;min-height:16px;}
+  .ac-disp div{font:700 32px -apple-system,'SF Pro Display',sans-serif;word-break:break-all;}
+  .ac-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .ac-k{padding:16px 0;border-radius:14px;border:none;background:rgba(255,255,255,.85);font:600 20px -apple-system,'SF Pro Text',sans-serif;color:#1c1c1e;cursor:pointer;}
+  .ac-k.op{background:#1c1c1e;color:#ECE4D6;} .ac-k.fn{background:rgba(0,0,0,.08);}
+  .ac-k:active{opacity:.6;}`;
+  document.head.appendChild(st);
+})();
+
+var ACR = { tid: null, reply: null, edit: null }, _acPoll = false;
+const acIsG = t => !!(t && t.isGroup);
+const acAttName = m => ({ img: '📷 Photo', file: '📎 File', loc: '📍 Location' }[m.ak] || '');
+const acMapsUrl = a => {
+  const P2 = 'https:' + String.fromCharCode(47, 47), q = a.lat + ',' + a.lng;
+  return /iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent) ? P2 + 'maps.apple.com/?ll=' + q + '&q=Shared%20location' : P2 + 'www.google.com/maps/search/?api=1&query=' + q;
+};
+
+/* ── message shape ── */
+acMsg = function (m) {
+  return { id: m.id, m: m.m ? 1 : 0, t: Date.parse(m.t) || Date.now(), x: m.x || '', c: m.c || null, a: m.a || null, ak: m.ak || '',
+    re: m.re || null, e: m.e ? Date.parse(m.e) : 0, p: !!m.p, r: m.r ? Date.parse(m.r) : 0, d: m.d ? Date.parse(m.d) : 0, f: m.f || '' };
+};
+
+/* ── groups into thread list ── */
+function agBuild(L) {
+  return L.map(g => {
+    const old = AC.threads.find(x => x.id === g.peer);
+    const last = g.last ? { id: g.last.id, m: g.last.m ? 1 : 0, t: Date.parse(g.last.t) || Date.now(), x: g.last.x || '', c: null, a: null, ak: '', re: null, e: 0, p: false, r: 0, d: 0, f: '' } : null;
+    const same = !!(old && old.full && ((!last && !old.msgs.length) || (last && acLast(old) && acLast(old).id === last.id)));
+    return { id: g.peer, isGroup: true, person: { key: g.peer, name: g.name, role: g.members + ' members', av: '#4A9DE0', verified: false, photo: '', phone: '', email: '' },
+      status: g.status, msgs: same ? old.msgs : (last ? [last] : []), unread: g.unread || 0, muted: !!g.muted, restricted: false,
+      t: Date.parse(g.t) || Date.now(), full: same, members: (old && old.members) || [] };
+  });
+}
+acSync = async function () {
+  if (!acOk() || _acBusy) return;
+  _acBusy = true;
+  try {
+    const [r, gr] = await Promise.all([acSrv('ownerChatList', {}), acSrv('ownerGroupList', {}).catch(() => ({ groups: [] }))]);
+    const before = {}; AC.threads.forEach(t => { before[t.id] = t.unread || 0; });
+    const keepEmpty = AC.threads.filter(t => !t.msgs.length && !t.isGroup);
+    const list = ((r && r.threads) || []).map(acMerge);
+    keepEmpty.forEach(t => { if (!list.some(x => x.id === t.id)) list.push(t); });
+    const all = list.concat(agBuild((gr && gr.groups) || []));
+    AC.threads = all;
+    if (_acLoaded) all.forEach(t => {
+      if (!t.muted && (t.unread || 0) > (before[t.id] || 0) && !(ACV.open && ACV.tid === t.id))
+        showToast(String(t.person.name).split(' ')[0] + (t.isGroup ? ' has a new message' : ' sent you a message'), 'neutral');
+    });
+    _acLoaded = true;
+    const sig = all.map(t => t.id + ':' + ((acLast(t) || {}).id) + ':' + t.unread + ':' + t.status + t.muted + t.restricted).join('|');
+    if (sig !== _acSig) {
+      _acSig = sig; acMount();
+      if (ACV.open) { if (ACV.tid) { const t = acCur(); if (t && !t.full) acLoadThread(ACV.tid, true); } else acPaintList(); }
+    }
+  } catch (e) { if (/session|sign in/i.test(String(e && e.message))) rmExpired(); }
+  finally { _acBusy = false; }
+};
+
+/* ── load thread (DM + group, light polling) ── */
+acLoadThread = async function (id, quiet, poll) {
+  const g = String(id).indexOf('G-') === 0;
+  try {
+    let t = AC.threads.find(x => x.id === id);
+    const since = (poll && t && t.full && t.msgs.length) ? new Date(acLast(t).t).toISOString() : '';
+    const r = await acSrv(g ? 'ownerGroupGet' : 'ownerChatGet', { peer: id, since: since });
+    if (!t) { t = { id: id, msgs: [], unread: 0, t: Date.now() }; AC.threads.push(t); }
+    const old = new Map(t.msgs.map(m => [m.id, m]));
+    const msgs = (r.messages || []).map(acMsg).map(m => { if (m.ak && !m.a) { const o = old.get(m.id); if (o && o.a) m.a = o.a; } return m; });
+    const sg = (ms, mem) => ms.map(m => [m.id, m.x.length, m.e, m.r, m.d, m.p, m.a ? 1 : 0].join(':')).join('|') + '#' + (mem || []).map(x => x.key + x.status + (x.lastReadAt || '')).join(',');
+    const before = sg(t.msgs, t.members);
+    if (g) {
+      t.isGroup = true; t.members = r.members || []; t.owner = r.group.owner;
+      t.person = { key: id, name: r.group.name, role: t.members.filter(x => x.status === 'member').length + ' members', av: '#4A9DE0', verified: false, photo: '', phone: '', email: '' };
+      t.status = r.myStatus === 'invited' ? 'request' : 'inbox'; t.muted = false; t.restricted = false;
+    } else {
+      t.person = acPerson(r.peer); t.status = r.status; t.muted = !!r.muted; t.restricted = !!r.restricted;
+    }
+    t.msgs = msgs; t.full = true; t.unread = 0; if (msgs.length) t.t = acLast(t).t;
+    if (!poll || before !== sg(t.msgs, t.members)) { if (ACV.open && ACV.tid === id) acRender(true); acMount(); }
+  } catch (e) { if (!quiet) { haptic('error'); showToast("Couldn't load messages", 'error'); } }
+};
+/* live: 2s polling habang bukas ang chat */
+setInterval(() => {
+  if (document.hidden || !acOk() || !ACV.open || !ACV.tid || _acPoll) return;
+  const t = acCur(); if (!t || t.status === 'request') return;
+  _acPoll = true; acLoadThread(t.id, true, true).finally(() => { _acPoll = false; });
+}, 2000);
+/* huwag mawala ang keyboard / scroll position kapag nag-refresh ang chat */
+(function () {
+  const _r = acRender;
+  acRender = function (keep) {
+    const ae = document.activeElement, foc = !!(ae && ae.id === 'acMsg'), box = document.getElementById('acMsgs');
+    const near = !box || (box.scrollHeight - box.scrollTop - box.clientHeight < 80), top = box ? box.scrollTop : 0;
+    _r.apply(this, arguments);
+    const nb = document.getElementById('acMsgs'); if (nb && keep && !near) nb.scrollTop = top;
+    if (foc) { const n = document.getElementById('acMsg'); if (n) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (e) {} } }
+  };
+})();
+
+/* ── push / send / edit ── */
+acPush = async function (t, msg) {
+  try {
+    const g = acIsG(t);
+    const r = await acSrv(g ? 'ownerGroupSend' : 'ownerChatSend', { peer: t.id, text: msg.x || '', ctx: msg.c || null, att: msg.a || null, replyTo: msg.re || null });
+    const m = acMsg(r.message); t.msgs.push(m); t.msgs = t.msgs.slice(-300); t.t = m.t; if (!g) t.status = 'inbox'; t.full = true;
+    acMount(); return true;
+  } catch (e) { haptic('error'); showToast(String((e && e.message) || "Couldn't send"), 'error'); return false; }
+};
+acSend = async function () {
+  const inp = document.getElementById('acMsg'), x = (inp && inp.value || '').trim(), t = acCur(); if (!x || !t) return;
+  if (ACR.edit) {
+    const id = ACR.edit.id;
+    try { await acSrv(acIsG(t) ? 'ownerGroupEdit' : 'ownerChatEdit', { peer: t.id, id: id, text: x }); }
+    catch (e) { haptic('error'); showToast(String((e && e.message) || "Couldn't edit"), 'error'); return; }
+    const m = t.msgs.find(v => v.id === id); if (m) { m.x = x; m.e = Date.now(); }
+    ACR.edit = null; haptic('success'); acRender(); return;
+  }
+  const msg = { m: 1, t: Date.now(), x: x }; if (ACR.reply) msg.re = ACR.reply.id;
+  if (!(await acPush(t, msg))) return;
+  ACR.reply = null; haptic('success'); acRender(); document.getElementById('acMsg')?.focus();
+};
+async function acSendAtt(a, text) {
+  const t = acCur(); if (!t) return;
+  const msg = { m: 1, t: Date.now(), x: text || '', a: a }; if (ACR.reply) msg.re = ACR.reply.id;
+  if (await acPush(t, msg)) { ACR.reply = null; haptic('success'); acRender(); }
+}
+function acCtxCancel() { ACR.reply = null; if (ACR.edit) { ACR.edit = null; const n = document.getElementById('acMsg'); if (n) n.value = ''; } acRender(true); }
+
+/* ── bubbles ── */
+function acAttHtml(m) {
+  const a = m.a;
+  if (!a) return m.ak ? '<div class="ac-file">' + acAttName(m) + '…</div>' : '';
+  if (a.k === 'img') return '<img class="ac-img" alt="Photo" src="' + auEsc(a.d) + '" onclick="event.stopPropagation();acViewImg(this.src)">';
+  if (a.k === 'file') return '<a class="ac-file" href="' + auEsc(a.d) + '" download="' + auEsc(a.n) + '" onclick="event.stopPropagation()">📎 ' + auEsc(a.n) + '<br><small>' + flKb(a.s || 0) + ' · Tap to save</small></a>';
+  if (a.k === 'loc') return '<a class="ac-file" href="' + auEsc(acMapsUrl(a)) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 Shared location<br><small>' + a.lat + ', ' + a.lng + ' · Open in Maps</small></a>';
+  return '';
+}
+function acViewImg(src) {
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;z-index:9890;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;';
+  o.onclick = () => o.remove();
+  o.innerHTML = '<img alt="" style="max-width:100%;max-height:100%;border-radius:10px;" src="' + auEsc(src) + '">';
+  document.body.appendChild(o);
+}
+function acBubble(t, m, i) {
+  const g = acIsG(t), mem = t.members || [];
+  const nm = k => String((mem.find(x => x.key === k) || {}).name || 'Member');
+  const q = m.re ? t.msgs.find(x => x.id === m.re) : null;
+  const quote = m.re ? '<div class="ac-q"><b>' + (q ? auEsc(q.m ? 'You' : (g ? nm(q.f) : String(t.person.name).split(' ')[0])) : 'Message') + '</b>' + (q ? auEsc((q.x || acAttName(q)).slice(0, 80)) : 'Original message') + '</div>' : '';
+  const who = (g && !m.m) ? '<div class="ac-who">' + auEsc(nm(m.f)) + '</div>' : '';
+  const tick = (m.m && !g) ? ' <span style="' + (m.r ? 'color:#7FD1FF;' : '') + '">' + ((m.r || m.d) ? '✓✓' : '✓') + '</span>' : '';
+  return '<div class="dc-bub ' + (m.m ? 'me' : 'th') + ' ac-b" data-mid="' + m.id + '" role="button" tabindex="0" style="cursor:pointer;" onclick="acMsgMenu(' + i + ')" onkeydown="if(event.key===\'Enter\')acMsgMenu(' + i + ')">'
+    + who + quote + acAttHtml(m) + (m.x ? '<div class="ac-t">' + auEsc(m.x) + '</div>' : '')
+    + '<span class="ac-meta">' + (m.p ? '📌 ' : '') + (m.e ? 'edited · ' : '') + acTime(m.t) + tick + '</span></div>';
+}
+function acLastStatus(t, m) {
+  if (acIsG(t)) {
+    const me = (currentEntry && currentEntry.cardId) || '';
+    const n = (t.members || []).filter(x => x.status === 'member' && x.key !== me && x.lastReadAt && Date.parse(x.lastReadAt) >= m.t).length;
+    return n ? 'Seen by ' + n : 'Sent';
+  }
+  return m.r ? 'Read ' + acTime(m.r) : m.d ? 'Delivered' : 'Sent';
+}
+function acJump(id) {
+  const el = document.querySelector('#acMsgs [data-mid="' + id + '"]'); if (!el) return;
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.style.outline = '2px solid #E8CC7A'; setTimeout(() => { el.style.outline = ''; }, 1200);
+}
+function acComposer(t) {
+  const bar = 'flex-shrink:0;background:rgba(236,228,214,.92);border-top:.6px solid rgba(0,0,0,.08);padding:10px 16px max(14px,env(safe-area-inset-bottom));';
+  let ctx = '';
+  if (ACR.edit) ctx = '<div class="ac-rb"><span><b>Editing message</b></span><button type="button" aria-label="Cancel" onclick="acCtxCancel()">×</button></div>';
+  else if (ACR.reply) ctx = '<div class="ac-rb"><span><b>Replying to ' + auEsc(ACR.reply.who) + '</b>' + auEsc(ACR.reply.x) + '</span><button type="button" aria-label="Cancel reply" onclick="acCtxCancel()">×</button></div>';
+  return '<div style="' + bar + '">' + ctx + '<div class="dc-compose" style="gap:8px;"><button type="button" class="ac-plus" aria-label="Add attachment or extension" onclick="acPlus()">+</button>'
+    + '<input id="acMsg" class="dc-in" type="text" maxlength="1000" aria-label="Message" placeholder="' + (ACR.edit ? 'Edit message' : 'Write a message') + '" autocomplete="off" enterkeyhint="send" onkeydown="if(event.key===\'Enter\')acSend()">'
+    + '<button type="button" class="dc-btn" style="width:auto;padding:0 18px;height:48px;" onclick="acSend()">Send</button></div></div>';
+}
+acChatHtml = function (t) {
+  if (ACR.tid !== t.id) { ACR.tid = t.id; ACR.reply = null; ACR.edit = null; }
+  const p = t.person, g = acIsG(t), mem = t.members || [];
+  const incoming = t.msgs.some(m => !m.m), connected = !g && afConnected({ name: p.name }), invited = g && t.status === 'request';
+  const names = mem.filter(x => x.status === 'member').map(x => String(x.name).split(' ')[0]).join(', ');
+  const sub = g ? (names || p.role) : (p.role || '');
+  const dots = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+  const hdr = `<div style="display:flex;align-items:center;gap:10px;padding:max(14px,env(safe-area-inset-top)) 14px 10px;flex-shrink:0;">
+    <button type="button" aria-label="Back" onclick="acBack()" style="${AC_PILL}">${acChev}</button>
+    <button type="button" aria-label="Open info of ${auEsc(p.name)}" onclick="acProfile()" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:none;padding:0;cursor:pointer;text-align:left;">${afAv(p.name, p.av || '#8E8E93', 38, p.photo)}
+      <span style="min-width:0;"><span style="display:flex;align-items:center;gap:5px;${ACF}font-size:16px;font-weight:700;color:#1c1c1e;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${auEsc(p.name)}</span>${p.verified ? acVer() : ''}</span><span style="display:block;${ACF}font-size:12px;color:rgba(60,60,67,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${auEsc(sub)}</span></span></button>
+    <button type="button" aria-label="More options" onclick="acProfile()" style="${AC_PILL}">${dots}</button></div>`;
+  const pin = t.msgs.filter(m => m.p).slice(-1)[0];
+  const pinH = pin ? `<div class="ac-pin" role="button" tabindex="0" onclick="acJump('${pin.id}')">📌 ${auEsc((pin.x || acAttName(pin)).slice(0, 70))}</div>` : '';
+  const intro = `<div style="text-align:center;padding:10px 0 6px;"><div style="display:flex;justify-content:center;margin-bottom:8px;">${afAv(p.name, p.av || '#8E8E93', 64, p.photo)}</div><div class="dc-name">${auEsc(p.name)}</div><div class="dc-role">${auEsc(g ? mem.filter(x => x.status === 'member').length + ' members' : (p.role || ''))}</div></div>`
+    + (invited && names ? `<div class="dc-note" style="text-align:center;">Members: ${auEsc(names)}</div>` : '')
+    + (!g && !incoming && !connected && t.msgs.length ? `<div class="dc-note" style="text-align:center;">Your message is in their requests until they reply.</div>` : '')
+    + (t.restricted ? `<div class="dc-note" style="text-align:center;">Restricted. They can't see when you read their messages.</div>` : '');
+  let lastOwn = -1; for (let i = t.msgs.length - 1; i >= 0; i--) if (t.msgs[i].m) { lastOwn = i; break; }
+  const bubbles = invited ? '' : t.msgs.map((m, i) => acBubble(t, m, i)
+    + (m.c ? `<div class="dc-note" style="align-self:${m.m ? 'flex-end' : 'flex-start'};text-align:${m.m ? 'right' : 'left'};margin:-4px 4px 2px;">Replied to a story: “${auEsc(m.c.snip || 'Photo')}”</div>` : '')
+    + (i === lastOwn ? `<div class="dc-note" style="align-self:flex-end;font-size:10.5px;margin:-4px 4px 2px;">${auEsc(acLastStatus(t, m))}</div>` : '')).join('');
+  const bar = 'flex-shrink:0;background:rgba(236,228,214,.92);border-top:.6px solid rgba(0,0,0,.08);padding:10px 16px max(14px,env(safe-area-inset-bottom));';
+  const bottom = t.status === 'request'
+    ? `<div style="${bar}"><div class="dc-note" style="text-align:center;margin-bottom:10px;">${g ? 'You were invited to this group. Accept to see and send messages.' : auEsc(p.name.split(' ')[0]) + " is not connected with you. Accept to reply. They won't know you've read this."}</div><div style="display:flex;gap:8px;"><button type="button" class="dc-btn alt" onclick="acDecline()">Decline</button><button type="button" class="dc-btn" onclick="acAccept()">Accept</button></div>${g ? '' : `<button type="button" class="dc-btn link" style="color:#FF453A;margin-top:4px;" onclick="acBlockAsk()">Block</button>`}</div>`
+    : acComposer(t);
+  return `${hdr}${pinH}<div class="dc-msgs" id="acMsgs" role="log" aria-live="polite" style="padding:8px 16px;">${intro}${bubbles}</div>${bottom}`;
+};
+
+/* ── message menu: Reply / Forward / Copy / Edit / More ── */
+function acMenuRow(label, js, color) {
+  return `<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="closeAuGenericModal('acMmOverlay');closeAuGenericModal('acMoOverlay');setTimeout(()=>{${js}},260);"><div class="os-row-text"><div class="os-row-title"${color ? ` style="color:${color};"` : ''}>${label}</div></div></div>`;
+}
+acMsgMenu = function (i) {
+  const t = acCur(); if (!t || !t.msgs[i]) return; const m = t.msgs[i]; haptic('light');
+  const canEdit = m.m && !!m.x && Date.now() - m.t < 9e5;
+  auMakeSheet('acMmOverlay', 'Message', `<div style="${ACF}font-size:13.5px;color:rgba(60,60,67,.7);background:rgba(255,255,255,.72);border-radius:14px;padding:12px 14px;margin:-4px 0 12px;white-space:pre-wrap;word-break:break-word;max-height:20vh;overflow:auto;">${auEsc(m.x || acAttName(m))}</div>
+    <div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${acMenuRow('Reply', `acReply(${i})`)}${acMenuRow('Forward', `acForward(${i})`)}${acMenuRow('Copy', `acMsgCopy(${i})`)}${canEdit ? acMenuRow('Edit', `acEditStart(${i})`) : ''}${acMenuRow('More…', `acMore(${i})`)}</div>`);
+};
+acMsgCopy = function (i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return;
+  ntCopy(m.x || (m.a && m.a.k === 'loc' ? acMapsUrl(m.a) : acAttName(m)), 'Copied');
+};
+function acReply(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return;
+  const who = m.m ? 'yourself' : (acIsG(t) ? String(((t.members || []).find(x => x.key === m.f) || {}).name || 'Member').split(' ')[0] : String(t.person.name).split(' ')[0]);
+  ACR.edit = null; ACR.reply = { id: m.id, x: (m.x || acAttName(m)).slice(0, 80), who: who };
+  acRender(true); setTimeout(() => document.getElementById('acMsg')?.focus(), 60);
+}
+function acEditStart(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m || !m.m) return;
+  ACR.reply = null; ACR.edit = { id: m.id }; acRender(true);
+  const n = document.getElementById('acMsg'); if (n) { n.value = m.x; n.focus(); }
+}
+function acMore(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return; haptic('light');
+  auMakeSheet('acMoOverlay', 'More', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${acMenuRow('Set a reminder', `acRemind(${i})`)}${acMenuRow('Forward', `acForward(${i})`)}${acIsG(t) ? '' : acMenuRow(m.p ? 'Unpin' : 'Pin', `acPin(${i})`)}${acMenuRow('Delete', `acDelMsgAsk(${i})`, '#FF453A')}</div>`);
+}
+async function acPin(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return; const on = !m.p;
+  try { await acSrv('ownerChatPin', { peer: t.id, id: m.id, pinned: on }); } catch (e) { haptic('error'); showToast("Couldn't update pin", 'error'); return; }
+  m.p = on; haptic('success'); acRender(true);
+}
+function acDelMsgAsk(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return; const g = acIsG(t);
+  if (g && !m.m) { haptic('error'); showToast('You can only delete your own messages in a group', 'neutral'); return; }
+  auMakeSheet('acMmOverlay', 'Delete message', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${g ? '' : acMenuRow('Delete for me', `acMsgDel(${i},false)`, '#FF453A')}${m.m ? acMenuRow('Delete for everyone', `acMsgDel(${i},true)`, '#FF453A') : ''}</div>`);
+}
+acMsgDel = function (i, everyone) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return; haptic('medium');
+  confirmDialog({ title: everyone ? 'Delete for everyone?' : 'Delete this message?', message: everyone ? 'It is removed for everyone in this chat.' : 'Removed from your side only.', confirmLabel: 'Delete', danger: true, onConfirm: async () => {
+    try {
+      if (acIsG(t)) await acSrv('ownerGroupDelete', { peer: t.id, ids: [m.id] });
+      else await acSrv('ownerChatDelete', { peer: t.id, ids: [m.id], everyone: !!everyone });
+    } catch (e) { haptic('error'); showToast("Couldn't delete message", 'error'); return; }
+    t.msgs = t.msgs.filter(x => x.id !== m.id); if (t.msgs.length) t.t = acLast(t).t;
+    haptic('success'); acRender(true); acMount();
+  } });
+};
+
+/* ── forward ── */
+function acForward(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return; haptic('light');
+  window._acFw = m;
+  const L = acVisible().filter(x => !acIsReq(x)).sort((a, b) => b.t - a.t); window._acFwL = L;
+  auMakeSheet('acFwOverlay', 'Forward to', L.length
+    ? `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${L.map((x, k) => `<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="acFwSend(${k})">${afAv(x.person.name, x.person.av || '#8E8E93', 38, x.person.photo)}<div class="os-row-text"><div class="os-row-title">${auEsc(x.person.name)}</div><div class="os-row-sub">${x.isGroup ? 'Group' : auEsc(x.person.role || '')}</div></div></div>`).join('')}</div>`
+    : '<div class="up-empty-card">No chats to forward to</div>');
+}
+async function acFwSend(k) {
+  const m = window._acFw, t = (window._acFwL || [])[k]; if (!m || !t) return;
+  closeAuGenericModal('acFwOverlay');
+  if (await acPush(t, { m: 1, t: Date.now(), x: m.x ? '↪ ' + m.x : '', a: m.a || null })) {
+    haptic('success'); showToast('Forwarded to ' + String(t.person.name).split(' ')[0], 'success');
+    if (ACV.tid === t.id) acRender(true);
+  }
+}
+
+/* ── reminders (local sa device na ito) ── */
+const AC_REM_KEY = 'ac-reminders-v1';
+const acRemRead = () => { try { return JSON.parse(localStorage.getItem(AC_REM_KEY) || '[]') || []; } catch (e) { return []; } };
+const acRemWrite = L => { try { localStorage.setItem(AC_REM_KEY, JSON.stringify(L.slice(-50))); } catch (e) {} };
+function acRemind(i) {
+  const t = acCur(), m = t && t.msgs[i]; if (!m) return; haptic('light');
+  window._acRm = { tid: t.id, who: t.person.name, x: (m.x || acAttName(m)).slice(0, 120) };
+  const eve = new Date(); eve.setHours(20, 0, 0, 0); const tonight = eve.getTime() > Date.now() + 6e4; if (!tonight) eve.setDate(eve.getDate() + 1);
+  const tom = new Date(); tom.setDate(tom.getDate() + 1); tom.setHours(9, 0, 0, 0);
+  const opt = (l, ts) => `<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="acRemSet(${ts})"><div class="os-row-text"><div class="os-row-title">${l}</div></div></div>`;
+  auMakeSheet('acRemOverlay', 'Set a reminder', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${opt('In 1 hour', Date.now() + 36e5)}${opt((tonight ? 'Tonight' : 'Tomorrow') + ', 8 PM', eve.getTime())}${opt('Tomorrow, 9 AM', tom.getTime())}</div>
+    <input id="acRemAt" type="datetime-local" class="am-input" aria-label="Custom date and time" style="margin:12px 0 8px;"><button type="button" class="dc-btn" onclick="acRemCustom()">Set custom time</button>
+    <div class="dc-note" style="margin:8px 2px 0;">Reminders ring on this device while articardd is open.</div>`);
+}
+function acRemCustom() { const ts = new Date(document.getElementById('acRemAt')?.value || '').getTime(); if (!ts || ts <= Date.now()) { haptic('error'); showToast('Pick a future date and time', 'error'); return; } acRemSet(ts); }
+function acRemSet(ts) {
+  const r = window._acRm; if (!r) return;
+  const L = acRemRead(); L.push({ id: 'r' + Date.now(), at: ts, tid: r.tid, who: r.who, x: r.x }); acRemWrite(L);
+  try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+  closeAuGenericModal('acRemOverlay'); haptic('success');
+  showToast('Reminder set · ' + new Date(ts).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }), 'success');
+}
+setInterval(function () {
+  const L = acRemRead(), now = Date.now(), due = L.filter(r => r.at <= now); if (!due.length) return;
+  acRemWrite(L.filter(r => r.at > now));
+  due.forEach(r => {
+    haptic('success');
+    try { if (window.Notification && Notification.permission === 'granted') new Notification('Reminder · ' + r.who, { body: r.x }); } catch (e) {}
+    auMakeSheet('acDue' + r.id, '⏰ Reminder', `<div style="${ACF}font-size:13.5px;color:rgba(60,60,67,.7);background:rgba(255,255,255,.72);border-radius:14px;padding:12px 14px;margin:-4px 0 12px;white-space:pre-wrap;word-break:break-word;"><b>${auEsc(r.who)}</b><br>${auEsc(r.x)}</div>
+      <button type="button" class="dc-btn" onclick="closeAuGenericModal('acDue${r.id}');acOpenModal({tid:'${r.tid}',origin:'inbox'})">Open chat</button>`);
+  });
+}, 20000);
+
+/* ── "+" extensions ── */
+function acPlus() {
+  const t = acCur(); if (!t) return; haptic('light');
+  const tile = (bg, e, l, js) => `<button type="button" class="ac-tile" onclick="closeAuGenericModal('acPlusOverlay');setTimeout(()=>{${js}},260)"><span style="background:${bg};">${e}</span>${l}</button>`;
+  auMakeSheet('acPlusOverlay', 'Add to chat', `<div class="ac-grid">${tile('#FF9F0A', '📷', 'Photos', 'acPickPhoto()')}${tile('#4A9DE0', '📎', 'Files', 'acPickFile()')}${tile('#34C759', '📍', 'Location', 'acShareLoc()')}${tile('#8E8E93', '🧮', 'Calculator', 'acCalc()')}${acIsG(t) ? '' : tile('#FF453A', '📅', 'Book a meeting', 'acBookMeeting()')}${tile('#9B59B6', '🎮', 'Play games', 'acGames()')}</div>`);
+}
+function acHiddenInput(accept, cb) {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = accept;
+  inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+  inp.addEventListener('change', () => { const f = inp.files && inp.files[0]; inp.remove(); if (f) cb(f); });
+  document.body.appendChild(inp); inp.click();
+}
+function acPickPhoto() {
+  acHiddenInput('image/*', async f => {
+    const d = await afReadImg(f);
+    if (!d || d.length > 390000) { haptic('error'); showToast("Can't use that photo", 'error'); return; }
+    acSendAtt({ k: 'img', d: d }, '');
+  });
+}
+function acPickFile() {
+  acHiddenInput('*/*', f => {
+    if (f.size > 280000) { haptic('error'); showToast('Files up to ~280 KB for now', 'neutral'); return; }
+    const rd = new FileReader();
+    rd.onload = () => { const d = String(rd.result || ''); if (!/^data:/.test(d)) { showToast("Can't read that file", 'error'); return; } acSendAtt({ k: 'file', d: d, n: f.name, s: f.size }, ''); };
+    rd.onerror = () => showToast("Can't read that file", 'error');
+    rd.readAsDataURL(f);
+  });
+}
+function acShareLoc() {
+  if (!navigator.geolocation) { haptic('error'); showToast('Location is not supported on this device', 'error'); return; }
+  confirmDialog({ title: 'Share your current location?', message: 'A one-time pin of where you are right now. It is not tracked live.', confirmLabel: 'Share', onConfirm: () => {
+    navigator.geolocation.getCurrentPosition(
+      pos => acSendAtt({ k: 'loc', lat: pos.coords.latitude, lng: pos.coords.longitude }, ''),
+      () => { haptic('error'); showToast('Allow location access to share it', 'error'); },
+      { enableHighAccuracy: true, timeout: 10000 });
+  } });
+}
+function acBookMeeting() {
+  const t = acCur(); if (!t) return; const c = afContactOf(t.person.name);
+  openAddMeeting({ name: t.person.name, email: t.person.email || (c && c.email) || '', org: (c && c.company) || '', phone: t.person.phone || (c && c.mobile) || '' });
+}
+function acGames() {
+  const t = acCur(); haptic('light');
+  const url = NT_H + 'arcade.artiplay.app/';
+  window._acGameUrl = url;
+  auMakeSheet('acGameOverlay', 'Play games', `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">
+    <div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="window.open(window._acGameUrl,'_blank','noopener');closeAuGenericModal('acGameOverlay')"><div class="os-row-text"><div class="os-row-title">Play now on Owlbound</div><div class="os-row-sub">Opens the arcade</div></div></div>
+    <div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="acGameInvite()"><div class="os-row-text"><div class="os-row-title">Invite ${auEsc(t ? String(t.person.name).split(' ')[0] : '')} to play</div><div class="os-row-sub">Sends the link, then opens the arcade</div></div></div></div>`);
+}
+function acGameInvite() {
+  const t = acCur(), url = window._acGameUrl; closeAuGenericModal('acGameOverlay');
+  window.open(url, '_blank', 'noopener');
+  if (t) acPush(t, { m: 1, t: Date.now(), x: "🎮 Let's play on Owlbound: " + url }).then(ok => { if (ok && ACV.tid === t.id) acRender(true); });
+}
+
+/* ── calculator ── */
+var _ca = { e: '', last: '', done: false };
+function acCalcVal(s) {
+  if (!s) return NaN;
+  const e = s.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/%/g, '/100');
+  if (!/^[0-9+\-*/.() ]+$/.test(e)) return NaN;
+  try { const v = Function('"use strict";return (' + e + ')')(); return (typeof v === 'number' && isFinite(v)) ? +v.toFixed(8) : NaN; } catch (x) { return NaN; }
+}
+function acCalc() { _ca = { e: '', last: '', done: false }; auMakeSheet('acCalcOverlay', 'Calculator', '<div id="acCalcBody"></div>'); acCalcPaint(); }
+function acCalcPaint() {
+  const w = document.getElementById('acCalcBody'); if (!w) return;
+  const keys = ['C', '⌫', '%', '÷', '7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+'];
+  const k = (x, cls, span) => `<button type="button" class="ac-k ${cls || ''}" ${span ? 'style="grid-column:span 2"' : ''} data-k="${x}" onclick="acCalcKey(this.dataset.k)">${x}</button>`;
+  w.innerHTML = `<div class="ac-disp"><small>${auEsc(_ca.last || '')}</small><div>${auEsc(_ca.e || '0')}</div></div>
+    <div class="ac-keys">${keys.map(x => k(x, '÷×−+'.indexOf(x) > -1 ? 'op' : (x === 'C' || x === '⌫' || x === '%') ? 'fn' : '')).join('')}${k('0', '', 1)}${k('.')}${k('=', 'op')}</div>
+    <button type="button" class="dc-btn" style="margin-top:12px;" onclick="acCalcSend()">Send to chat</button>`;
+}
+function acCalcKey(k) {
+  haptic('light');
+  if (k === 'C') _ca = { e: '', last: '', done: false };
+  else if (k === '⌫') { _ca.e = _ca.e.slice(0, -1); _ca.done = false; }
+  else if (k === '=') { const v = acCalcVal(_ca.e); if (isNaN(v)) { haptic('error'); return; } _ca.last = _ca.e + ' = ' + v; _ca.e = String(v); _ca.done = true; }
+  else { if (_ca.done && /[0-9.]/.test(k)) _ca.e = ''; _ca.done = false; _ca.e += k; }
+  acCalcPaint();
+}
+function acCalcSend() {
+  let txt = _ca.last; if (!txt) { const v = acCalcVal(_ca.e); if (!isNaN(v)) txt = _ca.e + ' = ' + v; }
+  if (!txt) { haptic('error'); showToast('Nothing to send yet', 'neutral'); return; }
+  closeAuGenericModal('acCalcOverlay'); acSendAtt(null, '🧮 ' + txt);
+}
+
+/* ── groups ── */
+const _acAccept0 = acAccept;
+acAccept = async function () {
+  const t = acCur();
+  if (t && acIsG(t)) {
+    try { await acSrv('ownerGroupRespond', { peer: t.id, accept: true }); t.status = 'inbox'; haptic('success'); await acLoadThread(t.id, true); acMount(); }
+    catch (e) { haptic('error'); showToast("Couldn't join the group", 'error'); }
+    return;
+  }
+  return _acAccept0.apply(this, arguments);
+};
+const _acDelThread0 = acDeleteThread;
+acDeleteThread = async function (id) {
+  if (String(id).indexOf('G-') === 0) {
+    try { await acSrv('ownerGroupLeave', { peer: id }); AC.threads = AC.threads.filter(x => x.id !== id); acMount(); return true; }
+    catch (e) { haptic('error'); showToast("Couldn't leave the group", 'error'); return false; }
+  }
+  return _acDelThread0.apply(this, arguments);
+};
+const _acDelAsk0 = acDelAsk;
+acDelAsk = function (id) {
+  const t = id ? AC.threads.find(x => x.id === id) : acCur();
+  if (t && acIsG(t)) {
+    haptic('medium');
+    confirmDialog({ title: 'Leave ' + t.person.name + '?', message: "You'll stop receiving messages from this group.", confirmLabel: 'Leave', danger: true, onConfirm: async () => {
+      if (!(await acDeleteThread(t.id))) return;
+      haptic('success'); showToast('You left the group', 'neutral');
+      if (ACV.tid === t.id) { ACV.tid = null; if (ACV.origin === 'inbox') acRender(); else acClose(); } else acPaintList();
+    } });
+    return;
+  }
+  return _acDelAsk0.apply(this, arguments);
+};
+const _acProfile0 = acProfile;
+acProfile = function () { const t = acCur(); if (t && acIsG(t)) return agInfo(); return _acProfile0.apply(this, arguments); };
+function agInfo() {
+  const t = acCur(); if (!t || !acIsG(t)) return; haptic('light');
+  const me = (currentEntry && currentEntry.cardId) || '';
+  const rows = (t.members || []).map(x => `<div class="os-row">${afAv(x.name, '#8E8E93', 36)}<div class="os-row-text"><div class="os-row-title">${auEsc(x.name)}${x.key === me ? ' (You)' : ''}</div><div class="os-row-sub">${x.status === 'invited' ? 'Invited · waiting to accept' : auEsc(x.role || 'Member')}${x.owner ? ' · Admin' : ''}</div></div></div>`).join('');
+  auMakeSheet('agInfoOverlay', auEsc(t.person.name), `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;margin-bottom:12px;max-height:40vh;overflow-y:auto;">${rows || '<div class="up-empty-card">No members</div>'}</div>
+    <button type="button" class="dc-btn" style="margin-bottom:8px;" onclick="closeAuGenericModal('agInfoOverlay');setTimeout(()=>agForm('add'),260)">Add people</button>
+    <button type="button" class="dc-btn alt" style="color:#FF453A;" onclick="closeAuGenericModal('agInfoOverlay');setTimeout(()=>acDelAsk('${t.id}'),260)">Leave group</button>`);
+}
+function agForm(mode) {
+  const t = mode === 'add' ? acCur() : null;
+  const bold = 'font-weight:700;color:#1c1c1e;';
+  auMakeSheet('agFormOverlay', mode === 'add' ? 'Add people' : 'New group',
+    (mode === 'add' ? '' : '<input id="agName" class="am-input" maxlength="50" placeholder="Group name" aria-label="Group name" style="margin-bottom:12px;">')
+    + `<div class="dc-note" style="${bold}margin:0 2px 8px;">Your contacts on articardd</div><div id="agPick"><div class="dc-note" style="text-align:center;padding:12px 0;">Finding your contacts…</div></div>
+    <div class="dc-note" style="${bold}margin:14px 2px 8px;">Add by Card ID or phone number</div>
+    <textarea id="agExtra" class="am-input" aria-label="Card IDs or phone numbers" style="min-height:70px;" placeholder="C-7F82KQ, 0917 123 4567"></textarea>
+    <div class="dc-note" style="margin:6px 2px 14px;">Everyone gets an invite. Whoever accepts joins the group. Numbers must belong to someone with an articardd.</div>
+    <button type="button" id="agGo" class="dc-btn" onclick="agSubmit('${mode}')">${mode === 'add' ? 'Send invites' : 'Create group'}</button>`);
+  agLoadPick(new Set(t ? (t.members || []).map(x => x.key) : []));
+}
+async function agLoadPick(skip) {
+  let L = [];
+  try {
+    const items = ADDRESS_BOOK.filter(c => c.emails.length || c.phones.length).slice(0, 300).map(c => ({ id: c.id, emails: c.emails.slice(0, 3), phones: c.phones.slice(0, 3) }));
+    if (items.length) {
+      const r = await acSrv('ownerChatFind', { items: items }), seen = new Set();
+      Object.keys((r && r.matches) || {}).forEach(k => { const p = acPerson(r.matches[k]); if (!seen.has(p.key) && !skip.has(p.key)) { seen.add(p.key); L.push(p); } });
+    }
+  } catch (e) {}
+  window._agC = L;
+  const w = document.getElementById('agPick'); if (!w) return;
+  w.innerHTML = L.length
+    ? `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;max-height:30vh;overflow-y:auto;">${L.map((p, i) => `<label class="os-row" style="cursor:pointer;">${afAv(p.name, p.av, 36, p.photo)}<div class="os-row-text"><div class="os-row-title">${auEsc(p.name)}</div><div class="os-row-sub">${auEsc(p.role || '')}</div></div><input type="checkbox" class="agck" value="${i}" aria-label="Add ${auEsc(p.name)}" style="width:22px;height:22px;"></label>`).join('')}</div>`
+    : '<div class="dc-note" style="text-align:center;padding:12px 0;">None of your contacts are on articardd yet. Use a Card ID or number below.</div>';
+}
+async function agSubmit(mode) {
+  const t = mode === 'add' ? acCur() : null;
+  const name = mode === 'add' ? '' : (document.getElementById('agName').value || '').trim();
+  if (mode !== 'add' && !name) { haptic('error'); showToast('Name your group', 'error'); return; }
+  const members = [...document.querySelectorAll('.agck:checked')].map(c => (window._agC[+c.value] || {}).key).filter(Boolean), phones = [];
+  (document.getElementById('agExtra').value || '').split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).forEach(s => { if (/^c-/i.test(s)) members.push(s.toUpperCase()); else phones.push(s); });
+  if (!members.length && !phones.length) { haptic('error'); showToast('Pick at least one person', 'error'); return; }
+  const b = document.getElementById('agGo'); if (b) { b.disabled = true; b.textContent = 'Sending…'; }
+  try {
+    const r = await acSrv(mode === 'add' ? 'ownerGroupAdd' : 'ownerGroupCreate', mode === 'add' ? { peer: t.id, members: members, phones: phones } : { name: name, members: members, phones: phones });
+    haptic('success'); closeAuGenericModal('agFormOverlay');
+    if (r.missing && r.missing.length) showToast(r.missing.length + ' number(s) are not on articardd yet', 'neutral');
+    else showToast(mode === 'add' ? 'Invites sent' : 'Group created', 'success');
+    if (mode === 'add') acLoadThread(t.id, true);
+    else { await acLoadThread(r.id, true); acOpenThread(r.id, 'inbox'); }
+  } catch (e) { haptic('error'); showToast(String((e && e.message) || "Couldn't continue"), 'error'); if (b) { b.disabled = false; b.textContent = mode === 'add' ? 'Send invites' : 'Create group'; } }
+}
+/* "New group chat" button sa New ArtiChat sheet */
+const _acNew0 = acNew;
+acNew = function () {
+  _acNew0.apply(this, arguments);
+  const i = document.getElementById('acNewId'), row = i && i.parentElement; if (!row) return;
+  row.insertAdjacentHTML('beforebegin', `<button type="button" class="dc-btn alt" style="margin-bottom:12px;" onclick="closeAuGenericModal('acNewOverlay');setTimeout(()=>agForm('new'),260)">New group chat</button>`);
+};
+/* === END: ARTICHATS v3 === */
 /* === END: ARTICHATS v2 === */
 /* === END: ARTICHATS === */
 /* === END: AFFINITY === */
 
+/* === START: AFFINITY BIG STORY + ARTICHATS GLOBAL FAB === */
+(function () {
+  if (document.getElementById('acFabCss')) return;
+  const st = document.createElement('style'); st.id = 'acFabCss';
+  st.textContent = `
+  /* 1 malaking story kada view */
+  #afBody .af-rail{gap:14px;margin:8px 0 0;padding:8px 0 26px;}
+  #afBody .af-rail .af-tile{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;gap:10px;}
+  #afBody .af-rail .af-card{width:100%;max-width:none;aspect-ratio:4/5;max-height:62vh;border-radius:28px;transform:none;box-shadow:0 10px 30px rgba(0,0,0,.16);}
+  #afBody .af-rail .af-card .in{border-radius:28px;padding:26px;font-size:24px;line-height:1.3;}
+  #afBody .af-rail .af-card .cl{font-size:24px;-webkit-line-clamp:10;}
+  #afBody .af-rail .af-card .ly{border-radius:28px;}
+  #afBody .af-rail .af-badge{right:14px;bottom:14px;}
+  #afBody .af-rail .af-badge > div{width:52px !important;height:52px !important;font-size:20px !important;}
+  #afBody .af-rail .af-nm{font-size:17px;}
+  #afBody .af-rail .af-ago{font-size:13px;}
+  /* ArtiChats global floating button */
+  #acFab{position:fixed;left:0;top:0;z-index:9790;width:56px;height:56px;border-radius:50%;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 16px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.7);color:#1c1c1e;display:none;align-items:center;justify-content:center;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer;will-change:transform;}
+  #acFab.show{display:flex;}
+  #acFab.snap{transition:transform .38s cubic-bezier(.34,1.3,.5,1);}
+  #acFab.drag{opacity:.9;box-shadow:0 8px 24px rgba(0,0,0,.28);}
+  #acFab .b{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#FF453A;border:2px solid #ECE4D6;color:#fff;font:700 11px/16px -apple-system,'SF Pro Text',sans-serif;text-align:center;display:none;}
+  #acFab .b.on{display:block;}
+  body.public-mode #acFab{display:none !important;}`;
+  document.head.appendChild(st);
+
+  const SZ = 56, M = 8, KEY = 'ac-fab-pos';
+  const fab = document.createElement('button');
+  fab.id = 'acFab'; fab.type = 'button'; fab.setAttribute('aria-label', 'ArtiChats');
+  fab.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/></svg><span class="b" id="acFabB"></span>';
+  document.body.appendChild(fab);
+
+  let pos = { s: 'r', y: .72 };
+  try { const j = JSON.parse(localStorage.getItem(KEY) || 'null'); if (j && (j.s === 'l' || j.s === 'r') && typeof j.y === 'number') pos = j; } catch (e) {}
+  const minY = () => 60, maxY = () => Math.max(minY(), innerHeight - SZ - 96);
+  const clampY = y => Math.min(maxY(), Math.max(minY(), y));
+  const place = (x, y) => { fab.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)'; };
+  function home(anim) {
+    const x = pos.s === 'l' ? M : innerWidth - SZ - M, y = clampY(pos.y * innerHeight);
+    fab.classList.toggle('snap', !!anim); place(x, y);
+  }
+  home(false);
+  window.addEventListener('resize', () => home(false));
+
+  let d = null, moved = false;
+  fab.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const r = fab.getBoundingClientRect();
+    d = { id: e.pointerId, ox: e.clientX - r.left, oy: e.clientY - r.top, sx: e.clientX, sy: e.clientY };
+    moved = false;
+    try { fab.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  fab.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    if (!moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return;
+    if (!moved) { moved = true; fab.classList.remove('snap'); fab.classList.add('drag'); haptic('light'); }
+    const x = Math.min(innerWidth - SZ - 2, Math.max(2, e.clientX - d.ox));
+    const y = clampY(e.clientY - d.oy);
+    place(x, y);
+    d.x = x; d.y = y;
+    e.preventDefault();
+  });
+  const end = e => {
+    if (!d || e.pointerId !== d.id) return;
+    const s = d; d = null;
+    try { fab.releasePointerCapture(e.pointerId); } catch (_) {}
+    fab.classList.remove('drag');
+    if (moved) {
+      pos = { s: (s.x + SZ / 2) < innerWidth / 2 ? 'l' : 'r', y: s.y / innerHeight };
+      try { localStorage.setItem(KEY, JSON.stringify(pos)); } catch (_) {}
+      haptic('light'); home(true);
+      return;
+    }
+    if (e.type === 'pointercancel') return;
+    haptic('medium');
+    const c = acCounts();
+    acOpenModal({ tab: (!c.unread && c.req) ? 'requests' : 'inbox' });
+  };
+  fab.addEventListener('pointerup', end);
+  fab.addEventListener('pointercancel', end);
+
+  function badge() {
+    const b = document.getElementById('acFabB'); if (!b) return;
+    let n = 0; try { const c = acCounts(); n = c.unread + c.req; } catch (e) {}
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.classList.toggle('on', n > 0);
+    fab.setAttribute('aria-label', 'ArtiChats' + (n ? ', ' + n + ' new' : ''));
+  }
+  function vis() {
+    const gate = document.getElementById('screenGate');
+    const on = acOk() && !ACV.open && !document.body.classList.contains('public-mode') && !(gate && gate.classList.contains('show'));
+    fab.classList.toggle('show', !!on);
+    if (on) badge();
+  }
+  setInterval(vis, 600);
+  vis();
+
+  /* alisin ang dating bilog sa loob ng Affinity; badge na lang ang ina-update */
+  acMount = function () { const o = document.getElementById('acEntry'); if (o) o.remove(); badge(); };
+  acMount();
+  try { afRender(true); } catch (e) {}
+})();
+/* === END: AFFINITY BIG STORY + ARTICHATS GLOBAL FAB === */
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */
 const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat deploy */
 (function () {

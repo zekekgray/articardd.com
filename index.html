@@ -12848,7 +12848,7 @@ function copyPIAthId() {
 
   /* === START: ACCESSIBILITY LAYER === */
   (function a11yLayer() {
-    const DIALOG_SEL = '.share-overlay,.cf-overlay,.fb-overlay,.gs-overlay,#cardMenuOverlay,#cardFilterOverlay,#physOrderOverlay,#addContactScreen,#noteEditorScreen,#fileEditorScreen,#contactDetailScreen,#screenAccount,#personalInfoScreen,#identityScreen,#licenseScreen,#tosScreen,#screenOS,#artimeetOverlay,#requestMgrScreen,#storyOverlay,#confirmDialogOverlay,#sampleCardOverlay,#publicCta';
+    const DIALOG_SEL = '.share-overlay,.cf-overlay,.fb-overlay,.gs-overlay,#cardMenuOverlay,#cardFilterOverlay,#physOrderOverlay,#addContactScreen,#noteEditorScreen,#fileEditorScreen,#contactDetailScreen,#screenAccount,#personalInfoScreen,#identityScreen,#licenseScreen,#tosScreen,#screenOS,#artimeetOverlay,#requestMgrScreen,#storyOverlay,#confirmDialogOverlay,#sampleCardOverlay,#publicCta,#artichatsScreen';
     const CLICKABLE = '[onclick]:not(button):not(input):not(select):not(textarea):not(a[href]),.ab-row,.ab-tag,.theme-dot-wrap,.au-nomatch-row,.id-checkbox';
     const ERR_SEL = '.ac-err,.cf-fe,.id-err-msg,.err-msg';
     /* === START: KEEP BANNER === */
@@ -12871,7 +12871,7 @@ function copyPIAthId() {
     const CLOSERS = {
       artimeetOverlay:'closeArtimeet', requestMgrScreen:'closeRequestManager', storyOverlay:'closeStory',
       addContactScreen:'requestCloseAddContact', noteEditorScreen:'requestCloseNoteEditor', fileEditorScreen:'flRequestClose', contactDetailScreen:'requestCloseContactDetail',
-      confirmDialogOverlay:'cancelConfirmDialog',
+      confirmDialogOverlay:'cancelConfirmDialog', artichatsScreen:'acBack', artichatsScreen:'acBack',
       screenAccount:'closeAccountPage', personalInfoScreen:'closePersonalInfoScreen', identityScreen:'closeIdentityScreen',
       licenseScreen:'closeLicenseScreen', tosScreen:'closeTosScreen', screenOS:'exitOS',
       cardMenuOverlay:'closeCardMenu', gsOverlay:'closeGlobalSearch'
@@ -17995,7 +17995,7 @@ function flDelete() {
   const sc = document.getElementById('screenCard'); if (sc) sc.style.touchAction = 'pan-y';
 
   const blocked = () => document.body.classList.contains('public-mode') ||
-    !!document.querySelector('.share-overlay.show,.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#screenGate.show,#screenOS.active,#screenAccount.active,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#confirmDialogOverlay,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardMenuOverlay[style*="flex"]') ||
+    !!document.querySelector('.share-overlay.show,.cf-overlay.show,.fb-overlay.show,.gs-overlay.show,#screenGate.show,#screenOS.active,#screenAccount.active,#storyOverlay,#sampleCardOverlay,#artimeetOverlay,#publicCta,#confirmDialogOverlay,#licenseScreen.show,#identityScreen.show,#tosScreen.show,#cardMenuOverlay[style*="flex"],#artichatsScreen') ||
     !document.getElementById('screenCard') || !window.currentEntry && typeof currentEntry === 'undefined';
   setInterval(() => { const b = blocked(); grip.style.opacity = b ? '0' : '1'; zone.style.pointerEvents = b ? 'none' : ''; }, 500);
 
@@ -20302,6 +20302,334 @@ function afMsgSend(id) {
   window.location.href = 'sms:' + intl + (apple ? '&' : '?') + 'body=' + encodeURIComponent(t);
 }
 /* === END: AFFINITY VIEWER v3 === */
+/* === START: ARTICHATS (Affinity bottom entry + independent messaging modal) === */
+const AC_KEY = 'artichats-v1', ACF = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+const AC_PILL = "display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:50%;border:0.6px solid rgba(255,255,255,0.9);background:rgba(255,255,255,0.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 2px 8px rgba(0,0,0,0.10);color:#1c1c1e;cursor:pointer;padding:0;flex:none;-webkit-tap-highlight-color:transparent;";
+const AC_FILTERS = [['all', 'All'], ['unread', 'Unread'], ['unanswered', 'Unanswered'], ['verified', 'Verified']];
+let AC = { threads: [], seeded: 0 }, ACV = { open: false, tab: 'inbox', filter: 'all', q: '', tid: null, origin: 'inbox' }, _acLoaded = false;
+
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '.ac-row{cursor:pointer;min-height:64px;transition:background .12s;}.ac-row:active{background:rgba(0,0,0,.04);}.ac-row:focus-visible{outline:2px solid #1c1c1e;outline-offset:-3px;}';
+  document.head.appendChild(st);
+  /* every sheet opened while ArtiChats is open must sit above it */
+  const _m = auMakeSheet;
+  auMakeSheet = function (id) { _m.apply(this, arguments); if (ACV.open) { const o = document.getElementById(id); if (o) o.style.zIndex = '9860'; } };
+})();
+
+/* ── storage ── */
+async function acSave() { try { return !!(await window.storage.set(AC_KEY, JSON.stringify(AC), false)); } catch (e) { return false; } }
+async function acCommit(fn) {
+  const snap = JSON.stringify(AC); fn();
+  if (await acSave()) { acMount(); return true; }
+  AC = JSON.parse(snap); haptic('error'); showToast("Couldn't save", 'error'); return false;
+}
+async function acLoad() {
+  if (_acLoaded) return; _acLoaded = true;
+  try { const r = await window.storage.get(AC_KEY, false); if (r && r.value) AC = Object.assign(AC, JSON.parse(r.value)); } catch (e) {}
+  if (AF_DEMO && !AC.seeded) {
+    AC.seeded = 1;
+    AC.threads.push({ id: 'ac' + Date.now().toString(36), person: { key: AF_SIM.name, name: AF_SIM.name, role: AF_SIM.role, av: '#A8326B', verified: true }, status: 'request', msgs: [{ m: 0, t: Date.now() - 18e5, x: 'Hi! Loved your story. Would love to connect and chat about a collab.' }], unread: 1, muted: false, restricted: false, t: Date.now() - 18e5 });
+    await acSave();
+  }
+  acMount();
+}
+
+/* ── helpers ── */
+const acVisible = () => AC.threads.filter(t => t.msgs.length && !(AF.blocked || []).includes(t.person.key));
+const acLast = t => t.msgs[t.msgs.length - 1] || null;
+const acIsReq = t => t.status === 'request' || !!t.restricted;
+const acCur = () => AC.threads.find(x => x.id === ACV.tid) || null;
+const acVer = () => '<svg role="img" aria-label="Verified" width="15" height="15" viewBox="0 0 24 24" style="flex:none;"><circle cx="12" cy="12" r="10" fill="#4A9DE0"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const acChev = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+function acTime(ts) { const d = new Date(ts); return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : noteRelativeDate(ts); }
+function acPersonOf(s) { return { key: afKey(s), name: s.name, role: s.role || '', av: s.av || '#8E8E93', verified: !!(s.verified || afConnected(s)) }; }
+function acCounts() {
+  const V = acVisible(), inb = V.filter(t => !acIsReq(t)), rq = V.filter(acIsReq);
+  return { unread: inb.reduce((n, t) => n + (t.muted ? 0 : (t.unread || 0)), 0), req: rq.length, last: inb.slice().sort((a, b) => b.t - a.t)[0] || null };
+}
+function acList() {
+  const q = ACV.q.trim().toLowerCase(), req = ACV.tab === 'requests', f = ACV.filter;
+  let L = acVisible().filter(t => acIsReq(t) === req);
+  if (q) L = L.filter(t => (t.person.name + ' ' + (t.person.role || '') + ' ' + t.msgs.map(m => m.x).join(' ')).toLowerCase().includes(q));
+  if (f === 'unread') L = L.filter(t => (t.unread || 0) > 0);
+  else if (f === 'unanswered') L = L.filter(t => { const l = acLast(t); return l && !l.m; });
+  else if (f === 'verified') L = L.filter(t => t.person.verified);
+  return L.sort((a, b) => b.t - a.t);
+}
+
+/* ── Affinity bottom entry (after Your Affinities) ── */
+function acMount() {
+  const b = document.getElementById('afBody'); if (!b) return;
+  b.querySelector('#acEntry')?.remove();
+  const c = acCounts(), l = c.last && acLast(c.last);
+  const badge = n => n ? `<span style="background:#1c1c1e;color:#fff;font:600 13px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;margin-right:2px;">${n}</span>` : '';
+  const chev = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  const ic = p => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const row = (icon, t, s, js, n) => `<div class="os-row af-row" role="button" tabindex="0" style="cursor:pointer;" onclick="${js}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${js}}"><div class="os-row-icon" style="background:#1c1c1e;">${icon}</div><div class="os-row-text"><div class="os-row-title">${t}</div><div class="os-row-sub">${s}</div></div>${badge(n)}${chev}</div>`;
+  const prev = l ? ((l.m ? 'You: ' : '') + l.x).slice(0, 60) : 'No messages yet';
+  const html = `<div id="acEntry">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:8px 4px 10px;"><div style="font:700 22px -apple-system,'SF Pro Display',sans-serif;letter-spacing:-.01em;color:#1c1c1e;">ArtiChats</div><button type="button" class="af-add" aria-label="New ArtiChat" onclick="haptic('light');acOpenModal().then(acNew)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+    <div class="os-group" style="margin-bottom:12px;">${row(ic('<path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/>'), 'Inbox', auEsc(prev), "acOpenModal({tab:'inbox'})", c.unread)}${row(ic('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1z"/>'), 'Requests', c.req ? c.req + ' from people you are not connected with' : 'No pending requests', "acOpenModal({tab:'requests'})", c.req)}</div></div>`;
+  const more = b.querySelector('#afMore');
+  if (more) more.insertAdjacentHTML('beforebegin', html); else b.insertAdjacentHTML('beforeend', html);
+}
+(function () { const _r = afRender; afRender = function () { _r.apply(this, arguments); acMount(); }; })();
+
+/* ── modal shell + navigation (seamless back) ── */
+function acScreen() {
+  let s = document.getElementById('artichatsScreen');
+  if (!s) {
+    s = document.createElement('div'); s.id = 'artichatsScreen';
+    s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true'); s.setAttribute('aria-label', 'ArtiChats');
+    s.style.cssText = 'position:fixed;inset:0;z-index:9850;background:#ECE4D6;display:flex;flex-direction:column;animation:screenFadeIn .3s cubic-bezier(0.16,1,0.3,1) forwards;';
+    document.body.appendChild(s);
+  }
+  return s;
+}
+async function acOpenModal(o) {
+  o = o || {}; await acLoad(); haptic('medium');
+  ACV.open = true; ACV.tab = o.tab || 'inbox'; ACV.tid = o.tid || null; ACV.origin = o.origin || 'inbox'; ACV.q = ''; ACV.filter = 'all';
+  if (o.tid) { const t = AC.threads.find(x => x.id === o.tid); if (t && t.unread) await acCommit(() => { t.unread = 0; }); }
+  acScreen(); acRender();
+}
+function acClose() {
+  const s = document.getElementById('artichatsScreen'); if (!s) return;
+  ACV.open = false; ACV.tid = null;
+  s.style.animation = 'osShellOut .25s cubic-bezier(0.4,0,0.2,1) forwards';
+  setTimeout(() => { if (!ACV.open) s.remove(); }, 260);
+  afRender(true);
+}
+function acBack() {
+  haptic('light');
+  if (ACV.tid && ACV.origin === 'inbox') { ACV.tid = null; acRender(); return; }   /* list -> chat -> back to list */
+  acClose();                                                                        /* story / sheet -> back to where you were */
+}
+async function acOpenThread(id, origin) {
+  const t = AC.threads.find(x => x.id === id); if (!t) return;
+  haptic('light'); ACV.tid = id; if (origin) ACV.origin = origin;
+  if (t.unread) await acCommit(() => { t.unread = 0; });
+  acRender();
+}
+function acRender(keep) {
+  const s = document.getElementById('artichatsScreen'); if (!s) return;
+  let t = ACV.tid && AC.threads.find(x => x.id === ACV.tid); if (!t) ACV.tid = null;
+  const dm = document.getElementById('acMsg'), draft = (keep && dm) ? dm.value : '';
+  if (t) {
+    s.innerHTML = acChatHtml(t);
+    const m = document.getElementById('acMsgs'); if (m) m.scrollTop = m.scrollHeight;
+    if (draft) { const n = document.getElementById('acMsg'); if (n) n.value = draft; }
+  } else { s.innerHTML = acInboxHtml(); acPaintList(); }
+}
+
+/* ── inbox ── */
+function acChipsHtml() {
+  return AC_FILTERS.map(([k, l]) => { const on = ACV.filter === k; return `<button type="button" class="nt-chip" aria-pressed="${on}" onclick="acFilter('${k}')" style="flex:none;${on ? 'background:#1c1c1e;color:#ECE4D6;border-color:#1c1c1e;' : ''}">${l}</button>`; }).join('');
+}
+function acInboxHtml() {
+  const c = acCounts(), on = ACV.tab === 'inbox';
+  return `<button type="button" aria-label="Back" onclick="acBack()" style="${AC_PILL}position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;z-index:5;">${acChev}</button>
+    <button type="button" aria-label="New ArtiChat" onclick="acNew()" style="${AC_PILL}position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;z-index:5;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:87px 16px max(30px,env(safe-area-inset-bottom));">
+      <div class="os-title" style="margin-top:0;padding:6px 4px 14px;">ArtiChats</div>
+      <div class="ab-seg" role="tablist" aria-label="ArtiChats sections" style="margin-bottom:12px;">
+        <button type="button" role="tab" class="${on ? 'on' : ''}" aria-selected="${on}" onclick="acTab('inbox')">Inbox${c.unread ? ' · ' + c.unread : ''}</button>
+        <button type="button" role="tab" class="${on ? '' : 'on'}" aria-selected="${!on}" onclick="acTab('requests')">Requests${c.req ? ' · ' + c.req : ''}</button></div>
+      <input id="acQ" class="ab-search" type="search" placeholder="Search people and messages" aria-label="Search ArtiChats" value="${auEsc(ACV.q)}" oninput="ACV.q=this.value;acPaintList()">
+      <div id="acChips" style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">${acChipsHtml()}</div>
+      ${on ? '' : `<div class="dc-note" style="margin:0 4px 10px;">People you are not connected with. They can't see that you've read their message until you accept.</div>`}
+      <div id="acListW"></div></div>`;
+}
+function acRowHtml(t) {
+  const l = acLast(t), un = t.unread || 0, p = t.person, hot = un && !t.muted;
+  const prev = l ? ((l.m ? 'You: ' : '') + l.x) : 'No messages yet';
+  const right = hot ? `<span style="background:#1c1c1e;color:#fff;font:600 12px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;">${un}</span>`
+    : t.muted ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,.45)" stroke-width="2" stroke-linecap="round" aria-label="Muted"><path d="M18 8a6 6 0 0 0-9.3-5M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/><line x1="2" y1="2" x2="22" y2="22"/></svg>' : '';
+  const open = `acOpenThread('${t.id}','inbox')`;
+  return `<div class="os-row ac-row" role="button" tabindex="0" aria-label="${auEsc(p.name)}${hot ? ', ' + un + ' unread' : ''}" onclick="${open}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${open}}">
+    ${afAv(p.name, p.av || '#8E8E93', 44)}
+    <div class="os-row-text"><div class="os-row-title" style="display:flex;align-items:center;gap:5px;${hot ? 'font-weight:700;' : ''}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${auEsc(p.name)}</span>${p.verified ? acVer() : ''}</div>
+      <div class="os-row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${hot ? 'color:#1c1c1e;font-weight:600;' : ''}">${auEsc(prev.slice(0, 80))}</div></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;"><span style="${ACF}font-size:11px;color:rgba(60,60,67,.5);">${acTime(t.t)}</span>${right}</div></div>`;
+}
+function acPaintList() {
+  const w = document.getElementById('acListW'); if (!w) return;
+  const L = acList();
+  w.innerHTML = L.length ? `<div class="os-group">${L.map(acRowHtml).join('')}</div>`
+    : `<div class="up-empty-card">${(ACV.q || ACV.filter !== 'all') ? 'No conversations match' : ACV.tab === 'requests' ? 'No message requests' : 'No conversations yet. Reply to a story or tap + to start one'}</div>`;
+}
+function acTab(k) { haptic('light'); ACV.tab = k; acRender(); }
+function acFilter(k) { haptic('light'); ACV.filter = k; const c = document.getElementById('acChips'); if (c) c.innerHTML = acChipsHtml(); acPaintList(); }
+
+/* ── new ArtiChat picker ── */
+function acNew() {
+  haptic('light');
+  const seen = new Set(), C = [];
+  afStories().filter(s => !s.mine).forEach(s => { const p = acPersonOf(s); if (!seen.has(p.key)) { seen.add(p.key); C.push(Object.assign({ src: 'Story' }, p)); } });
+  ADDRESS_BOOK.forEach(c => { if (seen.has(c.name)) return; seen.add(c.name); C.push({ key: c.name, name: c.name, role: c.subline || '', av: c.avatarBg, verified: false, src: 'Contact' }); });
+  window._acC = C;
+  auMakeSheet('acNewOverlay', 'New ArtiChat', '<input id="acNewQ" class="am-input" type="search" placeholder="Search" aria-label="Search people" oninput="acNewPaint()" style="margin-bottom:12px;"><div id="acNewList"></div>');
+  acNewPaint();
+}
+function acNewPaint() {
+  const w = document.getElementById('acNewList'); if (!w) return;
+  const q = (document.getElementById('acNewQ')?.value || '').trim().toLowerCase();
+  const rows = (window._acC || []).map((p, i) => [p, i]).filter(([p]) => !q || (p.name + ' ' + p.role).toLowerCase().includes(q))
+    .map(([p, i]) => `<div class="os-row ac-row" role="button" tabindex="0" onclick="acPickNew(${i})">${afAv(p.name, p.av || '#8E8E93', 40)}<div class="os-row-text"><div class="os-row-title" style="display:flex;align-items:center;gap:5px;">${auEsc(p.name)}${p.verified ? acVer() : ''}</div><div class="os-row-sub">${auEsc(p.role || p.src)}</div></div><span class="os-row-value" style="font-size:11px;">${p.src}</span></div>`).join('');
+  w.innerHTML = rows ? `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${rows}</div>` : '<div class="up-empty-card">No one found</div>';
+}
+function acPickNew(i) {
+  const p = (window._acC || [])[i]; if (!p) return;
+  if ((AF.blocked || []).includes(p.key)) { haptic('error'); showToast('You blocked this person', 'neutral'); return; }
+  closeAuGenericModal('acNewOverlay');
+  setTimeout(async () => { const t = await acStartThread(p); if (t) acOpenThread(t.id, 'inbox'); }, 260);
+}
+async function acStartThread(p) {
+  await acLoad();
+  let t = AC.threads.find(x => x.person.key === p.key); if (t) return t;
+  t = { id: 'ac' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), person: p, status: 'inbox', msgs: [], unread: 0, muted: false, restricted: false, t: Date.now() };
+  return (await acCommit(() => { AC.threads.push(t); })) ? t : null;
+}
+
+/* ── conversation ── */
+function acChatHtml(t) {
+  const p = t.person, incoming = t.msgs.some(m => !m.m), connected = afConnected({ name: p.name }), last = t.msgs.length - 1;
+  const hdr = `<div style="display:flex;align-items:center;gap:10px;padding:max(14px,env(safe-area-inset-top)) 14px 10px;flex-shrink:0;">
+    <button type="button" aria-label="Back" onclick="acBack()" style="${AC_PILL}">${acChev}</button>
+    <button type="button" aria-label="Open profile of ${auEsc(p.name)}" onclick="acProfile()" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:none;padding:0;cursor:pointer;text-align:left;">${afAv(p.name, p.av || '#8E8E93', 38)}
+      <span style="min-width:0;"><span style="display:flex;align-items:center;gap:5px;${ACF}font-size:16px;font-weight:700;color:#1c1c1e;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${auEsc(p.name)}</span>${p.verified ? acVer() : ''}</span><span style="display:block;${ACF}font-size:12px;color:rgba(60,60,67,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${auEsc(p.role || '')}</span></span></button>
+    <button type="button" aria-label="More options" onclick="acProfile()" style="${AC_PILL}"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></div>`;
+  const intro = `<div style="text-align:center;padding:10px 0 6px;"><div style="display:flex;justify-content:center;margin-bottom:8px;">${afAv(p.name, p.av || '#8E8E93', 64)}</div><div class="dc-name">${auEsc(p.name)}</div><div class="dc-role">${auEsc(p.role || '')}</div></div>`
+    + (!incoming && !connected && t.msgs.length ? `<div class="dc-note" style="text-align:center;">Your message is in their requests until they reply.</div>` : '')
+    + (t.restricted ? `<div class="dc-note" style="text-align:center;">Restricted. They can't see when you read their messages.</div>` : '');
+  const bubbles = t.msgs.map((m, i) => `<div class="dc-bub ${m.m ? 'me' : 'th'}">${auEsc(m.x)}</div>`
+    + (m.c ? `<div class="dc-note" style="align-self:${m.m ? 'flex-end' : 'flex-start'};text-align:${m.m ? 'right' : 'left'};margin:-4px 4px 2px;">Replied to a story: “${auEsc(m.c.snip || 'Photo')}”</div>` : '')
+    + (i === last ? `<div class="dc-note" style="align-self:${m.m ? 'flex-end' : 'flex-start'};font-size:10.5px;margin:-4px 4px 2px;">${acTime(m.t)}</div>` : '')).join('');
+  const bar = 'flex-shrink:0;background:rgba(236,228,214,.92);border-top:.6px solid rgba(0,0,0,.08);padding:10px 16px max(14px,env(safe-area-inset-bottom));';
+  const bottom = t.status === 'request'
+    ? `<div style="${bar}"><div class="dc-note" style="text-align:center;margin-bottom:10px;">${auEsc(p.name.split(' ')[0])} is not connected with you. Accept to reply. They won't know you've read this.</div><div style="display:flex;gap:8px;"><button type="button" class="dc-btn alt" onclick="acDecline()">Decline</button><button type="button" class="dc-btn" onclick="acAccept()">Accept</button></div><button type="button" class="dc-btn link" style="color:#FF453A;margin-top:4px;" onclick="acBlockAsk()">Block</button></div>`
+    : `<div class="dc-compose" style="${bar}"><input id="acMsg" class="dc-in" type="text" maxlength="1000" aria-label="Message" placeholder="Write a message" autocomplete="off" enterkeyhint="send" onkeydown="if(event.key==='Enter')acSend()"><button type="button" class="dc-btn" style="width:auto;padding:0 18px;height:48px;" onclick="acSend()">Send</button></div>`;
+  return `${hdr}<div class="dc-msgs" id="acMsgs" role="log" aria-live="polite" style="padding:8px 16px;">${intro}${bubbles}</div>${bottom}`;
+}
+async function acPush(t, msg) {
+  const ok = await acCommit(() => { t.msgs.push(msg); t.msgs = t.msgs.slice(-300); t.t = msg.t; if (msg.m && t.status === 'request') t.status = 'inbox'; });
+  if (!ok) return false;
+  /* TODO backend: apiPost('artichatSend', { to: t.person.key, text: msg.x, ctx: msg.c }) */
+  if (AF_DEMO && msg.m && !t.msgs.some(x => !x.m)) setTimeout(() => acIncoming(t, 'Thanks for reaching out! What are you working on?'), 1500);
+  return true;
+}
+async function acIncoming(t, x) {
+  const open = ACV.open && ACV.tid === t.id;
+  await acCommit(() => { t.msgs.push({ m: 0, t: Date.now(), x: x }); t.t = Date.now(); if (!open) t.unread = (t.unread || 0) + 1; });
+  if (open) acRender(true); else showToast(String(t.person.name).split(' ')[0] + ' replied in ArtiChats', 'neutral');
+}
+async function acSend() {
+  const inp = document.getElementById('acMsg'), x = (inp && inp.value || '').trim(), t = acCur(); if (!x || !t) return;
+  if (!(await acPush(t, { m: 1, t: Date.now(), x: x }))) return;
+  haptic('success'); acRender(); document.getElementById('acMsg')?.focus();
+}
+async function acAccept() { const t = acCur(); if (!t) return; if (!(await acCommit(() => { t.status = 'inbox'; }))) return; haptic('success'); acRender(); }
+function acDecline() {
+  const t = acCur(); if (!t) return; haptic('medium');
+  confirmDialog({ title: 'Decline this request?', message: 'The conversation is deleted. They are not notified.', confirmLabel: 'Decline', danger: true, onConfirm: async () => {
+    if (!(await acCommit(() => { AC.threads = AC.threads.filter(x => x.id !== t.id); }))) return;
+    haptic('success'); ACV.tid = null; if (ACV.origin === 'inbox') acRender(); else acClose();
+  } });
+}
+
+/* ── profile sheet: view contact, shared content, mute, restrict, report, block ── */
+function acSharedItems(t) {
+  const L = [];
+  t.msgs.forEach(m => { if (m.c) L.push({ k: 'story', x: m.c.snip || 'Story', t: m.t }); (String(m.x || '').match(/https?:\/\/[^\s<>"']+/g) || []).forEach(u => L.push({ k: 'link', x: u, t: m.t })); });
+  return L.reverse();
+}
+function acProfile() {
+  const t = acCur(); if (!t) return; haptic('light');
+  const p = t.person, c = afContactOf(p.name), ns = acSharedItems(t).length;
+  const ic = d => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const go = js => "closeAuGenericModal('acProfOverlay');setTimeout(()=>{" + js + "},260);";
+  const row = (bg, icon, label, sub, js, color, val) => `<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="${go(js)}"><div class="os-row-icon" style="background:${bg};">${icon}</div><div class="os-row-text"><div class="os-row-title"${color ? ` style="color:${color};"` : ''}>${label}</div>${sub ? `<div class="os-row-sub">${sub}</div>` : ''}</div>${val ? `<span class="os-row-value">${val}</span>` : ''}</div>`;
+  const grp = (r, last) => `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;${last ? '' : 'margin-bottom:12px;'}">${r}</div>`;
+  const head = `<div style="text-align:center;margin:-4px 0 16px;"><div style="display:flex;justify-content:center;margin-bottom:10px;">${afAv(p.name, p.av || '#8E8E93', 72)}</div>
+    <div style="${ACF}font-size:19px;font-weight:700;color:#1c1c1e;display:flex;align-items:center;justify-content:center;gap:6px;">${auEsc(p.name)}${p.verified ? acVer() : ''}</div>
+    <div style="${ACF}font-size:13px;color:rgba(60,60,67,.55);margin-top:2px;">${auEsc(p.role || '')}${p.role ? ' · ' : ''}${afConnected({ name: p.name }) ? 'Connected' : 'Not connected'}</div></div>`;
+  auMakeSheet('acProfOverlay', 'Profile', head
+    + grp((c ? row('#4A9DE0', ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-7.5 8-7.5s8 3.3 8 7.5"/>'), 'View contact', '', 'acViewContact()') : row('#34C759', ic('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/>'), 'Add to Contacts', '', 'acAddContact()'))
+      + row('#FF9F0A', ic('<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/>'), 'Shared content', '', 'acShared()', '', ns ? String(ns) : ''))
+    + grp(row('#8E8E93', ic('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'), t.muted ? 'Unmute' : 'Mute', 'Silence notifications for this chat', 'acMute()', '', t.muted ? 'On' : 'Off')
+      + row('#8E8E93', ic('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'), t.restricted ? 'Remove restriction' : 'Restrict', "Moves their messages to Requests. They won't know.", 'acRestrict()', '', t.restricted ? 'On' : 'Off'))
+    + grp(row('#FF9F0A', ic('<path d="M4 22V4h12l-2 4 2 4H4"/>'), 'Report', '', 'acReport()') + row('#FF453A', ic('<circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>'), 'Block ' + auEsc(p.name.split(' ')[0]), '', 'acBlockAsk()', '#FF453A'), true));
+}
+function acViewContact() {
+  const t = acCur(); if (!t) return; const c = afContactOf(t.person.name); if (!c) return;
+  openContactDetail(c.id);
+  const e = document.getElementById('contactDetailScreen'); if (e) e.style.zIndex = '9870';   /* above chat; Back reveals the chat again */
+}
+async function acAddContact() {
+  const t = acCur(); if (!t) return; const p = t.person;
+  if (!planGate('contacts', 1)) return;
+  const c = newContact({ source: 'artichats', name: p.name, role: p.role || '', tag: 'New', avatarBg: avatarColorFromName(p.name) });
+  c.id = ADDRESS_BOOK.reduce((m, x) => Math.max(m, x.id || 0), 0) + 1; ADDRESS_BOOK.push(c);
+  if (!(await saveAddressBook())) { const i = ADDRESS_BOOK.indexOf(c); if (i > -1) ADDRESS_BOOK.splice(i, 1); haptic('error'); showToast("Couldn't add contact", 'error'); return; }
+  haptic('success'); showToast(p.name + ' added to Contacts', 'success');
+}
+function acShared() {
+  const t = acCur(); if (!t) return; haptic('light');
+  const L = acSharedItems(t); window._acSh = L;
+  auMakeSheet('acShOverlay', 'Shared content', L.length
+    ? `<div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${L.map((x, i) => `<div class="os-row" ${x.k === 'link' ? `role="button" tabindex="0" style="cursor:pointer;" onclick="acOpenLink(${i})"` : ''}><div class="os-row-text"><div class="os-row-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.k === 'link' ? auEsc(x.x) : '“' + auEsc(x.x) + '”'}</div><div class="os-row-sub">${x.k === 'link' ? 'Link' : 'Story reply'} · ${acTime(x.t)}</div></div></div>`).join('')}</div>`
+    : `<div style="${ACF}font-size:13.5px;color:rgba(60,60,67,.45);text-align:center;padding:30px 6px;">Nothing shared yet</div>`);
+}
+function acOpenLink(i) { const x = (window._acSh || [])[i]; if (x && /^https?:\/\//i.test(x.x)) window.open(x.x, '_blank', 'noopener'); }
+async function acMute() { const t = acCur(); if (!t) return; const on = !t.muted; if (!(await acCommit(() => { t.muted = on; }))) return; haptic('success'); showToast(on ? 'Muted' : 'Unmuted', 'success'); }
+async function acRestrict() {
+  const t = acCur(); if (!t) return; const on = !t.restricted;
+  if (!(await acCommit(() => { t.restricted = on; }))) return;
+  haptic('success'); showToast(on ? 'Restricted. Their messages go to Requests' : 'Restriction removed', 'success'); acRender(true);
+}
+function acBlockAsk() {
+  const t = acCur(); if (!t) return; haptic('medium');
+  const first = String(t.person.name).split(' ')[0];
+  confirmDialog({ title: 'Block ' + first + '?', message: 'Their stories and messages disappear, and they cannot bond with you. You can unblock in Privacy & safety.', confirmLabel: 'Block', danger: true, onConfirm: async () => { await afBlockNow(t.person.key, t.person.name); acClose(); } });
+}
+function acReport() {
+  const t = acCur(); if (!t) return; haptic('light');
+  auMakeSheet('acRepOverlay', 'Report ' + auEsc(String(t.person.name).split(' ')[0]), `<div style="${ACF}font-size:13px;color:rgba(60,60,67,.6);line-height:1.5;margin:-6px 2px 12px;">Why are you reporting this chat? It is restricted right away.</div><div style="background:rgba(255,255,255,.72);border-radius:16px;overflow:hidden;">${AF_REPORT.map((r, i) => `<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="acReportSend(${i})"><div class="os-row-text"><div class="os-row-title">${r}</div></div></div>`).join('')}</div>`);
+}
+async function acReportSend(i) {
+  const t = acCur(); if (!t) return; const p = t.person, first = String(p.name).split(' ')[0];
+  if (!(await afCommit(() => { AF.reports = AF.reports || []; AF.reports.push({ id: 'r' + Date.now(), storyId: '', who: p.name, key: p.key, reason: AF_REPORT[i], t: Date.now() }); }))) return;
+  /* TODO backend: apiPost('artichatReport', { key: p.key, reason: AF_REPORT[i] }) */
+  await acCommit(() => { t.restricted = true; });
+  afLog('report', p.name, 'You reported a chat: ' + AF_REPORT[i]);
+  haptic('success'); closeAuGenericModal('acRepOverlay'); acRender(true);
+  showToast('Reported. This chat is restricted.', 'success');
+  setTimeout(() => confirmDialog({ title: 'Also block ' + first + '?', message: "They won't be able to message or bond with you.", confirmLabel: 'Block', cancelLabel: 'Not now', danger: true, onConfirm: async () => { await afBlockNow(p.key, p.name); acClose(); } }), 450);
+}
+
+/* ── story message bar → ArtiChats (back returns to the story) ── */
+afMsgSend = async function (id) {
+  const inp = document.getElementById('afMsgIn'), x = (inp && inp.value || '').trim(); if (!x) return;
+  const s = afStories().find(v => v.id === id); if (!s || s.mine) return;
+  await acLoad();
+  const t = await acStartThread(acPersonOf(s)); if (!t) return;
+  if (!(await acPush(t, { m: 1, t: Date.now(), x: x, c: { sid: id, snip: String(s.text || 'Photo story').slice(0, 80) } }))) return;
+  inp.value = ''; haptic('success'); afLog('msg', s.name, 'You sent a message');
+  acOpenModal({ tid: t.id, origin: 'story' });
+};
+/* "Message" from the story menu / Activity sheet → ArtiChats (back returns to that screen) */
+(function () {
+  const _go = afGo;
+  afGo = function (name, type) {
+    if (type !== 'message') return _go.apply(this, arguments);
+    const s = afStories().find(x => x.name === name && !x.mine), c = afContactOf(name);
+    const p = s ? acPersonOf(s) : { key: name, name: name, role: c ? c.subline : '', av: c ? c.avatarBg : '#8E8E93', verified: false };
+    (async () => { await acLoad(); const t = await acStartThread(p); if (t) acOpenModal({ tid: t.id, origin: 'overlay' }); })();
+  };
+})();
+
+acLoad().then(() => { try { afRender(true); } catch (e) {} });
+/* === END: ARTICHATS === */
 /* === END: AFFINITY === */
 
 /* === START: UPDATE WATCH (iwas stale code sa desktop) === */

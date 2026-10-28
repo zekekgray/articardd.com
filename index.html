@@ -21534,6 +21534,78 @@ const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat de
   setTimeout(check, 4000);
 })();
 /* === END: UPDATE WATCH === */
+ /* === START: UI LOCK (final word: Affinity compact stories + ArtiChats stable) ===
+   ILAGAY SA PINAKADULO NG HUling <script>, MISMO BAGO ANG:
+   /* === START: UPDATE WATCH ... */  (o bago ang  window.__ATHNA_READY__ = true;)
+   Dahil ito ang pinakahuli, ito ang mananaig sa lahat ng naunang override. */
+(function uiLock() {
+  var old = document.getElementById('uiLockCss'); if (old) old.remove();
+  var st = document.createElement('style'); st.id = 'uiLockCss';
+  st.textContent = [
+    /* ── Affinity: maliliit na stories (gaya ng dati, ~84px) ── */
+    '#osBody{overflow-x:hidden;overscroll-behavior-y:contain;}',
+    '#afBody .af-rail{gap:14px !important;margin:6px -16px 0 0 !important;padding:6px 16px 14px 0 !important;scroll-snap-type:x proximity !important;}',
+    '#afBody .af-rail .af-tile{flex:0 0 84px !important;width:84px !important;gap:6px !important;scroll-snap-align:start;}',
+    '#afBody .af-rail .af-card{width:84px !important;max-width:84px !important;border-radius:16px !important;}',
+    '#afBody .af-rail .af-card .in{border-radius:16px !important;padding:9px !important;font-size:11.5px !important;}',
+    '#afBody .af-rail .af-card .cl{font-size:10px !important;-webkit-line-clamp:4 !important;}',
+    '#afBody .af-rail .af-card .ly{border-radius:16px !important;}',
+    '#afBody .af-rail .af-nm{font-size:12.5px !important;}',
+    '#afBody .af-rail .af-ago{font-size:11px !important;}',
+    '#afBody .af-rail .af-badge{right:-7px !important;bottom:-7px !important;}',
+    /* ayos ng seksyon: Your Affinities -> Treats/Bond/Privacy -> ArtiChats */
+    '#afBody{display:flex;flex-direction:column;}',
+    '#afBody > *{order:1;}',
+    '#afBody > .os-group{order:3;margin:8px 0 12px;}',
+    '#afBody > #acEntry{order:4;}',
+    '#afBody > #afMore{order:5;}',
+    /* ── ArtiChats: walang gumagalaw na nav ── */
+    'html.ac-lock,html.ac-lock body{overflow:hidden !important;overscroll-behavior:none;}',
+    '#artichatsScreen{overflow:hidden;overscroll-behavior:contain;touch-action:pan-y;}',
+    '#artichatsScreen button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}',
+    '#artichatsScreen .dc-msgs,#artichatsScreen [style*="overflow-y:auto"]{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}'
+  ].join('\n');
+  document.head.appendChild(st);   /* huling style tag = panalo kahit magkapareho ang specificity */
+
+  /* sundan ang totoong visible area (keyboard) para hindi umangat/gumalaw ang buong modal */
+  function fit() {
+    var s = document.getElementById('artichatsScreen'); if (!s) return;
+    var v = window.visualViewport;
+    if (v) { s.style.top = v.offsetTop + 'px'; s.style.bottom = 'auto'; s.style.height = v.height + 'px'; }
+    if (window.scrollY) window.scrollTo(0, 0);
+    var m = document.getElementById('acMsgs'), a = document.activeElement;
+    if (m && a && a.id === 'acMsg') m.scrollTop = m.scrollHeight;
+  }
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', fit);
+    visualViewport.addEventListener('scroll', fit);
+  }
+  document.addEventListener('focusin', function (e) {
+    if (e.target.closest && e.target.closest('#artichatsScreen')) setTimeout(fit, 50);
+  });
+
+  /* lock ang page sa likod habang bukas ang ArtiChats */
+  if (typeof acOpenModal === 'function') {
+    var _open = acOpenModal;
+    acOpenModal = function () {
+      document.documentElement.classList.add('ac-lock');
+      var r = _open.apply(this, arguments);
+      fit();
+      return r;
+    };
+  }
+  if (typeof acClose === 'function') {
+    var _close = acClose;
+    acClose = function () {
+      var r = _close.apply(this, arguments);
+      document.documentElement.classList.remove('ac-lock');
+      return r;
+    };
+  }
+
+  try { afRender(true); } catch (e) {}
+})();
+/* === END: UI LOCK === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */
 </script>

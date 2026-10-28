@@ -19264,6 +19264,7 @@ function afCode() {
   return 'AFT-' + [...a].map(n => c[n % c.length]).join('');
 }
 function afAv(name, bg, px, photo) {
+  photo = photo || afPhotoFor(name);
   return `<div style="width:${px}px;height:${px}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;color:#fff;font:700 ${Math.round(px * .4)}px -apple-system,'SF Pro Text',sans-serif;">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover" alt="">` : auEsc(initials2(name))}</div>`;
 }
 const afAvOf = (s, px) => s.mine ? afAv(s.name, '#8E8E93', px, profilePhotoB64) : afAv(s.name, s.av || '#8E8E93', px);
@@ -20499,7 +20500,7 @@ function acChatHtml(t) {
   const intro = `<div style="text-align:center;padding:10px 0 6px;"><div style="display:flex;justify-content:center;margin-bottom:8px;">${afAv(p.name, p.av || '#8E8E93', 64)}</div><div class="dc-name">${auEsc(p.name)}</div><div class="dc-role">${auEsc(p.role || '')}</div></div>`
     + (!incoming && !connected && t.msgs.length ? `<div class="dc-note" style="text-align:center;">Your message is in their requests until they reply.</div>` : '')
     + (t.restricted ? `<div class="dc-note" style="text-align:center;">Restricted. They can't see when you read their messages.</div>` : '');
-  const bubbles = t.msgs.map((m, i) => `<div class="dc-bub ${m.m ? 'me' : 'th'}">${auEsc(m.x)}</div>`
+  const bubbles = t.msgs.map((m, i) => `<div class="dc-bub ${m.m ? 'me' : 'th'}" role="button" tabindex="0" style="cursor:pointer;" onclick="acMsgMenu(${i})" onkeydown="if(event.key==='Enter')acMsgMenu(${i})">${auEsc(m.x)}</div>`
     + (m.c ? `<div class="dc-note" style="align-self:${m.m ? 'flex-end' : 'flex-start'};text-align:${m.m ? 'right' : 'left'};margin:-4px 4px 2px;">Replied to a story: “${auEsc(m.c.snip || 'Photo')}”</div>` : '')
     + (i === last ? `<div class="dc-note" style="align-self:${m.m ? 'flex-end' : 'flex-start'};font-size:10.5px;margin:-4px 4px 2px;">${acTime(m.t)}</div>` : '')).join('');
   const bar = 'flex-shrink:0;background:rgba(236,228,214,.92);border-top:.6px solid rgba(0,0,0,.08);padding:10px 16px max(14px,env(safe-area-inset-bottom));';
@@ -20555,7 +20556,7 @@ function acProfile() {
       + row('#FF9F0A', ic('<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/>'), 'Shared content', '', 'acShared()', '', ns ? String(ns) : ''))
     + grp(row('#8E8E93', ic('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'), t.muted ? 'Unmute' : 'Mute', 'Silence notifications for this chat', 'acMute()', '', t.muted ? 'On' : 'Off')
       + row('#8E8E93', ic('<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>'), t.restricted ? 'Remove restriction' : 'Restrict', "Moves their messages to Requests. They won't know.", 'acRestrict()', '', t.restricted ? 'On' : 'Off'))
-    + grp(row('#FF9F0A', ic('<path d="M4 22V4h12l-2 4 2 4H4"/>'), 'Report', '', 'acReport()') + row('#FF453A', ic('<circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>'), 'Block ' + auEsc(p.name.split(' ')[0]), '', 'acBlockAsk()', '#FF453A'), true));
+    + grp(row('#FF9F0A', ic('<path d="M4 22V4h12l-2 4 2 4H4"/>'), 'Report', '', 'acReport()') + row('#FF453A', ic('<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'), 'Delete conversation', 'Removes it from your inbox only', 'acDelAsk()', '#FF453A') + row('#FF453A', ic('<circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/>'), 'Block ' + auEsc(p.name.split(' ')[0]), '', 'acBlockAsk()', '#FF453A'), true));
 }
 function acViewContact() {
   const t = acCur(); if (!t) return; const c = afContactOf(t.person.name); if (!c) return;
@@ -20597,7 +20598,7 @@ async function acReportSend(i) {
   const t = acCur(); if (!t) return; const p = t.person, first = String(p.name).split(' ')[0];
   if (!(await afCommit(() => { AF.reports = AF.reports || []; AF.reports.push({ id: 'r' + Date.now(), storyId: '', who: p.name, key: p.key, reason: AF_REPORT[i], t: Date.now() }); }))) return;
   /* TODO backend: apiPost('artichatReport', { key: p.key, reason: AF_REPORT[i] }) */
-  await acCommit(() => { t.restricted = true; });
+  try { await acSrv('ownerChatPeer', { peer: t.id, patch: { restricted: true } }); t.restricted = true; } catch (e) {}
   afLog('report', p.name, 'You reported a chat: ' + AF_REPORT[i]);
   haptic('success'); closeAuGenericModal('acRepOverlay'); acRender(true);
   showToast('Reported. This chat is restricted.', 'success');
@@ -20626,6 +20627,369 @@ afMsgSend = async function (id) {
 })();
 
 acLoad().then(() => { try { afRender(true); } catch (e) {} });
+/* === START: ARTICHATS v2 (real backend, encrypted at rest) === */
+try { window.storage.delete(AC_KEY, false); } catch (e) {}   /* alisin ang lumang plaintext chats sa device */
+AC = { threads: [] };
+var _acBusy = false, _acSig = '', _acSwOpen = null, _acSwSup = 0;
+const AC_SW = 208;
+
+(function acV2Css() {
+  const st = document.createElement('style');
+  st.textContent = `
+  /* Affinity order: Your Affinities muna, tapos Treats/Bond/Privacy, ArtiChats icon sa pinakababa */
+  #afBody{display:flex;flex-direction:column;}
+  #afBody > .os-group{order:3;margin:8px 0 12px;}
+  #afBody > #acEntry{order:4;}
+  #afBody > #afMore{order:5;}
+  /* swipe sa inbox rows */
+  .ac-wrap{position:relative;overflow:hidden;touch-action:pan-y;}
+  .ac-wrap + .ac-wrap{border-top:1px solid rgba(0,0,0,.07);}
+  .ac-wrap .ac-row{margin-right:var(--sw,0px);background:#F6F3ED;position:relative;}
+  .ac-wrap.sw-on .ac-row{border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.08);}
+  .ac-wrap.sw-anim .ac-row{transition:margin-right .36s cubic-bezier(.25,.8,.25,1),border-radius .3s,box-shadow .3s;}
+  .ac-tray{position:absolute;top:0;bottom:0;right:0;width:${AC_SW}px;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .ac-wrap:not(.sw-on) .ac-tray{visibility:hidden;}
+  .ac-btn{width:42px;height:42px;border-radius:50%;border:none;padding:0;flex-shrink:0;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transform:scale(var(--p,0));opacity:var(--p,0);-webkit-tap-highlight-color:transparent;}
+  .ac-wrap.sw-anim .ac-btn{transition:transform .42s cubic-bezier(.34,1.56,.64,1),opacity .25s;}
+  .ac-btn:active{filter:brightness(.9);}`;
+  document.head.appendChild(st);
+})();
+
+/* ── server plumbing ── */
+const acOk = () => !!rmToken() && !document.body.classList.contains('public-mode');
+function acSrv(a, p) { return apiPost(a, Object.assign({ token: rmToken() }, p || {})); }
+function acPerson(r) {
+  return { key: r.peer, name: r.name, role: r.position || '', av: '#8E8E93', verified: !!r.verified,
+    photo: (r.photo && CP_OK.test(r.photo)) ? r.photo : '', phone: r.phone || '', email: r.email || '' };
+}
+function acMsg(m) { return { id: m.id, m: m.m ? 1 : 0, t: Date.parse(m.t) || Date.now(), x: m.x, c: m.c || null }; }
+function acMerge(r) {
+  let t = AC.threads.find(x => x.id === r.peer);
+  const lm = r.last ? acMsg(r.last) : null;
+  if (!t) t = { id: r.peer, msgs: lm ? [lm] : [], full: false };
+  t.person = acPerson(r); t.status = r.status; t.muted = !!r.muted; t.restricted = !!r.restricted;
+  t.unread = r.unread || 0; t.t = Date.parse(r.t) || t.t || Date.now();
+  if (lm) {
+    const k = t.msgs.findIndex(m => m.id === lm.id);
+    if (k < 0) { t.msgs.push(lm); t.full = false; }
+    else if (k < t.msgs.length - 1) t.msgs.length = k + 1;
+  }
+  return t;
+}
+async function acSync() {
+  if (!acOk() || _acBusy) return;
+  _acBusy = true;
+  try {
+    const r = await acSrv('ownerChatList', {});
+    const before = {}; AC.threads.forEach(t => { before[t.id] = t.unread || 0; });
+    const keepEmpty = AC.threads.filter(t => !t.msgs.length);
+    const list = ((r && r.threads) || []).map(acMerge);
+    keepEmpty.forEach(t => { if (!list.some(x => x.id === t.id)) list.push(t); });
+    AC.threads = list;
+    if (_acLoaded) list.forEach(t => {
+      if (!t.muted && (t.unread || 0) > (before[t.id] || 0) && !(ACV.open && ACV.tid === t.id))
+        showToast(String(t.person.name).split(' ')[0] + ' sent you a message', 'neutral');
+    });
+    _acLoaded = true;
+    const sig = list.map(t => t.id + ':' + ((acLast(t) || {}).id) + ':' + t.unread + ':' + t.status + t.muted + t.restricted).join('|');
+    if (sig !== _acSig) {
+      _acSig = sig; acMount();
+      if (ACV.open) {
+        if (ACV.tid) { const t = acCur(); if (t && !t.full) acLoadThread(t.id, true); }
+        else acPaintList();
+      }
+    }
+  } catch (e) { if (/session|sign in/i.test(String(e && e.message))) rmExpired(); }
+  finally { _acBusy = false; }
+}
+async function acLoad() { if (!_acLoaded) await acSync(); }
+async function acLoadThread(id, quiet) {
+  try {
+    const r = await acSrv('ownerChatGet', { peer: id });
+    let t = AC.threads.find(x => x.id === id);
+    if (!t) { t = { id: id, msgs: [], unread: 0, t: Date.now() }; AC.threads.push(t); }
+    t.person = acPerson(r.peer); t.status = r.status; t.muted = !!r.muted; t.restricted = !!r.restricted;
+    t.msgs = (r.messages || []).map(acMsg); t.full = true; t.unread = 0;
+    if (t.msgs.length) t.t = acLast(t).t;
+    if (ACV.open && ACV.tid === id) acRender(true);
+    acMount();
+  } catch (e) { if (!quiet) { haptic('error'); showToast("Couldn't load messages", 'error'); } }
+}
+async function acCommit(fn) { fn(); acMount(); return true; }   /* local-only state; ang server na ang source of truth */
+
+/* ── open / navigate ── */
+async function acOpenModal(o) {
+  o = o || {}; haptic('medium');
+  ACV.open = true; ACV.tab = o.tab || 'inbox'; ACV.tid = o.tid || null; ACV.origin = o.origin || 'inbox'; ACV.q = ''; ACV.filter = 'all';
+  acScreen(); acRender();
+  if (ACV.tid) acLoadThread(ACV.tid, true);
+  acSync();
+}
+async function acOpenThread(id, origin) {
+  const t = AC.threads.find(x => x.id === id); if (!t) return;
+  haptic('light'); ACV.tid = id; if (origin) ACV.origin = origin;
+  t.unread = 0; acRender(); acMount();
+  acLoadThread(id, true);
+}
+async function acStartThread(p) {
+  let t = AC.threads.find(x => x.id === p.key); if (t) return t;
+  t = { id: p.key, person: p, status: 'inbox', msgs: [], unread: 0, muted: false, restricted: false, t: Date.now(), full: true };
+  AC.threads.push(t); return t;
+}
+
+/* ── send / accept / decline / delete ── */
+async function acPush(t, msg) {
+  try {
+    const r = await acSrv('ownerChatSend', { peer: t.id, text: msg.x, ctx: msg.c || null });
+    const m = acMsg(r.message);
+    t.msgs.push(m); t.msgs = t.msgs.slice(-300); t.t = m.t; t.status = 'inbox'; t.full = true;
+    acMount(); return true;
+  } catch (e) { haptic('error'); showToast(String((e && e.message) || "Couldn't send"), 'error'); return false; }
+}
+async function acAccept() {
+  const t = acCur(); if (!t) return;
+  try { await acSrv('ownerChatPeer', { peer: t.id, patch: { status: 'inbox' } }); t.status = 'inbox'; haptic('success'); acRender(true); acMount(); }
+  catch (e) { haptic('error'); showToast("Couldn't accept", 'error'); }
+}
+async function acDeleteThread(id) {
+  try { await acSrv('ownerChatDelete', { peer: id }); AC.threads = AC.threads.filter(x => x.id !== id); acMount(); return true; }
+  catch (e) { haptic('error'); showToast("Couldn't delete conversation", 'error'); return false; }
+}
+function acDecline() {
+  const t = acCur(); if (!t) return; haptic('medium');
+  confirmDialog({ title: 'Decline this request?', message: 'The conversation is deleted. They are not notified.', confirmLabel: 'Decline', danger: true, onConfirm: async () => {
+    if (!(await acDeleteThread(t.id))) return;
+    haptic('success'); ACV.tid = null; if (ACV.origin === 'inbox') acRender(); else acClose();
+  } });
+}
+function acDelAsk(id) {
+  const t = id ? AC.threads.find(x => x.id === id) : acCur(); if (!t) return; haptic('medium');
+  confirmDialog({ title: 'Delete conversation with ' + String(t.person.name).split(' ')[0] + '?', message: 'Removed from your inbox only. They keep their copy.', confirmLabel: 'Delete', danger: true, onConfirm: async () => {
+    if (!(await acDeleteThread(t.id))) return;
+    haptic('success'); showToast('Conversation deleted', 'neutral');
+    if (ACV.tid === t.id) { ACV.tid = null; if (ACV.origin === 'inbox') acRender(); else acClose(); } else acPaintList();
+  } });
+}
+function acMsgMenu(i) {
+  const t = acCur(); if (!t || !t.msgs[i]) return; const m = t.msgs[i]; haptic('light');
+  const go = js => "closeAuGenericModal('acMmOverlay');setTimeout(()=>{" + js + "},260);";
+  const row = (label, js, color) => `<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" onclick="${go(js)}"><div class="os-row-text"><div class="os-row-title"${color ? ` style="color:${color};"` : ''}>${label}</div></div></div>`;
+  auMakeSheet('acMmOverlay', 'Message', `<div style="${ACF}font-size:13.5px;color:rgba(60,60,67,.7);background:rgba(255,255,255,.72);border-radius:14px;padding:12px 14px;margin:-4px 0 12px;white-space:pre-wrap;word-break:break-word;max-height:20vh;overflow:auto;">${auEsc(m.x)}</div>
+    <div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${row('Copy', `acMsgCopy(${i})`)}${row('Delete for me', `acMsgDel(${i},false)`, '#FF453A')}${m.m ? row('Delete for everyone', `acMsgDel(${i},true)`, '#FF453A') : ''}</div>`);
+}
+function acMsgCopy(i) { const t = acCur(); if (t && t.msgs[i]) ntCopy(t.msgs[i].x, 'Copied'); }
+function acMsgDel(i, everyone) {
+  const t = acCur(); if (!t || !t.msgs[i]) return; const m = t.msgs[i]; haptic('medium');
+  confirmDialog({ title: everyone ? 'Delete for everyone?' : 'Delete this message?', message: everyone ? 'It is removed for both of you.' : 'Removed from your side only.', confirmLabel: 'Delete', danger: true, onConfirm: async () => {
+    try { await acSrv('ownerChatDelete', { peer: t.id, ids: [m.id], everyone: !!everyone }); }
+    catch (e) { haptic('error'); showToast("Couldn't delete message", 'error'); return; }
+    t.msgs = t.msgs.filter(x => x.id !== m.id); if (t.msgs.length) t.t = acLast(t).t;
+    haptic('success'); acRender(true); acMount();
+  } });
+}
+
+/* ── mute / restrict / block ── */
+async function acMute() {
+  const t = acCur(); if (!t) return; const on = !t.muted;
+  try { await acSrv('ownerChatPeer', { peer: t.id, patch: { muted: on } }); t.muted = on; haptic('success'); showToast(on ? 'Muted' : 'Unmuted', 'success'); }
+  catch (e) { haptic('error'); showToast("Couldn't update", 'error'); }
+}
+async function acRestrict() {
+  const t = acCur(); if (!t) return; const on = !t.restricted;
+  try { await acSrv('ownerChatPeer', { peer: t.id, patch: { restricted: on } }); t.restricted = on; haptic('success'); showToast(on ? 'Restricted. Their messages go to Requests' : 'Restriction removed', 'success'); acRender(true); acMount(); }
+  catch (e) { haptic('error'); showToast("Couldn't update", 'error'); }
+}
+function acBlockAsk() {
+  const t = acCur(); if (!t) return; haptic('medium');
+  const first = String(t.person.name).split(' ')[0];
+  confirmDialog({ title: 'Block ' + first + '?', message: 'Their messages stop reaching you and they cannot bond with you. You can unblock in Privacy & safety.', confirmLabel: 'Block', danger: true, onConfirm: async () => {
+    try { await acSrv('ownerChatPeer', { peer: t.id, patch: { blocked: true } }); } catch (e) { haptic('error'); showToast("Couldn't block", 'error'); return; }
+    await afBlockNow(t.person.key, t.person.name);
+    AC.threads = AC.threads.filter(x => x.id !== t.id); acClose();
+  } });
+}
+(function () {
+  const _u = afUnblock;
+  afUnblock = async function (k) {
+    if (/^C-[A-Z0-9]{4,10}$/.test(String(k))) { try { await acSrv('ownerChatPeer', { peer: k, patch: { blocked: false } }); } catch (e) {} }
+    return _u.apply(this, arguments);
+  };
+})();
+
+/* ── New ArtiChat: by Card ID o contacts na may articardd ── */
+function acNew() {
+  haptic('light');
+  auMakeSheet('acNewOverlay', 'New ArtiChat', `<div class="dc-note" style="margin:-4px 2px 8px;">Enter a Card ID (like C-7F82KQ) or pick a contact who has an articardd.</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;"><input id="acNewId" class="am-input" type="text" placeholder="C-XXXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Card ID" style="flex:1;text-transform:uppercase;" onkeydown="if(event.key==='Enter')acNewById()"><button type="button" class="dc-btn" style="width:auto;padding:0 18px;" onclick="acNewById()">Start</button></div>
+    <div id="acNewList"><div class="dc-note" style="text-align:center;padding:14px 0;">Finding your contacts on articardd…</div></div>`);
+  acNewContacts();
+}
+function acNewRows(L) {
+  const w = document.getElementById('acNewList'); if (!w) return;
+  window._acC = L;
+  w.innerHTML = L.length
+    ? `<div class="dc-note" style="font-weight:700;color:#1c1c1e;margin:0 2px 8px;">Your contacts on articardd</div><div style="background:rgba(255,255,255,0.72);border-radius:16px;overflow:hidden;">${L.map((p, i) => `<div class="os-row ac-row" role="button" tabindex="0" style="background:none;" onclick="acPickNew(${i})">${afAv(p.name, p.av, 40, p.photo)}<div class="os-row-text"><div class="os-row-title" style="display:flex;align-items:center;gap:5px;">${auEsc(p.name)}${p.verified ? acVer() : ''}</div><div class="os-row-sub">${auEsc(p.role || '')}</div></div></div>`).join('')}</div>`
+    : `<div class="dc-note" style="text-align:center;padding:14px 0;">None of your contacts are on articardd yet. Use a Card ID above.</div>`;
+}
+async function acNewContacts() {
+  try {
+    const items = ADDRESS_BOOK.filter(c => c.emails.length || c.phones.length).slice(0, 300).map(c => ({ id: c.id, emails: c.emails.slice(0, 3), phones: c.phones.slice(0, 3) }));
+    if (!items.length) { acNewRows([]); return; }
+    const r = await acSrv('ownerChatFind', { items: items });
+    const seen = new Set(), L = [];
+    Object.keys((r && r.matches) || {}).forEach(k => { const p = acPerson(r.matches[k]); if (!seen.has(p.key)) { seen.add(p.key); L.push(p); } });
+    acNewRows(L);
+  } catch (e) { acNewRows([]); }
+}
+async function acNewById() {
+  const inp = document.getElementById('acNewId'); let id = (inp && inp.value || '').trim().toUpperCase(); if (!id) { haptic('error'); return; }
+  if (!id.startsWith('C-')) id = 'C-' + id;
+  try {
+    const r = await acSrv('ownerChatFind', { cardId: id });
+    const p = r && r.people && r.people[0]; if (!p) throw new Error('Card not found.');
+    window._acC = [acPerson(p)]; acPickNew(0);
+  } catch (e) { haptic('error'); showToast(String((e && e.message) || 'Card not found'), 'error'); }
+}
+
+/* ── inbox row na may swipe: Message / Call / Email / Delete ── */
+function acPhone(t) { const c = afContactOf(t.person.name); return String((t.person.phone || (c && c.mobile) || '')).trim(); }
+function acEmail(t) { const c = afContactOf(t.person.name); return String((t.person.email || (c && c.email) || '')).trim(); }
+function acRowHtml(t) {
+  const l = acLast(t), un = t.unread || 0, p = t.person, hot = un && !t.muted;
+  const prev = l ? ((l.m ? 'You: ' : '') + l.x) : 'No messages yet';
+  const right = hot ? `<span style="background:#1c1c1e;color:#fff;font:600 12px -apple-system,sans-serif;border-radius:11px;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;">${un}</span>`
+    : t.muted ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,.45)" stroke-width="2" stroke-linecap="round" aria-label="Muted"><path d="M18 8a6 6 0 0 0-9.3-5M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/><line x1="2" y1="2" x2="22" y2="22"/></svg>' : '';
+  const open = `acOpenThread('${t.id}','inbox')`;
+  const TRASH = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+  const sw = (a, bg, label, on) => `<button type="button" class="ac-btn" aria-label="${label} ${auEsc(p.name)}" ${on ? '' : 'disabled aria-disabled="true"'} onclick="event.stopPropagation();acRowAct('${t.id}','${a}')" style="background:${bg};${on ? '' : 'opacity:.38 !important;'}">${a === 'delete' ? TRASH : CD_QUICK_ICONS[a]}</button>`;
+  return `<div class="ac-wrap" data-id="${t.id}"><div class="ac-tray">${sw('message', '#34C759', 'Message', true)}${sw('call', '#34C759', 'Call', !!acPhone(t))}${sw('email', '#4A9DE0', 'Email', !!acEmail(t))}${sw('delete', '#FF453A', 'Delete chat with', true)}</div>
+    <div class="os-row ac-row" role="button" tabindex="0" aria-label="${auEsc(p.name)}${hot ? ', ' + un + ' unread' : ''}" onclick="${open}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${open}}">
+    ${afAv(p.name, p.av || '#8E8E93', 44, p.photo)}
+    <div class="os-row-text"><div class="os-row-title" style="display:flex;align-items:center;gap:5px;${hot ? 'font-weight:700;' : ''}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${auEsc(p.name)}</span>${p.verified ? acVer() : ''}</div>
+      <div class="os-row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${hot ? 'color:#1c1c1e;font-weight:600;' : ''}">${auEsc(prev.slice(0, 80))}</div></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;"><span style="${ACF}font-size:11px;color:rgba(60,60,67,.5);">${acTime(t.t)}</span>${right}</div></div></div>`;
+}
+function acRowAct(id, type) {
+  const t = AC.threads.find(x => x.id === id); if (!t) return;
+  if (_acSwOpen) acSwSettle(_acSwOpen, false);
+  haptic('medium');
+  if (type === 'message') { acOpenThread(id, 'inbox'); return; }
+  if (type === 'delete') { acDelAsk(id); return; }
+  if (type === 'call') {
+    const m = acPhone(t).replace(/\s/g, ''); if (!m) { haptic('error'); showToast('No phone number saved', 'neutral'); return; }
+    window.location.href = 'tel:' + (m.startsWith('+') ? m : '+63' + m.replace(/^0/, '')); return;
+  }
+  if (type === 'email') {
+    const e = acEmail(t); if (!e) { haptic('error'); showToast('No email saved', 'neutral'); return; }
+    window.location.href = 'mailto:' + e;
+  }
+}
+function acSwSet(w, x) { w.style.setProperty('--sw', x + 'px'); w.style.setProperty('--p', Math.min(1, x / AC_SW).toFixed(3)); if (x > 0) w.classList.add('sw-on'); }
+function acSwSettle(w, open) {
+  w.classList.add('sw-anim'); acSwSet(w, open ? AC_SW : 0);
+  if (open) { _acSwOpen = w; return; }
+  if (_acSwOpen === w) _acSwOpen = null;
+  setTimeout(() => { if (w.style.getPropertyValue('--sw') === '0px') w.classList.remove('sw-on', 'sw-anim'); }, 420);
+}
+(function acSwipeInit() {
+  let st = null;
+  document.addEventListener('pointerdown', e => {
+    if (st || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const row = e.target.closest && e.target.closest('.ac-row'); if (!row) return;
+    const w = row.closest('.ac-wrap'); if (!w) return;
+    if (_acSwOpen && !_acSwOpen.isConnected) _acSwOpen = null;
+    if (_acSwOpen && _acSwOpen !== w) acSwSettle(_acSwOpen, false);
+    w.classList.remove('sw-anim');
+    st = { w: w, id: e.pointerId, x: e.clientX, y: e.clientY, base: w === _acSwOpen ? AC_SW : 0, mode: null, cur: w === _acSwOpen ? AC_SW : 0 };
+  }, true);
+  window.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id) return;
+    const dx = e.clientX - st.x, dy = e.clientY - st.y;
+    if (!st.mode) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dx) > Math.abs(dy) * 1.2 && (dx < 0 || st.base)) { st.mode = 'x'; try { st.w.setPointerCapture(e.pointerId); } catch (_) {} haptic('light'); }
+      else { st = null; return; }
+    }
+    let x = st.base - dx;
+    if (x > AC_SW) x = AC_SW + (x - AC_SW) * 0.25;
+    if (x < 0) x = 0;
+    st.cur = x; acSwSet(st.w, x);
+  });
+  const end = e => {
+    if (!st || e.pointerId !== st.id) return;
+    const s = st; st = null;
+    if (s.mode !== 'x') return;
+    _acSwSup = Date.now() + 350;
+    try { s.w.releasePointerCapture(e.pointerId); } catch (_) {}
+    acSwSettle(s.w, s.cur > AC_SW * (s.base ? 0.6 : 0.35));
+  };
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+  document.addEventListener('click', e => {
+    const w = e.target.closest && e.target.closest('.ac-wrap'); if (!w) return;
+    if (Date.now() < _acSwSup) { e.stopPropagation(); e.preventDefault(); return; }
+    if (e.target.closest('.ac-btn')) return;
+    if (_acSwOpen && _acSwOpen.isConnected) { e.stopPropagation(); e.preventDefault(); acSwSettle(_acSwOpen, false); }
+  }, true);
+})();
+
+/* ── photo ng contact / ng chat peer, kahit saan may avatar ── */
+function afPhotoFor(name) {
+  if (!name) return '';
+  try {
+    const c = afContactOf(name), p = c && CP[c.id];
+    if (p && CP_OK.test(p)) return p;
+    const t = AC.threads.find(x => x.person && x.person.name === name);
+    if (t && t.person.photo && CP_OK.test(t.person.photo)) return t.person.photo;
+  } catch (e) {}
+  return '';
+}
+(function () {
+  const _cr = cpRepaint;
+  cpRepaint = function () { _cr.apply(this, arguments); try { afRender(true); } catch (e) {} if (ACV.open && !ACV.tid) acPaintList(); };
+})();
+
+/* ── message mula sa story / Activity: totoong cardId lang ang pwedeng i-chat ── */
+async function acResolveName(name, s) {
+  try {
+    if (s && s.cardId) { const r = await acSrv('ownerChatFind', { cardId: s.cardId }); return r.people && r.people[0] ? acPerson(r.people[0]) : null; }
+    const c = afContactOf(name); if (!c) return null;
+    const r = await acSrv('ownerChatFind', { items: [{ id: c.id, emails: c.emails.slice(0, 3), phones: c.phones.slice(0, 3) }] });
+    const m = r.matches && r.matches[c.id]; return m ? acPerson(m) : null;
+  } catch (e) { return null; }
+}
+afMsgSend = async function (id) {
+  const inp = document.getElementById('afMsgIn'), x = (inp && inp.value || '').trim(); if (!x) return;
+  const s = afStories().find(v => v.id === id); if (!s || s.mine) return;
+  const p = await acResolveName(s.name, s);
+  if (!p) { haptic('error'); showToast(String(s.name).split(' ')[0] + " isn't reachable on ArtiChats yet", 'neutral'); return; }
+  const t = await acStartThread(p);
+  if (!(await acPush(t, { m: 1, t: Date.now(), x: x, c: { sid: id, snip: String(s.text || 'Photo story').slice(0, 80) } }))) return;
+  inp.value = ''; haptic('success'); afLog('msg', s.name, 'You sent a message');
+  acOpenModal({ tid: t.id, origin: 'story' });
+};
+(function () {
+  const _go = afGo;
+  afGo = function (name, type) {
+    if (type !== 'message') return _go.apply(this, arguments);
+    (async () => {
+      const s = afStories().find(x => x.name === name && !x.mine);
+      const p = await acResolveName(name, s);
+      if (p) { const t = await acStartThread(p); acOpenModal({ tid: t.id, origin: 'overlay' }); return; }
+      const c = afContactOf(name);
+      if (c && c.mobile) { activeContact = c; cdfsAction('message'); return; }
+      haptic('error'); showToast('Not reachable on ArtiChats yet', 'neutral');
+    })();
+  };
+})();
+
+/* ── live sync: ~4s habang bukas ang ArtiChats o Affinity ── */
+setInterval(() => {
+  if (document.hidden || !acOk()) return;
+  if (!_acLoaded || ACV.open || currentOSPane === 'affinity') acSync();
+}, 4000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && acOk()) acSync(); });
+/* === END: ARTICHATS v2 === */
 /* === END: ARTICHATS === */
 /* === END: AFFINITY === */
 

@@ -23518,6 +23518,7 @@ function mkRobotLegacyUnused(pal = 'default', name = 'Member', slot = {}) {
       }
     });
 
+        const more = Math.max(0, P.total - P.out.length);
     G.mo.style.display = more > 0 ? 'block' : 'none';
     G.mo.textContent = more > 0
       ? '+' + more + (more === 1 ? ' more member' : ' more members')

@@ -22967,10 +22967,24 @@ const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat de
   const instance = factory.createInstance();
   const root = instance.model;
 
-  // Isolate this member's model and palette.
-  root.scale.setScalar(0.32);
-  instance.setPalette(member.pal || 'default');
-  instance.setPose('idle');
+  const instance = factory.createInstance();
+const root = instance.model;
+
+root.scale.setScalar(0.32);
+
+// Center the original model and place its feet on the floor.
+root.updateMatrixWorld(true);
+
+const box = new T.Box3().setFromObject(root);
+if (!box.isEmpty()) {
+  const center = box.getCenter(new T.Vector3());
+  root.position.x -= center.x;
+  root.position.y -= box.min.y;
+  root.position.z -= center.z;
+}
+
+instance.setPalette(member.pal);
+instance.setPose('idle');
 
   // Keep the existing Group Room member data structure.
   const r = {

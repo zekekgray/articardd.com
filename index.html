@@ -22882,8 +22882,26 @@ const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat de
   css.textContent = `
   .ags-wrap{position:relative;flex:none;margin:0 12px 6px;}
   .ags-stage{position:relative;height:clamp(260px,38vh,340px);border-radius:22px;overflow:hidden;
-    background:radial-gradient(90% 70% at 18% 12%,rgba(74,157,224,.28),transparent 60%),radial-gradient(80% 60% at 85% 8%,rgba(255,95,210,.22),transparent 60%),linear-gradient(180deg,#0d1b36 0%,#070d1c 60%,#04070f 100%);
-    border:1px solid rgba(120,200,255,.28);box-shadow:0 8px 28px rgba(0,0,0,.28),inset 0 0 40px rgba(60,140,255,.12);}
+    
+    background:
+      radial-gradient(ellipse at 50% 115%,
+        transparent 0 24%,
+        rgba(105,190,255,.15) 24.2%,
+        transparent 24.7% 34%,
+        rgba(105,190,255,.11) 34.2%,
+        transparent 34.7% 45%,
+        rgba(105,190,255,.08) 45.2%,
+        transparent 45.7% 58%,
+        rgba(105,190,255,.05) 58.2%,
+        transparent 58.7%),
+      radial-gradient(ellipse at 50% 0%,
+        rgba(64,132,255,.19),transparent 66%),
+      radial-gradient(ellipse at 0% 100%,
+        rgba(36,211,238,.13),transparent 48%),
+      radial-gradient(ellipse at 100% 100%,
+        rgba(151,92,255,.16),transparent 48%),
+      linear-gradient(180deg,#101d39 0%,#091329 54%,#050a17 100%);
+
   .ags-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;}
   .ags-bl{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
   .ags-b{position:absolute;box-sizing:border-box;padding:5px 9px 4px;border-radius:14px;background:rgba(8,16,34,.74);border:1.5px solid var(--c,#4A9DE0);

@@ -21528,13 +21528,6 @@ function acAttHtml(m) {
 
   return '';
 }
-  const a = m.a;
-  if (!a) return m.ak ? '<div class="ac-file">' + acAttName(m) + '…</div>' : '';
-  if (a.k === 'img') return '<img class="ac-img" alt="Photo" src="' + auEsc(a.d) + '" onclick="event.stopPropagation();acViewImg(this.src)">';
-  if (a.k === 'file') return '<a class="ac-file" href="' + auEsc(a.d) + '" download="' + auEsc(a.n) + '" onclick="event.stopPropagation()">📎 ' + auEsc(a.n) + '<br><small>' + flKb(a.s || 0) + ' · Tap to save</small></a>';
-  if (a.k === 'loc') return '<a class="ac-file" href="' + auEsc(acMapsUrl(a)) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">📍 Shared location<br><small>' + a.lat + ', ' + a.lng + ' · Open in Maps</small></a>';
-  return '';
-}
 function acViewImg(src) {
   const o = document.createElement('div');
   o.style.cssText = 'position:fixed;inset:0;z-index:9890;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;';

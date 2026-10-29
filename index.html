@@ -21856,19 +21856,10 @@ function acQuickReact(i, emoji) {
     return;
   }
 
-  haptic('light');
+    haptic('light');
   acRender(true);
 }
-  const g = acIsG(t), mem = t.members || [];
-  const nm = k => String((mem.find(x => x.key === k) || {}).name || 'Member');
-  const q = m.re ? t.msgs.find(x => x.id === m.re) : null;
-  const quote = m.re ? '<div class="ac-q"><b>' + (q ? auEsc(q.m ? 'You' : (g ? nm(q.f) : String(t.person.name).split(' ')[0])) : 'Message') + '</b>' + (q ? auEsc((q.x || acAttName(q)).slice(0, 80)) : 'Original message') + '</div>' : '';
-  const who = (g && !m.m) ? '<div class="ac-who">' + auEsc(nm(m.f)) + '</div>' : '';
-  const tick = (m.m && !g) ? ' <span style="' + (m.r ? 'color:#7FD1FF;' : '') + '">' + ((m.r || m.d) ? '✓✓' : '✓') + '</span>' : '';
-  return '<div class="dc-bub ' + (m.m ? 'me' : 'th') + ' ac-b" data-mid="' + m.id + '" role="button" tabindex="0" style="cursor:pointer;" onclick="acMsgMenu(' + i + ')" onkeydown="if(event.key===\'Enter\')acMsgMenu(' + i + ')">'
-    + who + quote + acAttHtml(m) + (m.x ? '<div class="ac-t">' + acLinkify(m.x) + '</div>' : '')
-    + '<span class="ac-meta">' + (m.p ? '📌 ' : '') + (m.e ? 'edited · ' : '') + acTime(m.t) + tick + '</span></div>';
-}
+
 function acLastStatus(t, m) {
   if (acIsG(t)) {
     const me = (currentEntry && currentEntry.cardId) || '';

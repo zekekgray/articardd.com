@@ -21629,10 +21629,11 @@ acNew = function () {
   function vis() {
     const gate = document.getElementById('screenGate');
     const os = document.getElementById('screenOS'), ac = document.getElementById('screenAccount');
+   
     const on = acOk() && !ACV.open && !document.body.classList.contains('public-mode') && !(gate && gate.classList.contains('show'))
       && !!(os && os.classList.contains('active')) && !(ac && ac.classList.contains('active'))
-      && !document.getElementById('contactDetailScreen') && !document.getElementById('fileEditorScreen')
-      && !document.getElementById('noteEditorScreen') && !document.getElementById('storyOverlay');
+      && !document.getElementById('storyOverlay');
+
     fab.classList.toggle('show', !!on);
     if (on) badge();
   }

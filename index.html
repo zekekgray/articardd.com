@@ -23917,6 +23917,28 @@ function acSyncSend() {
   document.addEventListener('input', e => { if (e.target && e.target.id === 'acMsg') acSyncSend(); }, true);
 })();
 /* === END: ARTICHATS INTERACTION POLISH === */
+/* === START: REACTION BAR FIX (animation, hindi opacity:0) === */
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `
+  @keyframes acEmoIn{from{opacity:0;transform:translateY(5px) scale(.7);}to{opacity:1;transform:none;}}
+  #artichatsScreen .ac-msg-actions button{opacity:1;transform:none;transition:background .14s;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button{opacity:1;transform:none;animation:acEmoIn .26s cubic-bezier(.2,.9,.25,1.2) both;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button:nth-child(1){animation-delay:.12s;transition-delay:0s;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button:nth-child(2){animation-delay:.15s;transition-delay:0s;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button:nth-child(3){animation-delay:.18s;transition-delay:0s;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button:nth-child(4){animation-delay:.21s;transition-delay:0s;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button:nth-child(5){animation-delay:.24s;transition-delay:0s;}
+  #artichatsScreen .ac-msg-wrap.show-actions .ac-msg-actions button:nth-child(6){animation-delay:.27s;transition-delay:0s;}
+  @media (hover:hover){
+    #artichatsScreen .ac-msg-wrap:hover .ac-msg-actions button{opacity:1;transform:none;animation:acEmoIn .24s cubic-bezier(.2,.9,.25,1.2) .1s both;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    #artichatsScreen .ac-msg-actions button{animation:none !important;}
+  }`;
+  document.head.appendChild(st);
+})();
+/* === END: REACTION BAR FIX === */
 window.__ATHNA_READY__ = true;
 /* === END: READY FLAG === */
 </script>

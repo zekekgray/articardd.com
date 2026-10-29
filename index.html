@@ -17895,7 +17895,20 @@ function idleLife(t, dt, now) {
   requestAnimationFrame(frame);
   if (typeof applyRobotPal === 'function') applyRobotPal();
 
-  /* === START: ARTIBOT REUSABLE INSTANCE API === */
+  /* === START: ARTIBOT ROOM REST HOOK === */
+window.__ARTIBOT_REST = function () {
+  poseStand();
+  chest.scale.set(1, 1, 1);
+  body.position.set(0, 0, 0);
+  body.rotation.set(0, 0, 0);
+  headPivot.position.y = 6.75;
+  [-1, 1].forEach(s => { arms[s].ua.parent.position.y = 6.2; });
+  eyes.forEach(e => { e.scale.y = 1; });
+  robot.rotation.set(0, 0, 0);
+};
+/* === END: ARTIBOT ROOM REST HOOK === */
+
+/* === START: ARTIBOT REUSABLE INSTANCE API === */
   (() => {
     const sourceMaterials = new WeakMap();
 

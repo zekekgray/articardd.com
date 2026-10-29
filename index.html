@@ -22959,15 +22959,12 @@ const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat de
   const factory = window.__ARTIBOT_FACTORY;
 
   if (!factory || typeof factory.createInstance !== 'function') {
-    throw new Error(
-      'Original ArtiBot factory not found. Check Patch #1.'
-    );
-  }
+  throw new Error(
+    'Original ArtiBot factory not found. Check Patch #1.'
+  );
+}
 
-  const instance = factory.createInstance();
-  const root = instance.model;
-
-  const instance = factory.createInstance();
+const instance = factory.createInstance();
 const root = instance.model;
 
 root.scale.setScalar(0.32);
@@ -22975,6 +22972,17 @@ root.scale.setScalar(0.32);
 // Center the original model and place its feet on the floor.
 root.updateMatrixWorld(true);
 
+const box = new T.Box3().setFromObject(root);
+
+if (!box.isEmpty()) {
+  const center = box.getCenter(new T.Vector3());
+  root.position.x -= center.x;
+  root.position.y -= box.min.y;
+  root.position.z -= center.z;
+}
+
+instance.setPalette(member.pal);
+instance.setPose('idle');
 const box = new T.Box3().setFromObject(root);
 if (!box.isEmpty()) {
   const center = box.getCenter(new T.Vector3());

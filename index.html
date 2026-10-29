@@ -22955,76 +22955,44 @@ const APP_BUILD = '20261026-1';   /* PALITAN ito at ang version.json sa bawat de
   }
 
   /* ── robot factory (same look as ARTIBOT, kulay galing sa palette) ── */
-  function mkRobot(palId, name, slot) {
-    const P = ROBOT_PALS.find(p => p.id === palId) || ROBOT_PALS[0], c = P.c;
-    const mW = new T.MeshPhysicalMaterial({ color: new T.Color(c[0]), roughness: .28, metalness: .08, clearcoat: 1, clearcoatRoughness: .05 });
-    const mB = new T.MeshStandardMaterial({ color: 0x090a0c, roughness: .32, metalness: .7 });
-    const mG = new T.MeshStandardMaterial({ color: new T.Color(c[1]), roughness: .3, metalness: 1 });
-    const mS = new T.MeshBasicMaterial({ color: new T.Color(c[2]), toneMapped: false });
-    const mE = new T.MeshBasicMaterial({ color: new T.Color(c[2]).lerp(new T.Color(0xffffff), .35), toneMapped: false });
-    const sph = (r, m, sx, sy, sz, sg) => { const o = new T.Mesh(new T.SphereGeometry(r, sg || 24, 18), m); o.scale.set(sx || 1, sy || 1, sz || 1); return o; };
-    const cyl = (rt, rb, h, m, sg) => new T.Mesh(new T.CylinderGeometry(rt, rb, h, sg || 20), m);
-    const tor = (r, t, m) => new T.Mesh(new T.TorusGeometry(r, t, 8, 32), m);
-    const R = new T.Group();
-    R.add(sph(.62, mW, 1, .62, .7));
-    const torso = new T.Group(); torso.position.y = .25; R.add(torso);
-    const abd = cyl(.42, .46, .7, mB); abd.scale.z = .6; abd.position.y = .35; torso.add(abd);
-    const chest = sph(.72, mW, 1, .9, .58); chest.position.y = 1.15; torso.add(chest);
-    const core = sph(.14, mE, 1, 1, .5); core.position.set(0, 1.2, .38); torso.add(core);
-    const ring = tor(.2, .025, mS); ring.position.set(0, 1.2, .4); torso.add(ring);
-    const band = tor(.7, .03, mS); band.rotation.x = Math.PI / 2; band.scale.set(1, .62, 1); band.position.y = .62; torso.add(band);
-    const neck = cyl(.16, .2, .4, mB); neck.position.y = 1.95; torso.add(neck);
-    const head = new T.Group(); head.position.y = 2.55; torso.add(head);
-    head.add(sph(1, mW, .39, .53, .44, 32));
-    const vis = new T.Mesh(new T.SphereGeometry(1, 32, 24, Math.PI / 2 - 1.1, 2.2, 1.15, 1.6), new T.MeshPhysicalMaterial({ color: 0x010203, roughness: .04, metalness: .5, clearcoat: 1 }));
-    vis.scale.set(.396, .538, .447); head.add(vis);
-    const eyes = new T.Group(); head.add(eyes);
-    [-1, 1].forEach(s => {
-      const e = new T.Mesh(new T.PlaneGeometry(.2, .055), mE); e.position.set(s * .155, .01, .46); e.rotation.y = s * .43; eyes.add(e);
-      const ear = cyl(.11, .11, .12, mB, 24); ear.rotation.z = Math.PI / 2; ear.scale.set(1.3, 1, 1); ear.position.set(s * .4, .03, -.02); head.add(ear);
-      const er = tor(.085, .008, mS); er.rotation.y = Math.PI / 2; er.scale.set(1, 1.3, 1); er.position.set(s * .466, .03, -.02); head.add(er);
-    });
-    const cap = sph(1, mG, .17, .03, .2, 20); cap.position.set(0, .52, .04); head.add(cap);
-    const arms = {};
-    [1, -1].forEach(s => {
-      const sh = new T.Group(); sh.position.set(s * .9, 1.75, 0); torso.add(sh);
-      sh.add(sph(.24, mB));
-      const pad = sph(1, mW, .27, .4, .38); pad.position.set(s * .13, -.02, 0); sh.add(pad);
-      const up = cyl(.2, .17, 1.0, mW); up.position.y = -.55; sh.add(up);
-      const el = new T.Group(); el.position.y = -1.05; sh.add(el);
-      el.add(sph(.16, mB));
-      const fo = cyl(.17, .13, 1.05, mW); fo.position.y = -.6; el.add(fo);
-      const cr = tor(.15, .015, mS); cr.rotation.x = Math.PI / 2; cr.position.y = -.35; el.add(cr);
-      const hand = sph(.17, mW, 1, 1.25, .8); hand.position.y = -1.3; el.add(hand);
-      arms[s] = { sh, el, v: [0, 0, 0, 0] };
-    });
-    const legs = {};
-    [1, -1].forEach(s => {
-      const hp = new T.Group(); hp.position.set(s * .46, -.1, 0); R.add(hp);
-      hp.add(sph(.3, mB));
-      const th = cyl(.32, .24, 2.0, mW); th.position.y = -1.1; hp.add(th);
-      const kn = new T.Group(); kn.position.y = -2.15; hp.add(kn);
-      const kc = cyl(.21, .21, .4, mB); kc.rotation.z = Math.PI / 2; kn.add(kc);
-      const shn = cyl(.26, .16, 1.65, mW); shn.position.y = -.95; kn.add(shn);
-      const an = new T.Group(); an.position.y = -1.8; kn.add(an);
-      const ft = new T.Mesh(new T.BoxGeometry(.5, .25, 1.0), mW); ft.position.set(0, -.12, .25); an.add(ft);
-      const so = new T.Mesh(new T.BoxGeometry(.52, .07, 1.02), mB); so.position.set(0, -.25, .25); an.add(so);
-      legs[s] = { hp, kn, an };
-    });
-    const shd = new T.Mesh(new T.PlaneGeometry(2.6, 2.6), new T.MeshBasicMaterial({ map: G.shTex, transparent: true, depthWrite: false }));
-    shd.rotation.x = -Math.PI / 2; shd.position.y = .04;
-    const bub = document.createElement('div'); bub.className = 'ags-b'; bub.style.display = 'none'; bub.style.setProperty('--c', c[2]);
-    const r = { root: R, torso, head, eyes, arms, legs, shd, bub, slot, name, pal: palId, x: slot.x, ph: Math.random() * 6.28, sitW: slot.m === 'sit' ? 1 : 0,
-      talk: 0, wave: 0, stand: 0, up: false, next: 3 + Math.random() * 6, gp: 0, gw: 0, sg: 0, face: 0, faceT: 0, dir: 1, pause: 0, bl: 2 + Math.random() * 3, blt: 0, hy: 0, bh: 46, row: 0, key: '' };
-    R.userData.r = r;
-    return r;
-  }
-  function disposeRobot(r) {
-    G.world.remove(r.root); G.world.remove(r.shd);
-    r.root.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
-    r.shd.geometry.dispose(); r.shd.material.dispose(); r.bub.remove();
+  function mkRobot(member = {}) {
+  const factory = window.__ARTIBOT_FACTORY;
+
+  if (!factory || typeof factory.createInstance !== 'function') {
+    throw new Error(
+      'Original ArtiBot factory not found. Check Patch #1.'
+    );
   }
 
+  const instance = factory.createInstance();
+  const root = instance.model;
+
+  // Isolate this member's model and palette.
+  root.scale.setScalar(0.32);
+  instance.setPalette(member.pal || 'default');
+  instance.setPose('idle');
+
+  // Keep the existing Group Room member data structure.
+  const r = {
+    ...member,
+    instance,
+    root,
+    name: member.name || 'Member',
+    pal: member.pal || 'default',
+    x: member.x || 0,
+    ph: 0,
+    sitW: 0,
+    talk: false,
+    wave: false,
+    stand: false,
+    up: false,
+    next: 0,
+    pause: 0,
+    disposed: false
+  };
+
+  return r;
+}
   /* ── pose / animation ── */
   function armTarget(r, s, t) {
     const w = r.sitW, st = r.slot.st;

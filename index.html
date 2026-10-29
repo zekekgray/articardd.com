@@ -23272,18 +23272,7 @@ function armTarget(r, s, t) {
   return [sx, sz, ex, ez];
 }
 
-    const w = r.sitW, st = r.slot.st;
-    let sx = lerp(0, -.55, w), sz = s * lerp(.07, .12, w), ex = lerp(-.12, -.7, w), ez = 0;
-    if (st === 1) { sx = -.9; ex = -1.35; sz = s * .15; }
-    else if (st === 2 && s === -1) { sx = -.5; ex = -1.9; }
-    else if (st === 3 && s === -1) { sx = -1.0; ex = -2.25; sz = 0; }
-    else if (st === 4 && s === -1) { sx = -.75; ex = -1.45; sz = -.25; }
-    if (r.gw > .02) { sx = lerp(sx, s * r.sg * .5, r.gw); ex = lerp(ex, -.3, r.gw); sz = lerp(sz, s * .08, r.gw); }
-    if (r.talk > 0 && s === 1) { sx = -.85 + Math.sin(t * 6 + r.ph) * .3; ex = -1.15 + Math.sin(t * 8 + r.ph) * .4; sz = .15; }
-    if (r.wave > 0 && s === 1) { sx = 0; sz = 2.55; ex = -.25; ez = Math.sin(t * 11) * .55; }
-    return [sx, sz, ex, ez];
-  }
-  function pose(r, t, dt) {
+    function pose(r, t, dt) {
     const S = r.slot, R = r.root;
     r.next -= dt;
 

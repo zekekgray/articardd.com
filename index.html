@@ -19219,7 +19219,7 @@ let AF = { stories:[], mine:{}, bonds:[], treats:[], demoTreat:0 }, afBoot = Dat
 
 /* ── segments: Affinity | My Contacts | Calendar | Files (lahat ng pane) ── */
 function afSegHtml(a) {
-  return [['affinity','Affinity'],['mine','My Contacts'],['calendar','Calendar'],['files','Files'],['chats','ArtiChats' + afChatDot()]].map(([k, l]) => {
+  return [['affinity','Affinity'],['mine','My Contacts'],['calendar','Calendar'],['files','Files']].map(([k, l]) => {
     const on = a === k;
     return `<button type="button" role="tab"${on ? ' class="on"' : ''} aria-selected="${on}" onclick="${on ? "haptic('light')" : "abSegSelect('" + k + "')"}">${l}</button>`;
   }).join('');
@@ -21555,7 +21555,7 @@ acNew = function () {
   #afBody .af-rail .af-ago{font-size:13px;}
   /* ArtiChats global floating button */
   #acFab{position:fixed;left:0;top:0;z-index:9790;width:56px;height:56px;border-radius:50%;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.82);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 16px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.7);color:#1c1c1e;display:none;align-items:center;justify-content:center;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;cursor:pointer;will-change:transform;}
-  #acFab.show{display:none !important;}
+  #acFab.show{display:flex;}
   #acFab.snap{transition:transform .38s cubic-bezier(.34,1.3,.5,1);}
   #acFab.drag{opacity:.9;box-shadow:0 8px 24px rgba(0,0,0,.28);}
   #acFab .b{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#FF453A;border:2px solid #ECE4D6;color:#fff;font:700 11px/16px -apple-system,'SF Pro Text',sans-serif;text-align:center;display:none;}
@@ -21627,7 +21627,11 @@ acNew = function () {
   }
   function vis() {
     const gate = document.getElementById('screenGate');
-    const on = acOk() && !ACV.open && !document.body.classList.contains('public-mode') && !(gate && gate.classList.contains('show'));
+    const os = document.getElementById('screenOS'), ac = document.getElementById('screenAccount');
+    const on = acOk() && !ACV.open && !document.body.classList.contains('public-mode') && !(gate && gate.classList.contains('show'))
+      && !!(os && os.classList.contains('active')) && !(ac && ac.classList.contains('active'))
+      && !document.getElementById('contactDetailScreen') && !document.getElementById('fileEditorScreen')
+      && !document.getElementById('noteEditorScreen') && !document.getElementById('storyOverlay');
     fab.classList.toggle('show', !!on);
     if (on) badge();
   }

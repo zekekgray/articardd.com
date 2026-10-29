@@ -19254,9 +19254,62 @@ async function afCommit(fn) {
 }
 function afStories() {
   const now = Date.now(), L = [];
-  if (AF_DEMO) AF_DEMO_DATA.forEach(d => L.push(Object.assign({}, d, { t: afBoot - d.off })));
-  AF.stories.forEach(s => L.push(s));
-  return L.filter(s => now - s.t < AF_TTL).sort((a, b) => b.t - a.t);
+
+  if (AF_DEMO) {
+    AF_DEMO_DATA.forEach(d => {
+      L.push(Object.assign({}, d, { t: afBoot - d.off }));
+    });
+  }
+
+  AF.stories.forEach(s => {
+    const imgs = afImgs(s);
+    const parts = afParts(s);
+
+    // Migrate existing stories without changing their original timestamps.
+    if (!Array.isArray(s.imgT)) {
+      s.imgT = imgs.map(() => Number(s.t) || now);
+    }
+    if (!Array.isArray(s.partT)) {
+      s.partT = parts.map(() => Number(s.t) || now);
+    }
+
+    // Each photo expires 24 hours after it was added.
+    const keptImgs = [];
+    const keptImgT = [];
+
+    imgs.forEach((img, i) => {
+      const t = Number(s.imgT[i]) || Number(s.t) || now;
+      if (now - t < AF_TTL) {
+        keptImgs.push(img);
+        keptImgT.push(t);
+      }
+    });
+
+    // Each text post expires independently.
+    const keptParts = [];
+    const keptPartT = [];
+
+    parts.forEach((part, i) => {
+      const t = Number(s.partT[i]) || Number(s.t) || now;
+      if (now - t < AF_TTL) {
+        keptParts.push(part);
+        keptPartT.push(t);
+      }
+    });
+
+    s.imgs = keptImgs;
+    s.imgT = keptImgT;
+    s.img = keptImgs[0] || '';
+    s.parts = keptParts;
+    s.partT = keptPartT;
+    s.text = keptParts.join('\n\n').slice(0, 3000);
+
+    if (keptImgs.length || keptParts.length) {
+      L.push(s);
+    }
+  });
+
+  return L.sort((a, b) => b.t - a.t);
 }
 const afItem = id => AF_TREATS.find(x => x.id === id) || AF_TREATS[0];
 function afAgo(t) { const m = Math.floor((Date.now() - t) / 6e4); return m < 1 ? 'Just now' : m < 60 ? m + 'm ago' : Math.floor(m / 60) + 'h ago'; }
@@ -19346,11 +19399,53 @@ function afOpen(id) {
 function afClose() { document.getElementById('afViewer')?.remove(); afView = null; haptic('light'); afRender(); }
 
 async function afReact(r) {
-  const id = afView, s = afStories().find(x => x.id === id); if (!s || s.mine) return;
+  const id = afView;
+  const s = afStories().find(x => x.id === id);
+  if (!s || s.mine) return;
+
+  /* Bond keeps its existing request workflow. */
   if (r === 'bond') return afBond(s);
+
+  const viewer = document.getElementById('afViewer');
+  if (!viewer) return;
+
+  /* Prevent duplicate taps while the reaction is being saved. */
+  if (viewer.dataset.reactionBusy === '1') return;
+  viewer.dataset.reactionBusy = '1';
+
   const had = AF.mine[id] === r;
-  if (!(await afCommit(() => { if (had) delete AF.mine[id]; else AF.mine[id] = r; }))) return;
-  haptic(had ? 'light' : 'success'); afOpen(id);
+
+  try {
+    const ok = await afCommit(() => {
+      if (had) {
+        delete AF.mine[id];
+      } else {
+        AF.mine[id] = r;
+      }
+    });
+
+    if (!ok) return;
+
+    /* Update the existing buttons in place — no viewer rebuild. */
+    const selected = had ? '' : r;
+
+    viewer.querySelectorAll('.af-r').forEach(btn => {
+      const isSelected = btn.getAttribute('onclick') ===
+        "afReact('" + selected + "')";
+
+      btn.classList.toggle('on', !!selected && isSelected);
+      btn.setAttribute('aria-pressed', String(!!selected && isSelected));
+    });
+
+    haptic(had ? 'light' : 'success');
+  } catch (e) {
+    haptic('error');
+    showToast("Couldn't save your reaction. Try again.", 'error');
+  } finally {
+    if (viewer.isConnected) {
+      delete viewer.dataset.reactionBusy;
+    }
+  }
 }
 
 /* Bond: ang nag-share ng story ang magpapasya kung idadagdag sa Contacts niya */
@@ -19694,7 +19789,27 @@ afPost = async function () {
   if (m) {
     const all = afImgs(m).concat(imgs).slice(0, 20);
     const parts = afParts(m).concat(txt ? [txt] : []);
-    ok = await afCommit(() => { m.parts = parts; m.text = parts.join('\n\n').slice(0, 3000); m.imgs = all; m.img = all[0] || ''; m.u = now; });
+    const oldImgs = afImgs(m);
+const oldParts = afParts(m);
+const oldImgT = Array.isArray(m.imgT)
+  ? m.imgT.slice()
+  : oldImgs.map(() => Number(m.t) || now);
+const oldPartT = Array.isArray(m.partT)
+  ? m.partT.slice()
+  : oldParts.map(() => Number(m.t) || now);
+
+ok = await afCommit(() => {
+  m.imgs = oldImgs.concat(imgs);
+  m.imgT = oldImgT.concat(imgs.map(() => now));
+  m.img = m.imgs[0] || '';
+
+  m.parts = oldParts.concat(txt ? [txt] : []);
+  m.partT = oldPartT.concat(txt ? [now] : []);
+  m.text = m.parts.join('\n\n').slice(0, 3000);
+
+  // Preserve the original story creation time.
+  // Do not update m.t or m.u when adding new content.
+});
   } else {
     const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     const s = { id: 's' + now, mine: true, authorId: 'me', name: nm, role: (currentEntry && currentEntry.pos) || '', text: txt, imgs: imgs, img: imgs[0] || '', bg: Math.floor(Math.random() * AF_BG.length), allowBond: allow, t: now, u: now, rx: [] };
@@ -19945,7 +20060,24 @@ afPost = async function () {
     ok = await afCommit(() => { m.parts = parts; m.text = parts.join('\n\n').slice(0, 3000); m.imgs = all; m.img = all[0] || ''; m.u = now; });
   } else {
     const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    const s = { id: 's' + now, mine: true, authorId: 'me', name: nm, role: (currentEntry && currentEntry.pos) || '', text: txt, parts: txt ? [txt] : [], imgs: imgs, img: imgs[0] || '', bg: Math.floor(Math.random() * AF_BG.length), allowBond: allow, t: now, u: now, rx: [] };
+    const s = {
+  id: 's' + now,
+  mine: true,
+  authorId: 'me',
+  name: nm,
+  role: (currentEntry && currentEntry.pos) || '',
+  text: txt,
+  parts: txt ? [txt] : [],
+  partT: txt ? [now] : [],
+  imgs: imgs,
+  imgT: imgs.map(() => now),
+  img: imgs[0] || '',
+  bg: Math.floor(Math.random() * AF_BG.length),
+  allowBond: allow,
+  t: now,
+  u: now,
+  rx: []
+};
     if (AF_DEMO) s.rx = [{ name: 'Chloe', r: 'celebrate', t: now }, { name: 'Jules', r: 'celebrate', t: now }, { name: 'Teresa', r: 'inspired', t: now }];
     ok = await afCommit(() => {
       AF.stories = AF.stories.filter(x => !(x.mine && !afAlive(x)));
@@ -20240,9 +20372,63 @@ function afActivitySheet() {
   if (document.getElementById('afV3Css')) return;
   const st = document.createElement('style'); st.id = 'afV3Css';
   st.textContent = `
-  #afViewer .af-r{border-radius:20px;padding:12px 16px;min-width:76px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#e5e5ea;font-weight:600;}
-  #afViewer .af-r b{font-size:22px;margin-bottom:2px;}
-  #afViewer .af-r.on{background:#E8CC7A;color:#1c1c1e;border-color:#E8CC7A;}
+  /* === AFFINITY: UNIFIED ROUND REACTIONS === */
+  #afViewer .af-r{
+    flex:0 0 58px;
+    width:58px;
+    min-width:58px;
+    max-width:58px;
+    height:58px;
+    min-height:58px;
+    box-sizing:border-box;
+    padding:0;
+    margin:0;
+    border-radius:50%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:0;
+    background:rgba(255,255,255,.08);
+    border:1.5px solid rgba(255,255,255,.2);
+    color:#e5e5ea;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease;
+    transform:none;
+  }
+  #afViewer .af-r b{
+    width:24px;
+    height:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0;
+    font-size:22px;
+    line-height:1;
+    font-weight:400;
+  }
+  #afViewer .af-r b svg{
+    display:block;
+    width:22px;
+    height:22px;
+    flex:none;
+  }
+  #afViewer .af-r.on{
+    background:#E8CC7A;
+    color:#1c1c1e;
+    border-color:#E8CC7A;
+    box-shadow:0 0 0 2px rgba(232,204,122,.22);
+  }
+  #afViewer .af-r:active{
+    transform:none;
+  }
+  #afViewer .af-r:focus-visible{
+    outline:2px solid #E8CC7A;
+    outline-offset:3px;
+  }
+  /* === END: UNIFIED ROUND REACTIONS === */
   .af-hbtn{width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;-webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .12s;}
   .af-hbtn:active{transform:scale(.9);opacity:.7;}
   .af-msg{display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:0 6px 0 18px;height:52px;box-sizing:border-box;background:rgba(255,255,255,.04);}
@@ -20635,15 +20821,66 @@ async function acReportSend(i) {
   setTimeout(() => confirmDialog({ title: 'Also block ' + first + '?', message: "They won't be able to message or bond with you.", confirmLabel: 'Block', cancelLabel: 'Not now', danger: true, onConfirm: async () => { await afBlockNow(p.key, p.name); acClose(); } }), 450);
 }
 
-/* ── story message bar → ArtiChats (back returns to the story) ── */
+/* ── story message bar → ArtiChats: send to the actual story owner ── */
 afMsgSend = async function (id) {
-  const inp = document.getElementById('afMsgIn'), x = (inp && inp.value || '').trim(); if (!x) return;
-  const s = afStories().find(v => v.id === id); if (!s || s.mine) return;
-  await acLoad();
-  const t = await acStartThread(acPersonOf(s)); if (!t) return;
-  if (!(await acPush(t, { m: 1, t: Date.now(), x: x, c: { sid: id, snip: String(s.text || 'Photo story').slice(0, 80) } }))) return;
-  inp.value = ''; haptic('success'); afLog('msg', s.name, 'You sent a message');
-  acOpenModal({ tid: t.id, origin: 'story' });
+  const inp = document.getElementById('afMsgIn');
+  const x = (inp && inp.value || '').trim();
+  if (!x) return;
+
+  const s = afStories().find(v => v.id === id);
+  if (!s || s.mine) return;
+
+  const btn = document.querySelector('#afViewer [onclick*="afMsgSend"]');
+  if (btn) btn.disabled = true;
+
+  try {
+    await acLoad();
+
+    /* Resolve the real ArtiChats recipient, not a display-name placeholder. */
+    const p = await acResolveName(s.name, s);
+    if (!p || !p.key) {
+      haptic('error');
+      showToast(
+        String(s.name).split(' ')[0] +
+        " couldn't be reached on ArtiChats. Try again later.",
+        'error'
+      );
+      return;
+    }
+
+    const t = await acStartThread(p);
+    if (!t) {
+      haptic('error');
+      showToast("Couldn't open this conversation", 'error');
+      return;
+    }
+
+    const sent = await acPush(t, {
+      m: 1,
+      t: Date.now(),
+      x: x,
+      c: {
+        sid: id,
+        snip: String(s.text || 'Photo story').slice(0, 80)
+      }
+    });
+
+    if (!sent) return;
+
+    inp.value = '';
+    haptic('success');
+    afLog('msg', s.name, 'You sent a message');
+
+    await acOpenModal({ tid: t.id, origin: 'story' });
+  } catch (e) {
+    haptic('error');
+    showToast(
+      String((e && e.message) || "Couldn't send message"),
+      'error'
+    );
+  } finally {
+    if (btn && btn.isConnected) btn.disabled = false;
+  }
 };
 /* "Message" from the story menu / Activity sheet → ArtiChats (back returns to that screen) */
 (function () {

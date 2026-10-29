@@ -22342,8 +22342,8 @@ acChatHtml = function (t) {
   const bottom = t.status === 'request'
     ? `<div style="${bar}"><div class="dc-note" style="text-align:center;margin-bottom:10px;">${g ? 'You were invited to this group. Accept to see and send messages.' : auEsc(p.name.split(' ')[0]) + " is not connected with you. Accept to reply. They won't know you've read this."}</div><div style="display:flex;gap:8px;"><button type="button" class="dc-btn alt" onclick="acDecline()">Decline</button><button type="button" class="dc-btn" onclick="acAccept()">Accept</button></div>${g ? '' : `<button type="button" class="dc-btn link" style="color:#FF453A;margin-top:4px;" onclick="acBlockAsk()">Block</button>`}</div>`
     : acComposer(t);
-  return `${hdr}${pinH}<div class="dc-msgs" id="acMsgs" role="log" aria-live="polite" style="padding:8px 16px;background-color:#17253B;background-image:linear-gradient(rgba(16,29,48,.16),rgba(16,29,48,.16)),url('/artichats-wallpaper.png');background-size:cover;background-position:center;background-repeat:no-repeat;background-attachment:scroll;">${intro}${bubbles}</div>${bottom}`;
-};
+  
+  return `${hdr}${pinH}<div class="dc-msgs" id="acMsgs" role="log" aria-live="polite" style="padding:8px 16px;">${intro}${bubbles}</div>${bottom}`;
 
 /* ── ArtiChats call handler ── */
 let AC_CALL_STREAM = null;

@@ -23235,7 +23235,43 @@ function mkRobotLegacyUnused(pal = 'default', name = 'Member', slot = {}) {
 }
 
   /* ── pose / animation ── */
-  function armTarget(r, s, t) {
+  
+function armTarget(r, s, t) {
+  /*
+   * Match the original ArtiBot idle pose:
+   * upper arm rests naturally at the side.
+   * Keep motion small and blend gestures smoothly.
+   */
+  let sx = 0;
+  let sz = s * 0.07;
+  let ex = -0.12;
+  let ez = 0;
+
+  /* Subtle conversational gesture — right arm only */
+  if (r.talk > 0 && s === 1) {
+    const p = t * 2.6 + r.ph;
+    const w = Math.sin(p) * 0.5 + 0.5;
+
+    sx = -0.16 - w * 0.20;
+    sz = 0.10 + w * 0.12;
+    ex = -0.18 - w * 0.16;
+    ez = Math.sin(p * 0.7) * 0.06;
+  }
+
+  /* Gentle wave, not a fast repetitive swing */
+  if (r.wave > 0 && s === 1) {
+    const p = t * 4.0 + r.ph;
+    const fade = Math.min(1, r.wave / 0.35);
+
+    sx = -0.45 * fade;
+    sz = 0.55 * fade;
+    ex = -0.25 * fade;
+    ez = Math.sin(p) * 0.16 * fade;
+  }
+
+  return [sx, sz, ex, ez];
+}
+
     const w = r.sitW, st = r.slot.st;
     let sx = lerp(0, -.55, w), sz = s * lerp(.07, .12, w), ex = lerp(-.12, -.7, w), ez = 0;
     if (st === 1) { sx = -.9; ex = -1.35; sz = s * .15; }
@@ -23301,7 +23337,7 @@ if (r.next <= 0 && !G.reduce) {
     r.head.rotation.y = r.hy;
     r.head.rotation.x = r.talk > 0 ? Math.sin(t * 7 + r.ph) * .1 - .02 : Math.sin(t * .8 + r.ph) * .03;
     /* arms */
-    const k = 1 - Math.exp(-dt * 8);
+    const k = 1 - Math.exp(-dt * 4.5);
     [1, -1].forEach(s => {
       const a = r.arms[s], tg = armTarget(r, s, t);
       for (let i = 0; i < 4; i++) a.v[i] += (tg[i] - a.v[i]) * k;

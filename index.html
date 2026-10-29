@@ -21641,22 +21641,11 @@ acNew = function () {
   vis();
 
   
-/* Keep the original Affinity ArtiChats entry; retain floating FAB */
+
+/* Floating ArtiChats FAB only; remove duplicate Affinity entry */
 acMount = function () {
-  const b = document.getElementById('afBody');
-  if (b && !document.getElementById('acEntry')) {
-    const c = acCounts(), n = c.unread + c.req;
-    const tab = (!c.unread && c.req) ? 'requests' : 'inbox';
-    const el = document.createElement('button');
-    el.id = 'acEntry';
-    el.type = 'button';
-    el.style.cssText = AC_PILL + 'margin:12px auto;display:flex;';
-    el.setAttribute('aria-label', 'Open ArtiChats');
-    el.innerHTML = '<span style="font-size:25px;line-height:1;">☏</span>' +
-      (n ? '<span style="position:absolute;">' + n + '</span>' : '');
-    el.addEventListener('click', () => acOpenModal({ tab }));
-    b.appendChild(el);
-  }
+  const o = document.getElementById('acEntry');
+  if (o) o.remove();
   badge();
   try { afSegSync(); } catch (e) {}
 };

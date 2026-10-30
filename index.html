@@ -24697,6 +24697,159 @@ window.__ATHNA_READY__ = true;
 
   afRender(true);
 })();
+/* === START: AFFINITY ONE-STORY + HORIZONTAL ACTIONS === */
+(function () {
+  if (document.getElementById('afOne3Css')) return;
+  const st = document.createElement('style'); st.id = 'afOne3Css';
+  st.textContent = `
+  #afBody .af-rail{position:relative;}
+  #afBody .af-sp .af-sc{cursor:default;touch-action:manipulation;}
+  /* tanggal pill: plain icons lang, horizontal sa baba */
+  #afBody .af-rail2{flex-direction:row !important;left:0 !important;right:0 !important;bottom:12px !important;justify-content:center;align-items:center;gap:26px;}
+  #afBody .af-rl{background:none !important;border:none !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;width:44px;height:44px;}
+  #afBody .af-rl svg{width:28px;height:28px;filter:drop-shadow(0 1px 4px rgba(0,0,0,.65));}
+  #afBody .af-hrt{flex-direction:row !important;gap:2px;}
+  #afBody .af-hrt .n{font-size:14px;}
+  #afBody .af-sp .af-sc::after{content:'';position:absolute;left:0;right:0;bottom:0;height:130px;background:linear-gradient(transparent,rgba(0,0,0,.55));pointer-events:none;z-index:1;}
+  #afBody .af-sp .af-sc .ft{bottom:56px !important;padding:20px 14px 6px !important;background:none !important;}
+  .af-you{width:auto !important;padding:0 14px 0 4px !important;gap:8px;border-radius:22px !important;font:700 13px -apple-system,'SF Pro Text',sans-serif;}
+  .af-you .rg{border-radius:50%;padding:2px;display:flex;border:2px solid #E8CC7A;}
+  .af-you .rg.none{border-color:rgba(60,60,67,.3);border-style:dashed;}`;
+  document.head.appendChild(st);
+
+  const HEART = '<path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/>';
+  const ic = p => `<svg width="28" height="28" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+
+  /* ── story page: walang +, walang pill, horizontal ang actions ── */
+  function afPage2(s) {
+    const id = s.id, mine = !!s.mine, im = afImgs(s), bg = AF_BG[(s.bg || 0) % AF_BG.length];
+    const cover = im.length ? `<img src="${auEsc(im[0])}" alt="">`
+      : `<div class="tx" style="background:${bg};width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;">${auEsc(s.text || '')}</div>`;
+    const cap = (im.length && s.text) ? `<div class="ft"><div style="color:#fff;font:14px/1.4 -apple-system,'SF Pro Text',sans-serif;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${auEsc(s.text)}</div></div>` : '';
+    const n = afHearts(s), on = mine ? n > 0 : AF.mine[id] === 'bond', off = !mine && s.allowBond === false;
+    const rail = `<div class="af-rail2">
+      <div class="af-hrt${on ? ' on' : ''}${off ? ' off' : ''}"><button type="button" class="af-rl" aria-label="${mine ? 'See who bonded' : 'Bond'}" aria-pressed="${on}" onclick="event.stopPropagation();afHeartDo('${id}',event.clientX,event.clientY,false)">${ic(HEART)}</button><span class="n" aria-label="${n} bonds">${n}</span></div>
+      <button type="button" class="af-rl" aria-label="Artiverse" onclick="event.stopPropagation();haptic('light');showToast('Artiverse is coming soon','neutral')">${ic('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>')}</button>
+      <button type="button" class="af-rl" aria-label="More options" onclick="event.stopPropagation();afMenu('${id}')">${ic('<circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/>')}</button>
+    </div>`;
+    return `<section class="af-sp" data-id="${id}"><div class="af-sc" aria-label="Story from ${auEsc(mine ? 'you' : s.name)}${mine ? '' : '. Double tap to bond'}" onclick="afScTap(event,'${id}')">
+      <div class="cv">${cover}</div>
+      <div class="hd">${afAvOf(s, 40)}<div style="min-width:0;"><b>${auEsc(mine ? 'You' : s.name)}</b><small>${auEsc(s.role || '')}${s.role ? ' · ' : ''}${afAgo(s.t)}</small></div></div>
+      ${cap}${rail}</div></section>`;
+  }
+  const _r3 = afRender;
+  afRender = function () {
+    _r3.apply(this, arguments);
+    document.querySelectorAll('#afBody .af-add').forEach(e => e.remove());
+    const rail = document.querySelector('#afBody .af-rail'); if (!rail) return;
+    const keep = rail.scrollTop;
+    rail.innerHTML = afStories().map(afPage2).join('');
+    rail.scrollTop = keep;
+  };
+
+  /* ── wala nang loob na viewer: ang nakikita sa Affinity ay yun na ── */
+  afOpen = function () {};
+
+  /* ── double tap = auto bond heart ── */
+  window.afScTap = function (e, id) {
+    const s = afStories().find(x => x.id === id); if (!s || s.mine) return;
+    const L = window._afTap || (window._afTap = {}), now = Date.now();
+    if (L.id === id && now - L.t < 320) { L.id = null; afHeartDo(id, e.clientX, e.clientY, true); return; }
+    L.id = id; L.t = now;
+  };
+
+  /* ── bond → request sa ArtiChats (mapupunta sa Requests nila) ── */
+  async function afBondChat(s) {
+    try {
+      if (!acOk()) return;
+      const p = await acResolveName(s.name, s);   /* kailangan ng s.cardId galing backend para real na user */
+      if (!p) return;
+      const t = await acStartThread(p);
+      await acPush(t, { m: 1, t: Date.now(), x: '🤍 Bond request: I liked your story and would like to connect.', c: { sid: s.id, snip: String(s.text || 'Photo story').slice(0, 80) } });
+      showToast('Bond request sent to ' + String(s.name).split(' ')[0] + ' in ArtiChats', 'success');
+    } catch (e) {}
+  }
+  const _b3 = afBond;
+  afBond = async function (s) {
+    const had = AF.mine[s.id];
+    await _b3.apply(this, arguments);
+    if (!had && AF.mine[s.id] === 'bond') afBondChat(s);
+  };
+
+  /* ── isang post lang kada araw, isang photo lang ── */
+  afShare = function () {
+    const m = afMine();
+    if (m) {
+      const left = Math.max(1, Math.ceil((AF_TTL - (Date.now() - m.t)) / 36e5));
+      haptic('error'); showToast('You already posted today. You can post again in about ' + left + 'h', 'neutral'); return;
+    }
+    haptic('light'); afDraftImgs = []; afDraftTxt = ''; afStep = 'text';
+    auMakeSheet('afShareOverlay', 'New story', '<div id="afShBody"></div>');
+    afShPaint();
+  };
+  afShPaint = function () {
+    const w = document.getElementById('afShBody'); if (!w) return;
+    const F = "font-family:-apple-system,'SF Pro Text',sans-serif;", has = afDraftImgs.length > 0;
+    w.innerHTML = `<div class="dc-note" style="margin:-4px 2px 12px;">One story per day. It stays for 24 hours and can't be added to later.</div>
+      ${has ? `<div style="position:relative;margin-bottom:12px;"><img src="${afDraftImgs[0]}" alt="" style="width:100%;max-height:260px;object-fit:cover;border-radius:16px;display:block;"><button type="button" aria-label="Remove photo" onclick="afDropPhoto(0)" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:18px;cursor:pointer;padding:0;">×</button></div>` : ''}
+      <textarea id="afTxt" class="am-input" maxlength="300" placeholder="${has ? 'Add a caption…' : "What's on your mind?"}" style="min-height:100px;resize:vertical;" oninput="afDraftTxt=this.value;document.getElementById('afCnt').textContent=this.value.length+'/300'">${auEsc(afDraftTxt)}</textarea>
+      <div id="afCnt" style="${F}font-size:11px;color:rgba(60,60,67,.4);text-align:right;margin:4px 2px 0;">${afDraftTxt.length}/300</div>
+      <button type="button" class="dc-btn alt" style="margin:10px 0;" onclick="afPickPhoto()">${has ? 'Change photo' : 'Add a photo'}</button>
+      <label style="display:flex;align-items:center;gap:10px;${F}font-size:14px;color:#1c1c1e;margin:4px 2px 14px;cursor:pointer;"><input type="checkbox" id="afAllow" ${AF.bondPolicy === 'none' ? 'disabled' : 'checked'} style="width:20px;height:20px;">Allow people to Bond with me</label>
+      <button type="button" class="dc-btn" onclick="afPost()">Post</button>`;
+  };
+  afPhotoPaint = function () { afShPaint(); };
+  afDropPhoto = function () { afDraftImgs = []; haptic('light'); afShPaint(); };
+  afPickPhoto = function () {
+    haptic('light');
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;';
+    inp.addEventListener('change', async () => {
+      const f = inp.files && inp.files[0]; inp.remove(); if (!f) return;
+      const d = await afReadImg(f);
+      if (d) afDraftImgs = [d]; else showToast("Can't read that photo", 'error');
+      afShPaint();
+    });
+    document.body.appendChild(inp); inp.click();
+  };
+  afPost = async function () {
+    if (afMine()) { haptic('error'); showToast('You already posted today', 'neutral'); return; }
+    const txt = (document.getElementById('afTxt')?.value || '').trim().slice(0, 300), img = afDraftImgs[0] || '';
+    const allow = document.getElementById('afAllow')?.checked !== false && AF.bondPolicy !== 'none';
+    if (!txt && !img) { haptic('error'); showToast('Add a photo or a few words', 'error'); return; }
+    const now = Date.now();
+    const nm = ((currentEntry && currentEntry.name) || 'You').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    const s = { id: 's' + now, mine: true, authorId: 'me', name: nm, role: (currentEntry && currentEntry.pos) || '', text: txt, parts: txt ? [txt] : [], partT: txt ? [now] : [], imgs: img ? [img] : [], imgT: img ? [now] : [], img: img, bg: Math.floor(Math.random() * AF_BG.length), allowBond: allow, t: now, u: now, rx: [] };
+    const ok = await afCommit(() => {
+      AF.stories = AF.stories.filter(x => !(x.mine && !afAlive(x)));
+      AF.stories.push(s);
+      if (AF_DEMO && allow) AF.bonds.push({ id: 'b' + now, storyId: s.id, dir: 'in', who: AF_SIM, status: 'pending', t: now });
+    });
+    if (!ok) { showToast("Couldn't post. Try a smaller photo", 'neutral'); return; }
+    /* TODO backend: apiPost('affinityPost', s) */
+    haptic('success'); closeAuGenericModal('afShareOverlay'); afDraftImgs = []; afDraftTxt = ''; afRender(true);
+    showToast('Story shared for 24 hours', 'success');
+  };
+
+  /* ── "You" icon sa taas, katabi ng Treats: balik sa story mo, seamless ── */
+  window.afGoMine = function () {
+    haptic('light');
+    const m = afMine(); if (!m) { afShare(); return; }
+    const rail = document.querySelector('#afBody .af-rail'); if (!rail) return;
+    const pg = rail.querySelector('[data-id="' + m.id + '"]');
+    if (pg) rail.scrollTo({ top: pg.offsetTop, behavior: 'smooth' });
+  };
+  afIconRow = function () {
+    const m = afMine(), nm = (currentEntry && currentEntry.name) || 'You';
+    const sv = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3v2M12 3v2"/></svg>';
+    return `<div style="display:flex;gap:12px;align-items:center;">
+      <button type="button" class="af-ico af-you" aria-label="${m ? 'Go to your story' : 'Add your story'}" onclick="afGoMine()"><span class="rg${m ? '' : ' none'}">${afAv(nm, '#8E8E93', 30, profilePhotoB64)}</span>${m ? 'You' : 'Add'}</button>
+      <button type="button" class="af-ico" aria-label="Treats, coming soon" style="opacity:.38;filter:grayscale(1);" onclick="haptic('light');showToast('Treats are coming soon','neutral')">${sv}</button></div>`;
+  };
+
+  afRender(true);
+})();
+/* === END: AFFINITY ONE-STORY + HORIZONTAL ACTIONS === */
 /* === END: AFFINITY SURFACE === */
 /* === END: READY FLAG === */
 </script>

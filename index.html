@@ -20961,6 +20961,82 @@ function afMsgSend(id) {
   afLog('msg', s.name, 'You sent a message');
   window.location.href = 'sms:' + intl + (apple ? '&' : '?') + 'body=' + encodeURIComponent(t);
 }
+/* === START: AFFINITY VIEWER v4 (book-style, bond heart only, floating menu + Artiverse) === */
+(function () {
+  if (document.getElementById('afV4Css')) return;
+  const st = document.createElement('style'); st.id = 'afV4Css';
+  st.textContent = `
+  .af-vs{width:100%;max-width:480px;margin:0 auto;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .af-vs::-webkit-scrollbar{display:none;}
+  .af-pg{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;padding:max(14px,env(safe-area-inset-top)) 16px max(96px,calc(env(safe-area-inset-bottom) + 84px));box-sizing:border-box;}
+  .af-pgm{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:12px;padding:14px 0;overflow:hidden;}
+  .af-pg img{pointer-events:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
+  .af-fl{position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .af-fl .af-hbtn{background:rgba(255,255,255,.16);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+  .af-heart{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:4;width:58px;height:58px;border-radius:50%;border:none;padding:0;background:rgba(255,255,255,.16);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;}
+  .af-heart:active{transform:translateX(-50%) scale(.9);}
+  .af-heart svg{fill:none;transition:fill .2s;}
+  .af-heart.on svg{fill:#fff;}
+  .af-heart.off{opacity:.45;}`;
+  document.head.appendChild(st);
+})();
+
+function afPageHtml(s) {
+  const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+  const mine = !!s.mine, bg = AF_BG[(s.bg || 0) % AF_BG.length];
+  const im = afImgs(s), len = String(s.text || '').length, fs = len > 400 ? 15 : len > 200 ? 18 : 26;
+  const car = im.length ? `<div style="width:100%;"><div class="af-car" onscroll="afCarScroll(this)">${im.map(u => `<img src="${auEsc(u)}" alt="">`).join('')}</div>${im.length > 1 ? `<div class="af-dots" aria-hidden="true">${im.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}</div>` : '';
+  const media = car + (s.text ? (im.length
+    ? `<div style="${F}color:#fff;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;width:100%;">${auEsc(s.text)}</div>`
+    : `<div style="width:100%;border-radius:32px;padding:44px 28px;box-sizing:border-box;background:${bg};color:#fff;font:700 ${fs}px/1.3 -apple-system,'SF Pro Display',sans-serif;white-space:pre-wrap;word-break:break-word;">${auEsc(s.text)}</div>`) : '');
+  const bonded = AF.mine[s.id] === 'bond';
+  const heart = mine ? '' : `<button type="button" class="af-heart${bonded ? ' on' : ''}${s.allowBond === false ? ' off' : ''}" aria-label="Bond" aria-pressed="${bonded}" onclick="afHeart('${s.id}')"><svg width="28" height="28" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg></button>`;
+  return `<section class="af-pg" data-id="${s.id}">
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <div style="padding:3px;border-radius:50%;border:2px solid rgba(74,157,224,.7);flex:none;">${afAvOf(s, 46)}</div>
+      <div style="flex:1;min-width:0;"><div style="${F}font-size:18px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${auEsc(mine ? 'You' : s.name)}</div><div style="${F}font-size:14px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${auEsc(s.role || '')}${s.role ? ' · ' : ''}${afAgo(s.t)}</div></div>
+      <button type="button" class="af-hbtn" aria-label="Close story" onclick="afClose()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="af-pgm">${media}</div>
+    <div class="af-fl">
+      <button type="button" class="af-hbtn" aria-label="More options" onclick="afMenu('${s.id}')"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+      <button type="button" class="af-hbtn" aria-label="Artiverse" title="Artiverse" onclick="haptic('light');showToast('Artiverse is coming soon','neutral')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></button>
+    </div>
+    ${heart}</section>`;
+}
+
+function afHeart(id) {
+  const s = afStories().find(x => x.id === id);
+  if (!s || s.mine) return;
+  afView = id;
+  afBond(s);
+}
+
+afOpen = function (id) {
+  const L = afStories(), idx = L.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  haptic('light'); afView = id;
+  document.getElementById('afViewer')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'afViewer'; ov.className = 'share-overlay show';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Stories');
+  ov.style.cssText = 'background:#1c1c1e;align-items:stretch;backdrop-filter:none;-webkit-backdrop-filter:none;';
+  ov.onclick = e => { if (e.target === ov) afClose(); };
+  ov.innerHTML = `<div class="af-vs">${L.map(afPageHtml).join('')}</div>`;
+  document.body.appendChild(ov);
+  const sc = ov.querySelector('.af-vs'), pgs = [...sc.children];
+  sc.style.scrollSnapType = 'none';
+  sc.scrollTop = idx * sc.clientHeight;
+  requestAnimationFrame(() => { sc.style.scrollSnapType = ''; });
+  let raf = 0;
+  sc.addEventListener('scroll', () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const p = pgs[Math.round(sc.scrollTop / Math.max(1, sc.clientHeight))];
+      if (p && p.dataset.id !== afView) { afView = p.dataset.id; haptic('light'); }
+    });
+  }, { passive: true });
+};
+/* === END: AFFINITY VIEWER v4 === */
 /* === END: AFFINITY VIEWER v3 === */
 /* === START: ARTICHATS (Affinity bottom entry + independent messaging modal) === */
 const AC_KEY = 'artichats-v1', ACF = "font-family:-apple-system,'SF Pro Text',sans-serif;";

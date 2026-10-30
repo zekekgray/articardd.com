@@ -24055,6 +24055,106 @@ function acSyncSend() {
 })();
 /* === END: ARTICHATS INTERACTION POLISH === */
 window.__ATHNA_READY__ = true;
+ /* === START: AFFINITY SURFACE (one story at a time, actions outside) === */
+(function () {
+  if (document.getElementById('afSurfCss')) return;
+  const st = document.createElement('style'); st.id = 'afSurfCss';
+  st.textContent = `
+  #afBody .af-rail{display:block !important;overflow-y:auto !important;overflow-x:hidden !important;scroll-snap-type:y mandatory;margin:8px 0 0 !important;padding:0 !important;max-height:none !important;height:calc(100dvh - 300px);min-height:380px;border-radius:26px;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;}
+  #afBody .af-rail::-webkit-scrollbar{display:none;}
+  .af-sp{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;box-sizing:border-box;padding:0 0 8px;}
+  .af-sp .af-sc{position:relative;height:100%;border-radius:26px;overflow:hidden;background:#1c1c1e;box-shadow:0 10px 30px rgba(0,0,0,.16);cursor:pointer;}
+  .af-sp .af-sc .cv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+  .af-sp .af-sc .cv img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;}
+  .af-sp .af-sc .cv .tx{padding:28px 26px;color:#fff;font:700 24px/1.3 -apple-system,'SF Pro Display',sans-serif;white-space:pre-wrap;word-break:break-word;max-height:100%;overflow:hidden;}
+  .af-sp .af-sc .hd{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:14px;background:linear-gradient(rgba(0,0,0,.45),transparent);color:#fff;z-index:2;}
+  .af-sp .af-sc .hd b{font:700 15px -apple-system,'SF Pro Text',sans-serif;display:block;}
+  .af-sp .af-sc .hd small{font:12px -apple-system,'SF Pro Text',sans-serif;opacity:.7;display:block;}
+  .af-sp .af-sc .ft{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 12px;background:linear-gradient(transparent,rgba(0,0,0,.55));z-index:2;}
+  .af-sp .af-rb{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px;-webkit-overflow-scrolling:touch;touch-action:pan-x;}
+  .af-sp .af-rb::-webkit-scrollbar{display:none;}
+  .af-sp .af-rb .af-r{flex:0 0 46px;width:46px;height:46px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  .af-sp .af-rb .af-r b{display:flex;margin:0;}
+  .af-sp .af-rb .af-r b svg{width:20px;height:20px;}
+  .af-sp .af-rb .af-r.on{background:#E8CC7A;color:#1c1c1e;border-color:#E8CC7A;}
+  .af-sp .af-bar{display:flex;align-items:center;gap:10px;}
+  .af-sp .af-bar .af-msg{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.3);border-radius:22px;padding:0 6px 0 14px;height:44px;box-sizing:border-box;background:rgba(0,0,0,.28);}
+  .af-sp .af-bar .af-msg input{flex:1;min-width:0;background:none;border:none;outline:none;color:#fff;font:16px -apple-system,'SF Pro Text',sans-serif;}
+  .af-sp .af-bar .af-msg input::placeholder{color:rgba(255,255,255,.55);}
+  .af-sp .af-bar .af-send{width:34px;height:34px;border-radius:50%;border:none;background:#E8CC7A;color:#1c1c1e;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .af-sp .af-bar .af-send.on{display:flex;}
+  .af-sp .af-bar .af-hbtn{width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  .af-sp .af-bar .af-hbtn.on svg{fill:#fff;}
+  .af-sp .af-bar .af-hbtn.off{opacity:.45;}
+  .af-sp .af-bar .af-hbtn svg{fill:none;}
+  .af-sp .af-dts{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:3;}
+  .af-sp .af-dts i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4);}`;
+  document.head.appendChild(st);
+
+  const ic = p => `<svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+
+  function page(s) {
+    const mine = !!s.mine, im = afImgs(s), my = AF.mine[s.id] || '';
+    const bg = AF_BG[(s.bg || 0) % AF_BG.length];
+    const cover = im.length ? `<img src="${auEsc(im[0])}" alt="">` : `<div class="tx" style="background:${bg};width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;">${auEsc(s.text || '')}</div>`;
+    const cap = im.length && s.text ? `<div style="color:#fff;font:14px/1.4 -apple-system,'SF Pro Text',sans-serif;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${auEsc(s.text)}</div>` : '';
+    let foot;
+    if (mine) {
+      const n = (s.rx || []).length;
+      foot = `<div class="af-bar"><button type="button" class="af-hbtn" style="flex:1;width:auto;border-radius:22px;font:600 14px -apple-system,sans-serif;" onclick="event.stopPropagation();afReactors('${s.id}')">Reactions${n ? ' · ' + n : ''}</button><button type="button" class="af-hbtn" aria-label="More" onclick="event.stopPropagation();afMenu('${s.id}')">${ic('<circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/>')}</button></div>`;
+    } else {
+      const bonded = AF.mine[s.id] === 'bond';
+      foot = `<div class="af-rb" role="group" aria-label="React">${AF_REACTS.filter(r => r.id !== 'bond').map(r => `<button type="button" class="af-r${my === r.id ? ' on' : ''}" aria-label="${r.l}" aria-pressed="${my === r.id}" onclick="event.stopPropagation();afSurfReact('${s.id}','${r.id}',this)"><b>${r.e}</b></button>`).join('')}</div>
+      <div class="af-bar">
+        <div class="af-msg"><input type="text" maxlength="500" enterkeyhint="send" autocomplete="off" aria-label="Message" placeholder="Message…" onclick="event.stopPropagation()" oninput="this.parentElement.querySelector('.af-send').classList.toggle('on',!!this.value.trim())" onkeydown="if(event.key==='Enter')afSurfMsg('${s.id}',this)"><button type="button" class="af-send" aria-label="Send" onclick="event.stopPropagation();afSurfMsg('${s.id}',this.previousElementSibling)">${ic('<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>')}</button></div>
+        <button type="button" class="af-hbtn${bonded ? ' on' : ''}${s.allowBond === false ? ' off' : ''}" aria-label="Bond" aria-pressed="${bonded}" onclick="event.stopPropagation();afSurfBond('${s.id}',this)">${ic('<path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/>')}</button>
+        <button type="button" class="af-hbtn" aria-label="More" onclick="event.stopPropagation();afMenu('${s.id}')">${ic('<circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/>')}</button>
+      </div>`;
+    }
+    return `<section class="af-sp" data-id="${s.id}"><div class="af-sc" role="button" tabindex="0" aria-label="Open story from ${auEsc(mine ? 'you' : s.name)}" onclick="afOpen('${s.id}')" onkeydown="if(event.key==='Enter')afOpen('${s.id}')">
+      <div class="cv">${cover}</div>
+      <div class="hd">${afAvOf(s, 40)}<div style="min-width:0;"><b>${auEsc(mine ? 'You' : s.name)}</b><small>${auEsc(s.role || '')}${s.role ? ' · ' : ''}${afAgo(s.t)}</small></div></div>
+      <div class="ft">${cap}${foot}</div></div></section>`;
+  }
+
+  /* palitan ang tile rail ng patayong feed, kasunod ng bawat afRender */
+  const _r = afRender;
+  afRender = function () {
+    _r.apply(this, arguments);
+    const rail = document.querySelector('#afBody .af-rail'); if (!rail) return;
+    const L = afStories();
+    const keep = rail.scrollTop;
+    rail.innerHTML = L.map(page).join('');
+    rail.scrollTop = keep;
+  };
+
+  /* mga aksyon sa mismong card (walang pag-open ng viewer) */
+  window.afSurfReact = async function (id, r, btn) {
+    const s = afStories().find(x => x.id === id); if (!s || s.mine) return;
+    const had = AF.mine[id] === r;
+    if (!(await afCommit(() => { if (had) delete AF.mine[id]; else AF.mine[id] = r; }))) return;
+    btn.parentElement.querySelectorAll('.af-r').forEach(b => { const on = !had && b === btn; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    haptic(had ? 'light' : 'success');
+    if (!had) afLog('react', s.name, 'You reacted: ' + ((AF_REACTS.find(x => x.id === r) || {}).l || r));
+  };
+  window.afSurfBond = async function (id, btn) {
+    const s = afStories().find(x => x.id === id); if (!s || s.mine) return;
+    await afBond(s);
+    const on = AF.mine[id] === 'bond';
+    btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', String(on));
+  };
+  window.afSurfMsg = function (id, inp) {
+    if (!inp || !inp.value.trim()) return;
+    afView = id;
+    let tmp = document.getElementById('afMsgIn');
+    if (!tmp) { tmp = document.createElement('input'); tmp.id = 'afMsgIn'; tmp.style.display = 'none'; document.body.appendChild(tmp); }
+    tmp.value = inp.value;
+    Promise.resolve(afMsgSend(id)).then(() => { inp.value = ''; inp.parentElement.querySelector('.af-send')?.classList.remove('on'); tmp.remove(); });
+  };
+
+  afRender(true);
+})();
+/* === END: AFFINITY SURFACE === */
 /* === END: READY FLAG === */
 </script>
 </body>

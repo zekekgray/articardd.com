@@ -25912,7 +25912,7 @@ function afArtiverse(id) {
     const strip = im.length > 1 ? `<div class="af-fs" onclick="event.stopPropagation()">${im.map((u, i) => `<img class="${i ? '' : 'on'}" src="${auEsc(u)}" alt="Photo ${i + 1}" draggable="false" onclick="event.stopPropagation();afPcGo('${id}',${i})">`).join('')}</div>` : '';
     const ft = (cap || foot || strip) ? `<div class="ft">${strip}${cap}${foot}</div>` : '';
     const rail = `<div style="display:contents;">
-      <button type="button" class="af-pl" aria-label="Artiverse" onclick="event.stopPropagation();afArtiverse('${id}')">${ic('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>')}</button>
+      <button type="button" class="af-pl" aria-label="Artiverse" onclick="event.stopPropagation();afArtiverse('${id}')"><img src="assets/YOUR-LOGO-FILENAME.png" alt="" width="22" height="22" style="width:22px;height:22px;object-fit:contain;display:block;"></button>
       <button type="button" class="af-pl" aria-label="More options" onclick="event.stopPropagation();afMenu('${id}')">${ic('<circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/>')}</button>
       ${mine ? `<button type="button" class="af-pl" aria-label="Add to your story" onclick="event.stopPropagation();haptic('light');afShare()">${ic('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>')}</button>` : ''}
     </div>`;

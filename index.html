@@ -25109,7 +25109,215 @@ function afArtiverse(id) {
   };
   try { afRender(true); } catch (e) {}
 })();
-/* === END: STORY PHOTO STRIP === */
+/* === END: STORY PHOTO STRIP === */                             
+/* === START: ARTICHATS FROM CONTACTS + MEETING OPTION + LIQUID GLASS NAV === */
+(function artiNavAndChat() {
+
+  /* ───────── 1. CONTACT → ARTICHATS ───────── */
+  try {
+    CD_QUICK_ICONS.chat = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+
+    var chatBusy = false;
+    window.cdChatWith = async function (c) {
+      if (!c || chatBusy) return;
+      var first = String(c.name || 'this contact').split(' ')[0];
+      if (!acOk()) { haptic('error'); showToast('Sign in to use ArtiChats', 'neutral'); return; }
+      if (!c.emails.length && !c.phones.length) { haptic('error'); showToast('Add ' + first + "'s phone or email first so we can find their articardd", 'neutral'); return; }
+      chatBusy = true; haptic('medium');
+      try {
+        var r = await acSrv('ownerChatFind', { items: [{ id: c.id, emails: c.emails.slice(0, 3), phones: c.phones.slice(0, 3) }] });
+        var m = r && r.matches && r.matches[c.id];
+        if (!m) { haptic('error'); showToast(first + ' is not on articardd yet. Use Message or Mail instead', 'neutral'); return; }
+        /* bagong thread = unang message mo ay papasok sa Requests nila */
+        var t = await acStartThread(acPerson(m));
+        await acOpenModal({ tid: t.id, origin: 'overlay' });
+      } catch (e) { haptic('error'); showToast(String((e && e.message) || "Couldn't open ArtiChats"), 'error'); }
+      finally { chatBusy = false; }
+    };
+
+    var _cdfsAction = cdfsAction;
+    cdfsAction = function (type) {
+      if (type === 'chat') { if (activeContact) window.cdChatWith(activeContact); return; }
+      return _cdfsAction.apply(this, arguments);
+    };
+
+    var _cdRefresh = cdRefreshContactActions;
+    cdRefreshContactActions = function () {
+      _cdRefresh.apply(this, arguments);
+      var q = document.getElementById('cdfs-quick-row');
+      if (q && !q.querySelector('[onclick*="\'chat\'"]'))
+        q.insertAdjacentHTML('afterbegin', cdQuickBtnLightRaw('chat', 'ArtiChat').replace('#8E8E93', '#1c1c1e'));
+    };
+  } catch (e) { console.warn('contact chat patch', e); }
+
+  /* ───────── 2. BOOK A MEETING: ArtiChat option ───────── */
+  try {
+    if (AMX_LOCS.indexOf('ArtiChat') < 0) AMX_LOCS.push('ArtiChat');
+    AMX_ICONS['ArtiChat'] = '<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/></svg>';
+
+    var _amxRender = amxRender;
+    amxRender = function () {
+      _amxRender.apply(this, arguments);
+      if (!amx || amx.step !== 3 || amx.location !== 'ArtiChat' || document.body.classList.contains('public-mode')) return;
+      var body = document.getElementById('amxBody');
+      var g = body && body.querySelector('[data-act="gcal"]');
+      if (!g || body.querySelector('[data-act="openchat"]')) return;
+      g.insertAdjacentHTML('beforebegin', '<button type="button" class="amx-btn amx-primary amx-full" data-act="openchat">Chat on ArtiChats</button>');
+    };
+
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-act="openchat"]');
+      if (!b || !amx) return;
+      e.stopPropagation(); e.preventDefault();
+      var em = String(amx.email || '').toLowerCase(), nm = abNorm(amx.name), pk = abPhoneKey(amx.phone || '');
+      var c = ADDRESS_BOOK.find(function (x) {
+        return (em && x.emails.some(function (y) { return y.toLowerCase() === em; })) ||
+               (pk && x.phones.some(function (p) { return abPhoneKey(p) === pk; })) ||
+               (nm && abNorm(x.name) === nm);
+      });
+      if (!c) { haptic('error'); showToast('Add them to Contacts first to chat on ArtiChats', 'neutral'); return; }
+      closeArtimeet();
+      setTimeout(function () { window.cdChatWith(c); }, 300);
+    }, true);
+  } catch (e) { console.warn('meeting chat patch', e); }
+
+  /* ───────── 3. LIQUID GLASS BOTTOM NAV ───────── */
+  try {
+    var nav = document.getElementById('acGNav');
+    if (!nav || nav.dataset.liquid) return;
+    nav.dataset.liquid = '1';
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var st = document.createElement('style');
+    st.textContent =
+      '#acGNav{background:linear-gradient(145deg,rgba(255,255,255,.58) 0%,rgba(255,255,255,.24) 48%,rgba(255,255,255,.42) 100%) !important;' +
+        '-webkit-backdrop-filter:blur(26px) saturate(210%) brightness(1.05) !important;backdrop-filter:blur(26px) saturate(210%) brightness(1.05) !important;' +
+        'border:.6px solid rgba(255,255,255,.85) !important;' +
+        'box-shadow:0 12px 36px rgba(20,20,30,.18),0 2px 6px rgba(0,0,0,.06),inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.35),inset 0 0 22px rgba(255,255,255,.22) !important;' +
+        'touch-action:none;-webkit-user-select:none;user-select:none;}' +
+      '#acGNav button{background:transparent !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;' +
+        'position:relative;z-index:1;transform:none !important;transition:color .12s ease !important;}' +
+      '#acGNav button:active{transform:none !important;}' +
+      '#acGNav button svg,#acGNav button .gn-l{transition:transform .5s cubic-bezier(.34,1.56,.64,1);will-change:transform;}' +
+      '#acGNav button.hot svg{transform:translateY(-1px) scale(1.2);}' +
+      '#acGNav button.hot .gn-l{transform:scale(1.06);}' +
+      '#acGNav button.on,#acGNav button.hot,#acGNav button.pick{color:#1c1c1e;}' +
+      '#acGNav .gn-ind{position:absolute;left:0;top:0;z-index:0;border-radius:28px;pointer-events:none;will-change:transform;opacity:0;transition:opacity .2s;' +
+        'background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.36));border:.8px solid rgba(255,255,255,.8);' +
+        'box-shadow:0 6px 18px rgba(0,0,0,.14),inset 0 1px 1px rgba(255,255,255,.95),inset 0 -6px 12px rgba(255,255,255,.22);' +
+        '-webkit-backdrop-filter:blur(8px) saturate(180%);backdrop-filter:blur(8px) saturate(180%);}' +
+      '#acGNav.ready .gn-ind{opacity:1;}' +
+      '@media (prefers-reduced-motion:reduce){#acGNav button svg,#acGNav button .gn-l{transition:none;}}';
+    document.head.appendChild(st);
+
+    var ind = document.createElement('div');
+    ind.className = 'gn-ind'; ind.setAttribute('aria-hidden', 'true');
+    nav.insertBefore(ind, nav.firstChild);
+
+    var btns = function () { return [].slice.call(nav.querySelectorAll('button[data-k]')); };
+    btns().forEach(function (b) { b.removeAttribute('onclick'); });   /* pointerup na ang nagna-navigate, walang click delay */
+
+    var S = { x: 0, v: 0, p: 0, pv: 0, tx: 0, tp: 0, run: false, last: 0 };
+    var drag = null, hotB = null, pend = '', pendUntil = 0;
+
+    function apply() {
+      var sp = Math.abs(S.v);
+      var sx = 1 + Math.min(.26, sp / 2600) + .07 * S.p, sy = 1 - Math.min(.09, sp / 7500) + .03 * S.p;
+      ind.style.transform = 'translate3d(' + S.x.toFixed(2) + 'px,0,0) scale(' + sx.toFixed(3) + ',' + sy.toFixed(3) + ')';
+    }
+    function step(t) {
+      var dt = Math.min(.032, Math.max(.001, (t - S.last) / 1000)); S.last = t;
+      S.v += (520 * (S.tx - S.x) - 36 * S.v) * dt; S.x += S.v * dt;        /* spring: slight overshoot */
+      S.pv += (640 * (S.tp - S.p) - 30 * S.pv) * dt; S.p += S.pv * dt;    /* press squish */
+      apply();
+      if (Math.abs(S.tx - S.x) < .15 && Math.abs(S.v) < 2 && Math.abs(S.tp - S.p) < .002 && Math.abs(S.pv) < .02) {
+        S.x = S.tx; S.p = S.tp; S.v = S.pv = 0; apply(); S.run = false; return;
+      }
+      requestAnimationFrame(step);
+    }
+    function kick() { if (!S.run) { S.run = true; S.last = performance.now(); requestAnimationFrame(step); } }
+
+    function off(b) {
+      var r = b.getBoundingClientRect(), n = nav.getBoundingClientRect();
+      return { x: r.left - n.left - nav.clientLeft, y: r.top - n.top - nav.clientTop, w: r.width, h: r.height };
+    }
+    function place(key, instant) {
+      var L = btns(); if (!L.length || !nav.offsetWidth) return;
+      var b = L.filter(function (x) { return x.dataset.k === key; })[0] || L[0], o = off(b);
+      ind.style.top = o.y + 'px'; ind.style.height = o.h + 'px'; ind.style.width = o.w + 'px';
+      S.tx = o.x;
+      if (instant || reduce) { S.x = S.tx; S.v = 0; apply(); }
+      nav.classList.add('ready'); kick();
+    }
+    function curKey() { var b = btns().filter(function (x) { return x.classList.contains('on'); })[0]; return b ? b.dataset.k : 'card'; }
+    function follow(instant) { if (drag) return; place((pend && Date.now() < pendUntil) ? pend : curKey(), instant); }
+
+    function hit(x) {
+      var best = null, bd = 1e9, L = btns();
+      for (var i = 0; i < L.length; i++) {
+        var r = L[i].getBoundingClientRect();
+        if (x >= r.left && x <= r.right) return L[i];
+        var d = Math.min(Math.abs(x - r.left), Math.abs(x - r.right));
+        if (d < bd) { bd = d; best = L[i]; }
+      }
+      return best;
+    }
+    function setHot(b, quiet) {
+      if (hotB === b) return;
+      if (hotB) hotB.classList.remove('hot');
+      hotB = b; if (b) { b.classList.add('hot'); if (!quiet) haptic('light'); }
+    }
+
+    nav.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      var b = hit(e.clientX); if (!b) return;
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+      try { nav.setPointerCapture(e.pointerId); } catch (_) {}
+      setHot(b, true);
+      S.tx = off(b).x; S.tp = 1; kick();                 /* instant: wala nang hinihintay na click */
+    });
+    nav.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.moved && Math.abs(e.clientX - drag.x) > 5) drag.moved = true;
+      if (drag.moved) {
+        var L = btns(), a = off(L[0]), z = off(L[L.length - 1]), nr = nav.getBoundingClientRect();
+        S.tx = Math.min(z.x, Math.max(a.x, e.clientX - nr.left - nav.clientLeft - a.w / 2));   /* sumusunod sa daliri */
+        setHot(hit(e.clientX), false);
+      }
+      kick(); e.preventDefault();
+    });
+    function up(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = drag, b = hotB; drag = null; S.tp = 0;
+      try { nav.releasePointerCapture(e.pointerId); } catch (_) {}
+      var cancel = e.type === 'pointercancel' || Math.abs(e.clientY - d.y) > 110 || !b;
+      if (cancel) { setHot(null, true); follow(false); return; }
+      var k = b.dataset.k;
+      pend = k; pendUntil = Date.now() + 900;
+      b.classList.add('pick'); setTimeout(function () { b.classList.remove('pick'); }, 900);
+      setHot(null, true);
+      window.gNavGo(k);
+      place(k, false);
+    }
+    nav.addEventListener('pointerup', up);
+    nav.addEventListener('pointercancel', up);
+    nav.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    nav.addEventListener('click', function (e) {          /* keyboard Enter/Space lang (detail===0) */
+      var b = e.target.closest && e.target.closest('button[data-k]');
+      if (b && e.detail === 0) { pend = b.dataset.k; pendUntil = Date.now() + 900; window.gNavGo(b.dataset.k); place(b.dataset.k, false); }
+    });
+
+    var shown = nav.classList.contains('show');
+    new MutationObserver(function () {
+      var s = nav.classList.contains('show'), just = s && !shown; shown = s;
+      follow(just);
+    }).observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    if (window.ResizeObserver) new ResizeObserver(function () { follow(true); }).observe(nav);
+    window.addEventListener('resize', function () { follow(true); });
+    requestAnimationFrame(function () { follow(true); });
+  } catch (e) { console.warn('liquid nav patch', e); }
+})();
+/* === END: ARTICHATS FROM CONTACTS + MEETING OPTION + LIQUID GLASS NAV === */
 /* === END: READY FLAG === */
 </script>
 </body>

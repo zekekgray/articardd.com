@@ -24846,12 +24846,21 @@ function acSyncSend() {
       return;
     }
 
-    if (k === 'affinity') {
+        if (k === 'affinity') {
       if (open) {
         if (currentOSPane !== 'affinity') switchOSTab('affinity');
       } else {
         enterOS('affinity');
       }
+
+      /* [AB:SHARED:NAVIGATION:AFFINITY-FEED-RENDER:BEGIN] */
+      requestAnimationFrame(() => {
+        if (osOpen() && currentOSPane === 'affinity') {
+          afRender(true);
+        }
+      });
+      /* [AB:SHARED:NAVIGATION:AFFINITY-FEED-RENDER:END] */
+
       return;
     }
 

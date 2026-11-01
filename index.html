@@ -25023,7 +25023,7 @@ function acSyncSend() {
     /* Keep the requested layout stable while Affinity opens. */
     window.__gnWant = {
       k: k,
-      u: Date.now() + 2500
+      u: Infinity
     };
 
     const expanded = k === 'affinity';

@@ -24847,6 +24847,20 @@ function acSyncSend() {
     }
 
             if (k === 'affinity') {
+  if (open) {
+    if (currentOSPane !== 'affinity') switchOSTab('affinity');
+  } else {
+    enterOS('affinity');
+  }
+
+  requestAnimationFrame(() => {
+    if (osOpen() && currentOSPane === 'affinity') {
+      afRender(true);
+    }
+  });
+
+  return;
+}
       if (open) {
         if (currentOSPane !== 'affinity') switchOSTab('affinity');
       } else {

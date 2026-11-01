@@ -24846,24 +24846,69 @@ function acSyncSend() {
       return;
     }
 
-        if (k === 'affinity') {
+            if (k === 'affinity') {
       if (open) {
         if (currentOSPane !== 'affinity') switchOSTab('affinity');
       } else {
         enterOS('affinity');
       }
 
-      /* [AB:SHARED:NAVIGATION:AFFINITY-FEED-RENDER:BEGIN] */
+      /* [AB:SHARED:NAVIGATION:AFFINITY-PANE-RECOVERY:BEGIN] */
       requestAnimationFrame(() => {
-        if (osOpen() && currentOSPane === 'affinity') {
+        const body = document.getElementById('osBody');
+        if (!body || !osOpen() || currentOSPane !== 'affinity') return;
+
+        let pane = body.querySelector('[data-pane="affinity"]');
+
+        if (!pane) {
+          pane = document.createElement('div');
+          pane.className = 'os-pane';
+          pane.dataset.pane = 'affinity';
+          pane.innerHTML = `
+            <div class="ab-pane-header">
+              <div style="display:flex;align-items:baseline;">
+                <div class="os-title" style="padding:6px 0 0 4px;">Affinity</div>
+              </div>
+              <button type="button" class="af-add"
+                aria-label="Share a story"
+                onclick="haptic('light');afShare()">
+                <svg width="22" height="22" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="ab-seg" role="tablist"
+              aria-label="Contacts sections"></div>
+            <div id="afBody"></div>
+          `;
+          body.appendChild(pane);
+        }
+
+        if (!document.getElementById('afBody')) {
+          const feed = document.createElement('div');
+          feed.id = 'afBody';
+          pane.appendChild(feed);
+        }
+
+        body.querySelectorAll('.os-pane').forEach(p => {
+          p.classList.toggle('active', p === pane);
+        });
+
+        pane.classList.add('active');
+
+        try {
           afRender(true);
+        } catch (error) {
+          console.error('[Affinity Feed Render Error]', error);
         }
       });
-      /* [AB:SHARED:NAVIGATION:AFFINITY-FEED-RENDER:END] */
+      /* [AB:SHARED:NAVIGATION:AFFINITY-PANE-RECOVERY:END] */
 
       return;
     }
-
     if (open) {
       if (currentOSPane !== k) switchOSTab(k);
       return;

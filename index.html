@@ -357,6 +357,10 @@ body.public-mode #acGNav{display:none !important;}
 .ab-qb { gap:2px; padding:6px 2px 5px; border-radius:20px; }
 .ab-qb svg { width:30px; height:30px; flex:none; overflow:visible; }
 .ab-qb { color:#1c1c1e; }
+/* Contacts: icons on top, search pill + "+" below */
+.os-pane[data-pane="address"] > .ab-pane-header { order:-3; }
+.os-pane[data-pane="address"] > .ab-quickbar { order:-2; margin-bottom:0; }
+.os-pane[data-pane="address"] > #osBottomSearch { order:-1; padding-bottom:0 !important; }
 .ab-qb span { color:rgba(60,60,67,.62); }
 .ab-qb.on { background:rgba(255,255,255,.88); color:#17171C; box-shadow:0 4px 14px rgba(0,0,0,.09),inset 0 1px 0 rgba(255,255,255,.95); transform:translateY(-2px); }
 .ab-qb.on span { color:#17171C; }

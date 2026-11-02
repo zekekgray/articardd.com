@@ -26148,7 +26148,10 @@ function afArtiverse(id) {
   .af-rail2[style*="bottom"]{bottom:calc(102px + env(safe-area-inset-bottom)) !important;}
   /* fixed side rail: hindi sumasama sa swipe, kapareho ng Treats at profile/+ */
   .af-sp .af-rail2{display:none !important;}
-  #afSide{position:fixed;right:10px;bottom:calc(102px + env(safe-area-inset-bottom));z-index:7;display:flex;flex-direction:column;align-items:center;gap:8px;}
+    #afSide{position:fixed;right:10px;bottom:calc(102px + env(safe-area-inset-bottom));z-index:7;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  /* icon size = main nav (30px) para sa Artiverse, 3 dots, heart, Treats, profile/+ */
+  #afSide .af-pl,#afSide .af-rl,#afBody .af-ico{width:44px !important;height:44px !important;}
+  #afSide .af-pl svg,#afSide .af-rl svg,#afSide .af-pl img,#afBody .af-ico svg{width:30px !important;height:30px !important;}
   .af-hrt{position:relative;}
   .af-hrt .n{position:absolute;top:100%;left:0;right:0;margin-top:3px;}
   /* bare icons: heart/bond, treats, profile/+ = walang pill, kapareho ng 3 dots (.af-pl) */

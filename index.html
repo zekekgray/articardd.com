@@ -24468,8 +24468,8 @@ acMount = function () {
       W = w; H = h;
       rd.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       rd.setSize(w, h, false);
-      const px = Math.min(h * 0.6, w * 1.15) * 1.2;    /* taas ng robot sa screen (px). +20% */
-      const upp = host.ROBOT_H / px, visH = h * upp, y = -(30 * upp);  /* 36 = taas ng robot mula sa gitna (para hindi matakpan ng nav) */
+      const px = Math.min(h * 0.6, w * 1.15) * 1.44;   /* taas ng robot sa screen (px). +44% total */
+      const upp = host.ROBOT_H / px, visH = h * upp, y = -(26 * upp);  /* 36 = taas ng robot mula sa gitna (para hindi matakpan ng nav) */
       cam.aspect = w / h;
       cam.position.set(0, y, (visH / 2) / Math.tan(13 * Math.PI / 180));
       cam.lookAt(0, y, 0);

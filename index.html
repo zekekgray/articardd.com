@@ -1898,6 +1898,22 @@ body.qr3d #holdOpenBtn #holdQrRing, body.qr3d #holdOpenBtn #holdQr { opacity:0 !
 .ab-avw{position:relative;display:inline-flex;flex:none;border-radius:50%;line-height:0;vertical-align:middle;}
 .artibadge.ab-av{position:absolute;left:85%;top:71%;transform:translate(-50%,-50%);margin:0;z-index:4;pointer-events:none;}
 /* [AB:FEATURE:ARTIBADGE:CSS:END] */
+/* === FRONT CARD: QR RING CENTER + ARTIBOT OFF (reversible: burahin ang block na ito) === */
+/* 1. ArtiBot off, front card lang */
+.face-front #rbcCv,
+.face-front #rbcFrontCv,
+.face-front .rbc-shade,
+.face-front #robotBubble,
+.face-front .robot-pal-btn,
+.scene .proto-fab{display:none !important;}
+
+/* 2. Ibalik ang ring + QR sa gitna ng front card */
+.face-front #holdOpenBtn{top:290px !important;}
+body.qr3d #holdOpenBtn #holdQrRing,
+body.qr3d #holdOpenBtn #holdQr{opacity:1 !important;}
+
+/* 3. Ang "TAP & HOLD" pill, sa ilalim na ng ring */
+.face-front .coach-pill{top:350px !important;}
 /* [AB:SHARED:GLOBAL-STYLES:CSS:END] */
 </style>
 

@@ -5747,7 +5747,7 @@ function fillConnectPreview() {
       s.append(btn('alt', 'Save to Phone Contacts', acFindSaveContact));
 
       const invite = el('a', '', 'Invite via SMS');
-      const smsBody = 'Hey! Join me on ArtiCardd so we can connect.';
+      const smsBody = 'Hey! Join me on ArtiCardd so we can connect. View my card: ' + profileLink();
       invite.href = 'sms:' + AC_FIND_STATE.phone +
         '?body=' + encodeURIComponent(smsBody);
 

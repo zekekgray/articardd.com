@@ -5506,213 +5506,107 @@ function fillConnectPreview() {
     }, { capture: true, passive: true });
   })();
   /* === START: ADD CONTACT — FIND BY PHONE (JS) === */
-  CONST ACF = { PHONE: '', STAGE: 'IDLE', MSG: '' };
+  const acF = { phone: '', stage: 'idle', msg: '' };
 
-  FUNCTION ACNORMPHONE(RAW) {
-    CONST D = STRING(RAW || '').REPLACE(/[^\D+]/G, '');
-    IF (/^\+639\D{9}$/.TEST(D)) RETURN D;
-    IF (/^639\D{9}$/.TEST(D))   RETURN '+' + D;
-    IF (/^09\D{9}$/.TEST(D))    RETURN '+63' + D.SLICE(1);
-    IF (/^9\D{9}$/.TEST(D))     RETURN '+63' + D;
-    RETURN '';
+  function acNormPhone(raw) {
+    const d = String(raw || '').replace(/[^\d+]/g, '');
+    if (/^\+639\d{9}$/.test(d)) return d;
+    if (/^639\d{9}$/.test(d))   return '+' + d;
+    if (/^09\d{9}$/.test(d))    return '+63' + d.slice(1);
+    if (/^9\d{9}$/.test(d))     return '+63' + d;
+    return '';
   }
-  FUNCTION ACPRETTYPHONE(P) { RETURN P ? P.REPLACE(/^\+63(\D{3})(\D{3})(\D{4})$/, '+63 $1 $2 $3') : ''; }
+  function acPrettyPhone(p) { return p ? p.replace(/^\+63(\d{3})(\d{3})(\d{4})$/, '+63 $1 $2 $3') : ''; }
 
-  FUNCTION ACMODESET(MODE) {
-    CONST SCR = DOCUMENT.GETELEMENTBYID('ADDCONTACTSCREEN'); IF (!SCR) RETURN;
-    CONST FIND = MODE === 'FIND';
-    SCR.CLASSLIST.TOGGLE('AC-FIND', FIND);
-    DOCUMENT.GETELEMENTBYID('ACMODEMANUAL').CLASSLIST.TOGGLE('ON', !FIND);
-    DOCUMENT.GETELEMENTBYID('ACMODEFIND').CLASSLIST.TOGGLE('ON', FIND);
-    DOCUMENT.GETELEMENTBYID('ACMODEMANUAL').SETATTRIBUTE('ARIA-SELECTED', STRING(!FIND));
-    DOCUMENT.GETELEMENTBYID('ACMODEFIND').SETATTRIBUTE('ARIA-SELECTED', STRING(FIND));
-    CONST T = DOCUMENT.GETELEMENTBYID('ACTITLE');
-    IF (T) {
-      IF (FIND) { T.DATASET.PREV = T.TEXTCONTENT; T.TEXTCONTENT = 'FIND CONTACT'; }
-      ELSE IF (T.DATASET.PREV) { T.TEXTCONTENT = T.DATASET.PREV; DELETE T.DATASET.PREV; }
+  function acModeSet(mode) {
+    const scr = document.getElementById('addContactScreen'); if (!scr) return;
+    const find = mode === 'find';
+    scr.classList.toggle('ac-find', find);
+    document.getElementById('acModeManual').classList.toggle('on', !find);
+    document.getElementById('acModeFind').classList.toggle('on', find);
+    document.getElementById('acModeManual').setAttribute('aria-selected', String(!find));
+    document.getElementById('acModeFind').setAttribute('aria-selected', String(find));
+    const t = document.getElementById('acTitle');
+    if (t) {
+      if (find) { t.dataset.prev = t.textContent; t.textContent = 'Find Contact'; }
+      else if (t.dataset.prev) { t.textContent = t.dataset.prev; delete t.dataset.prev; }
     }
-    IF (FIND) { ACFINDRENDER(); SETTIMEOUT(() => { CONST I = DOCUMENT.GETELEMENTBYID('ACFINDPHONE'); IF (I) I.FOCUS(); }, 60); }
-    ELSE IF (TYPEOF ACCHECKSAVE === 'FUNCTION') ACCHECKSAVE();
+    if (find) { acFindRender(); setTimeout(() => { const i = document.getElementById('acFindPhone'); if (i) i.focus(); }, 60); }
+    else if (typeof acCheckSave === 'function') acCheckSave();
   }
 
-  FUNCTION ACFINDINPUT(EL) {
-    ACF.PHONE = ACNORMPHONE(EL.VALUE);
-    ACF.STAGE = 'IDLE';
-    ACFINDRENDER();
+  function acFindInput(el) {
+    acF.phone = acNormPhone(el.value);
+    acF.stage = 'idle';
+    acFindRender();
   }
 
-  FUNCTION ACFINDRESET() {
-    ACF.PHONE = ''; ACF.STAGE = 'IDLE'; ACF.MSG = '';
-    CONST I = DOCUMENT.GETELEMENTBYID('ACFINDPHONE'); IF (I) I.VALUE = '';
-    ACMODESET('MANUAL');
+  function acFindReset() {
+    acF.phone = ''; acF.stage = 'idle'; acF.msg = '';
+    const i = document.getElementById('acFindPhone'); if (i) i.value = '';
+    acModeSet('manual');
   }
 
-  FUNCTION ACFINDRENDER() {
-    CONST S = DOCUMENT.GETELEMENTBYID('ACFINDSTAGE'); IF (!S) RETURN;
-    S.TEXTCONTENT = '';
-    CONST EL = (TAG, CLS, TXT) => { CONST N = DOCUMENT.CREATEELEMENT(TAG); IF (CLS) N.CLASSNAME = CLS; IF (TXT) N.TEXTCONTENT = TXT; RETURN N; };
-    CONST BTN = (CLS, TXT, FN, DIS) => { CONST B = EL('BUTTON', 'AC-FP-BTN ' + CLS, TXT); B.TYPE = 'BUTTON'; B.DISABLED = !!DIS; B.ONCLICK = FN; RETURN B; };
+  function acFindRender() {
+    const s = document.getElementById('acFindStage'); if (!s) return;
+    s.textContent = '';
+    const el = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt) n.textContent = txt; return n; };
+    const btn = (cls, txt, fn, dis) => { const b = el('button', 'ac-fp-btn ' + cls, txt); b.type = 'button'; b.disabled = !!dis; b.onclick = fn; return b; };
 
-    IF (ACF.STAGE === 'DONE') {
-      S.APPEND(EL('DIV', 'AC-FP-NOTE OK', ACF.MSG));
-      S.APPEND(BTN('', 'DONE', () => { HAPTIC('LIGHT'); REQUESTCLOSEADDCONTACT(); }));
-      RETURN;
+    if (acF.stage === 'done') {
+      s.append(el('div', 'ac-fp-note ok', acF.msg));
+      s.append(btn('', 'Done', () => { haptic('light'); requestCloseAddContact(); }));
+      return;
     }
-    IF (ACF.STAGE === 'ERROR') {
-      S.APPEND(EL('DIV', 'AC-FP-NOTE ERR', ACF.MSG));
-      S.APPEND(BTN('', 'TRY AGAIN', () => { HAPTIC('LIGHT'); ACF.STAGE = 'CONFIRM'; ACFINDRENDER(); }));
-      RETURN;
+    if (acF.stage === 'error') {
+      s.append(el('div', 'ac-fp-note err', acF.msg));
+      s.append(btn('', 'Try again', () => { haptic('light'); acF.stage = 'confirm'; acFindRender(); }));
+      return;
     }
-    IF (ACF.STAGE === 'CONFIRM' || ACF.STAGE === 'BUSY') {
-      CONST BUSY = ACF.STAGE === 'BUSY';
-      S.APPEND(EL('DIV', 'AC-FP-NOTE', 'SEND A CONNECTION REQUEST TO ' + ACPRETTYPHONE(ACF.PHONE) + '? DOUBLE-CHECK THE NUMBER BEFORE SENDING.'));
-      S.APPEND(BTN('', BUSY ? 'SENDING…' : 'CONFIRM & SEND', ACFINDSEND, BUSY));
-      S.APPEND(BTN('ALT', 'BACK', () => { HAPTIC('LIGHT'); ACF.STAGE = 'IDLE'; ACFINDRENDER(); }, BUSY));
-      RETURN;
+    if (acF.stage === 'confirm' || acF.stage === 'busy') {
+      const busy = acF.stage === 'busy';
+      s.append(el('div', 'ac-fp-note', 'Send a connection request to ' + acPrettyPhone(acF.phone) + '? Double-check the number before sending.'));
+      s.append(btn('', busy ? 'Sending…' : 'Confirm & Send', acFindSend, busy));
+      s.append(btn('alt', 'Back', () => { haptic('light'); acF.stage = 'idle'; acFindRender(); }, busy));
+      return;
     }
-    S.APPEND(BTN('', 'SEND REQUEST', () => { HAPTIC('MEDIUM'); ACF.STAGE = 'CONFIRM'; ACFINDRENDER(); }, !ACF.PHONE));
+    s.append(btn('', 'Send Request', () => { haptic('medium'); acF.stage = 'confirm'; acFindRender(); }, !acF.phone));
   }
 
-  ASYNC FUNCTION ACFINDSEND() {
-    IF (ACF.STAGE === 'BUSY' || !ACF.PHONE) RETURN;
-    ACF.STAGE = 'BUSY'; ACFINDRENDER();
-    TRY {
-      /* SENDER IDENTITY COMES FROM THE VERIFIED SESSION JWT ON THE SERVER (AUTH.UID()). NEVER SENT FROM HERE. */
-      CONST R = AWAIT ACSDK.CALL('SENDCONNECTIONREQUESTBYPHONE', { PHONE: ACF.PHONE });
-      CONST ST = (R && R.STATUS) || 'SENT';
-      IF (ST === 'SELF')              { ACF.STAGE = 'ERROR'; ACF.MSG = "THAT'S YOUR OWN NUMBER."; HAPTIC('ERROR'); }
-      ELSE IF (ST === 'ALREADY_CONNECTED') { ACF.STAGE = 'DONE'; ACF.MSG = "YOU'RE ALREADY CONNECTED WITH THIS PERSON."; HAPTIC('SUCCESS'); }
-      ELSE IF (ST === 'RATE_LIMITED') { ACF.STAGE = 'ERROR'; ACF.MSG = "YOU'VE REACHED TODAY'S REQUEST LIMIT. TRY AGAIN TOMORROW."; HAPTIC('ERROR'); }
-      ELSE {
-        /* NEUTRAL ON PURPOSE: SAME MESSAGE WHETHER OR NOT THE NUMBER HAS AN ACCOUNT (ANTI-ENUMERATION) */
-        ACF.STAGE = 'DONE';
-        ACF.MSG = "REQUEST SENT. IF THIS NUMBER HAS AN ARTICARDD ACCOUNT, THEY'LL SEE IT IN REQUESTS. IF NOT, INVITE THEM TO JOIN.";
-        HAPTIC('SUCCESS');
+  async function acFindSend() {
+    if (acF.stage === 'busy' || !acF.phone) return;
+    acF.stage = 'busy'; acFindRender();
+    try {
+      if (!rmToken()) { rmExpired(); throw new Error('Please sign in again.'); }
+      const r = await apiPost('ownerConnectByPhone', { token: rmToken(), phone: acF.phone });
+      const st = (r && r.status) || 'sent';
+      if (st === 'self') { acF.stage = 'error'; acF.msg = "That's your own number."; haptic('error'); }
+      else {
+        /* neutral on purpose: same message whether or not the number has an account (anti-enumeration) */
+        acF.stage = 'done';
+        acF.msg = "Request sent. If this number has an ArtiCardd account, they'll see it in Requests. If not, invite them to join.";
+        haptic('success');
       }
-    } CATCH (E) {
-      CONST M = STRING((E && E.MESSAGE) || '');
-      ACF.STAGE = 'ERROR';
-      ACF.MSG = /AUTH|JWT|SIGN|401/I.TEST(M) ? 'PLEASE SIGN IN AGAIN, THEN RETRY.'
-              : /RATE|LIMIT|429/I.TEST(M)   ? "YOU'VE REACHED TODAY'S REQUEST LIMIT."
-              : "COULDN'T SEND THE REQUEST. PLEASE TRY AGAIN.";
-      HAPTIC('ERROR');
+    } catch (e) {
+      const m = String((e && e.message) || '');
+      acF.stage = 'error';
+      acF.msg = /sign in|session|expired/i.test(m) ? 'Please sign in again, then retry.'
+              : /limit|too many/i.test(m)          ? "You've reached today's request limit. Try again tomorrow."
+              : /valid PH mobile/i.test(m)         ? 'Enter a valid PH mobile number.'
+              : "Couldn't send the request. Please try again.";
+      haptic('error');
     }
-    ACFINDRENDER();
+    acFindRender();
   }
 
-  /* RESET FIND MODE WHENEVER THE MODAL CLOSES (NO NEED TO TOUCH OPENADDCONTACTMODAL / REQUESTCLOSEADDCONTACT) */
-  (FUNCTION () {
-    CONST SCR = DOCUMENT.GETELEMENTBYID('ADDCONTACTSCREEN');
-    IF (!SCR || !WINDOW.MUTATIONOBSERVER) RETURN;
-    NEW MUTATIONOBSERVER(() => {
-      CONST HIDDEN = !SCR.STYLE.DISPLAY || SCR.STYLE.DISPLAY === 'NONE';
-      IF (HIDDEN && (SCR.CLASSLIST.CONTAINS('AC-FIND') || ACF.PHONE || ACF.STAGE !== 'IDLE')) ACFINDRESET();
-    }).OBSERVE(SCR, { ATTRIBUTES: TRUE, ATTRIBUTEFILTER: ['STYLE'] });
-  })();
-  /* === END: ADD CONTACT — FIND BY PHONE (JS) === */
-
-  /* === START: ADD CONTACT — FIND BY PHONE (JS) === */
-  CONST ACF = { PHONE: '', STAGE: 'IDLE', MSG: '' };
-
-  FUNCTION ACNORMPHONE(RAW) {
-    CONST D = STRING(RAW || '').REPLACE(/[^\D+]/G, '');
-    IF (/^\+639\D{9}$/.TEST(D)) RETURN D;
-    IF (/^639\D{9}$/.TEST(D))   RETURN '+' + D;
-    IF (/^09\D{9}$/.TEST(D))    RETURN '+63' + D.SLICE(1);
-    IF (/^9\D{9}$/.TEST(D))     RETURN '+63' + D;
-    RETURN '';
-  }
-  FUNCTION ACPRETTYPHONE(P) { RETURN P ? P.REPLACE(/^\+63(\D{3})(\D{3})(\D{4})$/, '+63 $1 $2 $3') : ''; }
-
-  FUNCTION ACMODESET(MODE) {
-    CONST SCR = DOCUMENT.GETELEMENTBYID('ADDCONTACTSCREEN'); IF (!SCR) RETURN;
-    CONST FIND = MODE === 'FIND';
-    SCR.CLASSLIST.TOGGLE('AC-FIND', FIND);
-    DOCUMENT.GETELEMENTBYID('ACMODEMANUAL').CLASSLIST.TOGGLE('ON', !FIND);
-    DOCUMENT.GETELEMENTBYID('ACMODEFIND').CLASSLIST.TOGGLE('ON', FIND);
-    DOCUMENT.GETELEMENTBYID('ACMODEMANUAL').SETATTRIBUTE('ARIA-SELECTED', STRING(!FIND));
-    DOCUMENT.GETELEMENTBYID('ACMODEFIND').SETATTRIBUTE('ARIA-SELECTED', STRING(FIND));
-    CONST T = DOCUMENT.GETELEMENTBYID('ACTITLE');
-    IF (T) {
-      IF (FIND) { T.DATASET.PREV = T.TEXTCONTENT; T.TEXTCONTENT = 'FIND CONTACT'; }
-      ELSE IF (T.DATASET.PREV) { T.TEXTCONTENT = T.DATASET.PREV; DELETE T.DATASET.PREV; }
-    }
-    IF (FIND) { ACFINDRENDER(); SETTIMEOUT(() => { CONST I = DOCUMENT.GETELEMENTBYID('ACFINDPHONE'); IF (I) I.FOCUS(); }, 60); }
-    ELSE IF (TYPEOF ACCHECKSAVE === 'FUNCTION') ACCHECKSAVE();
-  }
-
-  FUNCTION ACFINDINPUT(EL) {
-    ACF.PHONE = ACNORMPHONE(EL.VALUE);
-    ACF.STAGE = 'IDLE';
-    ACFINDRENDER();
-  }
-
-  FUNCTION ACFINDRESET() {
-    ACF.PHONE = ''; ACF.STAGE = 'IDLE'; ACF.MSG = '';
-    CONST I = DOCUMENT.GETELEMENTBYID('ACFINDPHONE'); IF (I) I.VALUE = '';
-    ACMODESET('MANUAL');
-  }
-
-  FUNCTION ACFINDRENDER() {
-    CONST S = DOCUMENT.GETELEMENTBYID('ACFINDSTAGE'); IF (!S) RETURN;
-    S.TEXTCONTENT = '';
-    CONST EL = (TAG, CLS, TXT) => { CONST N = DOCUMENT.CREATEELEMENT(TAG); IF (CLS) N.CLASSNAME = CLS; IF (TXT) N.TEXTCONTENT = TXT; RETURN N; };
-    CONST BTN = (CLS, TXT, FN, DIS) => { CONST B = EL('BUTTON', 'AC-FP-BTN ' + CLS, TXT); B.TYPE = 'BUTTON'; B.DISABLED = !!DIS; B.ONCLICK = FN; RETURN B; };
-
-    IF (ACF.STAGE === 'DONE') {
-      S.APPEND(EL('DIV', 'AC-FP-NOTE OK', ACF.MSG));
-      S.APPEND(BTN('', 'DONE', () => { HAPTIC('LIGHT'); REQUESTCLOSEADDCONTACT(); }));
-      RETURN;
-    }
-    IF (ACF.STAGE === 'ERROR') {
-      S.APPEND(EL('DIV', 'AC-FP-NOTE ERR', ACF.MSG));
-      S.APPEND(BTN('', 'TRY AGAIN', () => { HAPTIC('LIGHT'); ACF.STAGE = 'CONFIRM'; ACFINDRENDER(); }));
-      RETURN;
-    }
-    IF (ACF.STAGE === 'CONFIRM' || ACF.STAGE === 'BUSY') {
-      CONST BUSY = ACF.STAGE === 'BUSY';
-      S.APPEND(EL('DIV', 'AC-FP-NOTE', 'SEND A CONNECTION REQUEST TO ' + ACPRETTYPHONE(ACF.PHONE) + '? DOUBLE-CHECK THE NUMBER BEFORE SENDING.'));
-      S.APPEND(BTN('', BUSY ? 'SENDING…' : 'CONFIRM & SEND', ACFINDSEND, BUSY));
-      S.APPEND(BTN('ALT', 'BACK', () => { HAPTIC('LIGHT'); ACF.STAGE = 'IDLE'; ACFINDRENDER(); }, BUSY));
-      RETURN;
-    }
-    S.APPEND(BTN('', 'SEND REQUEST', () => { HAPTIC('MEDIUM'); ACF.STAGE = 'CONFIRM'; ACFINDRENDER(); }, !ACF.PHONE));
-  }
-
-  ASYNC FUNCTION ACFINDSEND() {
-    IF (ACF.STAGE === 'BUSY' || !ACF.PHONE) RETURN;
-    ACF.STAGE = 'BUSY'; ACFINDRENDER();
-    TRY {
-      IF (!RMTOKEN()) { RMEXPIRED(); THROW NEW ERROR('PLEASE SIGN IN AGAIN.'); }
-      CONST R = AWAIT APIPOST('OWNERCONNECTBYPHONE', { TOKEN: RMTOKEN(), PHONE: ACF.PHONE });
-      CONST ST = (R && R.STATUS) || 'SENT';
-      IF (ST === 'SELF') { ACF.STAGE = 'ERROR'; ACF.MSG = "THAT'S YOUR OWN NUMBER."; HAPTIC('ERROR'); }
-      ELSE {
-        /* NEUTRAL ON PURPOSE: SAME MESSAGE WHETHER OR NOT THE NUMBER HAS AN ACCOUNT (ANTI-ENUMERATION) */
-        ACF.STAGE = 'DONE';
-        ACF.MSG = "REQUEST SENT. IF THIS NUMBER HAS AN ARTICARDD ACCOUNT, THEY'LL SEE IT IN REQUESTS. IF NOT, INVITE THEM TO JOIN.";
-        HAPTIC('SUCCESS');
-      }
-    } CATCH (E) {
-      CONST M = STRING((E && E.MESSAGE) || '');
-      ACF.STAGE = 'ERROR';
-      ACF.MSG = /SIGN IN|SESSION|EXPIRED/I.TEST(M) ? 'PLEASE SIGN IN AGAIN, THEN RETRY.'
-              : /LIMIT|TOO MANY/I.TEST(M)          ? "YOU'VE REACHED TODAY'S REQUEST LIMIT. TRY AGAIN TOMORROW."
-              : /VALID PH MOBILE/I.TEST(M)         ? 'ENTER A VALID PH MOBILE NUMBER.'
-              : "COULDN'T SEND THE REQUEST. PLEASE TRY AGAIN.";
-      HAPTIC('ERROR');
-    }
-    ACFINDRENDER();
-  }
-
-  /* RESET FIND MODE WHENEVER THE MODAL CLOSES */
-  (FUNCTION () {
-    CONST SCR = DOCUMENT.GETELEMENTBYID('ADDCONTACTSCREEN');
-    IF (!SCR || !WINDOW.MUTATIONOBSERVER) RETURN;
-    NEW MUTATIONOBSERVER(() => {
-      CONST HIDDEN = !SCR.STYLE.DISPLAY || SCR.STYLE.DISPLAY === 'NONE';
-      IF (HIDDEN && (SCR.CLASSLIST.CONTAINS('AC-FIND') || ACF.PHONE || ACF.STAGE !== 'IDLE')) ACFINDRESET();
-    }).OBSERVE(SCR, { ATTRIBUTES: TRUE, ATTRIBUTEFILTER: ['STYLE'] });
+  /* reset find mode whenever the modal closes */
+  (function () {
+    const scr = document.getElementById('addContactScreen');
+    if (!scr || !window.MutationObserver) return;
+    new MutationObserver(() => {
+      const hidden = !scr.style.display || scr.style.display === 'none';
+      if (hidden && (scr.classList.contains('ac-find') || acF.phone || acF.stage !== 'idle')) acFindReset();
+    }).observe(scr, { attributes: true, attributeFilter: ['style'] });
   })();
   /* === END: ADD CONTACT — FIND BY PHONE (JS) === */
 

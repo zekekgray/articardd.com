@@ -26311,11 +26311,11 @@ setInterval(sync, 150); sync();
 (function gNavFixedOrder() {
   try { localStorage.removeItem('athna-nav-order-v1'); } catch (e) {}
   const nav = document.getElementById('acGNav'); if (!nav) return;
-  ['card', 'affinity', 'artibot', 'address', 'chats'].forEach(k => {
+  ['card', 'address', 'chats', 'affinity', 'artibot'].forEach(k => {
     const b = nav.querySelector('[data-k="' + k + '"]'); if (b) nav.appendChild(b);
   });
 })();
-/* === END: NAV FIXED ORDER === */
+ /* === END: NAV FIXED ORDER === */
 /* === DISABLED LEGACY DRAG BLOCK ===
 (function gNavDragInit_DISABLED() {
   const nav = document.getElementById('acGNav');

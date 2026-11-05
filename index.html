@@ -25561,12 +25561,22 @@ opacity:0;visibility:hidden;
       W = w; H = h;
       rd.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       rd.setSize(w, h, false);
-      const px = Math.min(h * 0.82, w * 1.48) * 1.2;          /* taas ng robot sa screen (px). Dagdagan para palakihin */
-      const upp = host.ROBOT_H / px, visH = h * upp, y = 0;   /* 36 = taas ng robot mula sa gitna (para hindi matakpan ng nav) */
-      cam.aspect = w / h;
-      cam.position.set(0, y, (visH / 2) / Math.tan(13 * Math.PI / 180));
-      cam.lookAt(0, y, 0);
-      cam.updateProjectionMatrix();
+     /* Frame BOTH ArtiBot and ArtiDog */
+const COMPOSITION_H = host.ROBOT_H + 4.0;
+const CENTER_Y = 1.96;
+
+const px = Math.min(h * 0.82, w * 1.48) * 1.2;
+const upp = COMPOSITION_H / px;
+const visH = h * upp;
+
+cam.aspect = w / h;
+cam.position.set(
+  0,
+  CENTER_Y,
+  (visH / 2) / Math.tan(13 * Math.PI / 180)
+);
+cam.lookAt(0, CENTER_Y, 0);
+cam.updateProjectionMatrix();
     }
     return true;
   }

@@ -8711,7 +8711,7 @@ const RECENT_IDS_KEY = 'ab-recent-ids';
         html += `
         <div class="ab-row-wrap" data-id="${c.id}" style="position:relative;overflow:hidden;">
           ${abSwipeActions(c)}<div class="ab-row" data-id="${c.id}" style="display:flex;align-items:center;gap:13px;padding:12px 14px;background:#fff;position:relative;cursor:pointer;will-change:transform;">
-            <div class="ab-avatar${abHasStory(c) ? ' ab-story' : ''}" style="background:${c.avatarBg};width:36px;height:36px;font-size:13px;flex-shrink:0;">${cpInner(c)}</div>
+            <div class="ab-avatar${(typeof abHasStory === 'function' && abHasStory(c)) ? ' ab-story' : ''}" style="background:${c.avatarBg};width:36px;height:36px;font-size:13px;flex-shrink:0;">${cpInner(c)}</div>
             <div style="flex:1;min-width:0;">
               <div class="ab-row-name" style="font-size:15px;"${abAttr(c.isPremium)}>${auEsc(c.name)}</div>
             </div>

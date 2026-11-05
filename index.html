@@ -26546,13 +26546,32 @@ setInterval(sync, 150); sync();
 (function artibotNav() {
   const isBot = b => !!b && /^ArtiBot$/i.test(((b.querySelector('.gn-l') || {}).textContent || '').trim());
 
-  function openBot() {
+   function openBot() {
     haptic('light');
+
     const os = document.getElementById('screenOS');
-    if (typeof ACV !== 'undefined' && ACV.open && typeof acClose === 'function') acClose();
-    window.__gnWant = { k: 'artibot', u: Date.now() + 800 };
-    if (os && os.classList.contains('active')) switchOSTab('artibot');
-    else { enterOS('affinity'); setTimeout(() => switchOSTab('artibot'), 60); }
+
+    /* Close Card overlay if open */
+    if (
+      typeof ACV !== 'undefined' &&
+      ACV.open &&
+      typeof acClose === 'function'
+    ) {
+      acClose();
+    }
+
+    /* Mark ArtiBot as the requested destination */
+    window.__gnWant = {
+      k: 'artibot',
+      u: Date.now() + 800
+    };
+
+    /* Open ArtiBot directly — no Affinity detour */
+    if (os && os.classList.contains('active')) {
+      switchOSTab('artibot');
+    } else {
+      enterOS('artibot');
+    }
   }
 
   /* capture phase: mauuna sa gNav handler, para hindi ma-trigger ang ibang tab */

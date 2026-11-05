@@ -26397,6 +26397,27 @@ setInterval(sync, 150); sync();
   sync();
 })();
 /* === END: ARTIBOT SOLO === */
+/* === START: ARTIBOT STATUS BAR COLOR === */
+(function abtStatusBar() {
+  const pane = document.querySelector('.os-pane[data-pane="artibot"]'), osEl = document.getElementById('screenOS');
+  if (!pane || !osEl || window.__abtSB) return; window.__abtSB = 1;
+  const C0 = (document.querySelector('meta[name="theme-color"]') || {}).content || '#ECE4D6', C1 = '#2F343A';
+  let last = null;
+  function set(c) {
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.remove());
+    const m = document.createElement('meta'); m.name = 'theme-color'; m.content = c; document.head.appendChild(m);
+  }
+  function sync() {
+    const on = pane.classList.contains('active') && osEl.classList.contains('active') && !osEl.classList.contains('leaving');
+    if (on === last) return; last = on;
+    const c = on ? C1 : C0; set(c); setTimeout(() => set(c), 450);   /* ulitin pagkatapos ng transition para tanggapin ng iOS */
+  }
+  const mo = new MutationObserver(sync);
+  mo.observe(pane, { attributes: true, attributeFilter: ['class'] });
+  mo.observe(osEl, { attributes: true, attributeFilter: ['class'] });
+  sync();
+})();
+/* === END: ARTIBOT STATUS BAR COLOR === */
 /* [AB:SHARED:NAVIGATION:JS:END] */
 
 /* === START: NAV FIXED ORDER (drag disabled) === */

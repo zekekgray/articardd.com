@@ -8565,10 +8565,10 @@ function abSegSelect(which) {
     showToast(`${ADDRESS_BOOK.length} contacts exported as CSV`, 'success');
   }
 
-  function abhasstory(c) {
+   function abHasStory(c) {
     try {
-      const n = abnorm(c.name);
-      return !!n && afstories().some(s => !s.mine && abnorm(s.name) === n);
+      const n = abNorm(c.name);
+      return !!n && afStories().some(s => !s.mine && abNorm(s.name) === n);
     } catch (e) { return false; }
   }
   function initials2(name) {

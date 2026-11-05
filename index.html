@@ -20100,6 +20100,7 @@ function flDelete() {
   document.addEventListener('pointerdown', e => {
     if (st || document.body.classList.contains('public-mode')) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+        if (document.querySelector('#screenOS.active .os-pane[data-pane="artibot"].active')) return;   /* ArtiBot: walang swipe-out, arrow lang ang daan */
     const pg = topPage(); if (!pg || !pg.el.contains(e.target)) return;
     const rightEdge = e.clientX >= Wd() - EDGE;
     if (!rightEdge && e.target.closest(NO_START)) return;

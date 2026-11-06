@@ -25871,6 +25871,127 @@ sync();
     const pm = new T.PMREMGenerator(rd), rt = pm.fromScene(env, 0.02); pm.dispose(); return rt.texture;
   }
 
+   /* ── ARTIDOG BUILDER — independent VEX companion ── */
+  function buildArtiDog() {
+    const root = new T.Group();
+    root.name = 'artidog-companion';
+    root.position.set(-1.95, -3.98, 0.12);
+    scene.add(root);
+
+    const dog = new T.Group();
+    root.add(dog);
+
+    const white = new T.MeshPhysicalMaterial({
+      color: 0xeef1f5, roughness: 0.3, metalness: 0.12, clearcoat: 0.9
+    });
+    const silver = new T.MeshStandardMaterial({
+      color: 0x9da9b7, roughness: 0.25, metalness: 0.85
+    });
+    const dark = new T.MeshStandardMaterial({
+      color: 0x292e36, roughness: 0.35, metalness: 0.8
+    });
+    const cyan = new T.MeshBasicMaterial({
+      color: 0x22e8ff, toneMapped: false
+    });
+    const black = new T.MeshStandardMaterial({
+      color: 0x080b10, roughness: 0.2, metalness: 0.5
+    });
+
+    owned.mats.push(white, silver, dark, cyan, black);
+
+    /* BODY */
+    const body = sphere(0.43, white, 1.15, 0.75, 0.85, 40);
+    body.position.set(0, 0.72, 0);
+    dog.add(body);
+
+    const chest = sphere(0.29, silver, 0.9, 1, 0.8, 32);
+    chest.position.set(0, 0.65, 0.22);
+    dog.add(chest);
+
+    /* HEAD */
+    const head = new T.Group();
+    head.position.set(0, 1.22, 0.24);
+    dog.add(head);
+
+    head.add(sphere(0.35, white, 1, 0.92, 0.9, 40));
+
+    const muzzle = sphere(0.19, silver, 1.1, 0.7, 0.85, 32);
+    muzzle.position.set(0, -0.15, 0.28);
+    head.add(muzzle);
+
+    const nose = sphere(0.065, black, 1, 0.8, 0.7, 20);
+    nose.position.set(0, -0.12, 0.43);
+    head.add(nose);
+
+    [-1, 1].forEach(s => {
+      const ear = sphere(0.17, dark, 0.7, 1.25, 0.6, 24);
+      ear.position.set(s * 0.29, 0.25, -0.015);
+      ear.rotation.z = -s * 0.3;
+      head.add(ear);
+
+      const socket = sphere(0.085, dark, 1, 1, 0.5, 20);
+      socket.position.set(s * 0.17, 0.025, 0.29);
+      head.add(socket);
+
+      const eye = sphere(0.045, cyan, 1, 1, 0.5, 20);
+      eye.position.set(s * 0.17, 0.025, 0.33);
+      head.add(eye);
+    });
+
+    /* FOUR LEGS */
+    const legs = [];
+
+    [-1, 1].forEach(sx => {
+      [-1, 1].forEach(sz => {
+        const leg = new T.Group();
+        leg.position.set(sx * 0.27, 0.42, sz * 0.23);
+        dog.add(leg);
+
+        const upper = cyl(0.105, 0.09, 0.35, white, 24);
+        upper.position.y = -0.10;
+        leg.add(upper);
+
+        const joint = sphere(0.105, dark, 1, 1, 1, 20);
+        joint.position.y = -0.27;
+        leg.add(joint);
+
+        const paw = sphere(0.14, silver, 1.15, 0.65, 1.2, 24);
+        paw.position.set(0, -0.37, 0.035);
+        leg.add(paw);
+
+        legs.push(leg);
+      });
+    });
+
+    /* TAIL */
+    const tail = new T.Group();
+    tail.position.set(0, 0.92, -0.34);
+    dog.add(tail);
+
+    const tailPart = cyl(0.055, 0.085, 0.38, silver, 20);
+    tailPart.rotation.x = Math.PI / 2.5;
+    tailPart.position.z = -0.15;
+    tail.add(tailPart);
+
+    const tailTip = sphere(0.09, white, 0.9, 0.9, 1.2, 20);
+    tailTip.position.z = -0.34;
+    tail.add(tailTip);
+
+    /* ANTENNA */
+    const antenna = cyl(0.018, 0.025, 0.17, silver, 16);
+    antenna.position.set(0, 0.39, -0.02);
+    head.add(antenna);
+
+    const antennaLight = sphere(0.055, cyan, 1, 1, 1, 16);
+    antennaLight.position.set(0, 0.49, -0.02);
+    head.add(antennaLight);
+
+    root.userData.character = 'ARTIDOG';
+    root.userData.companionOf = 'VEX';
+
+    return { root, body, head, tail, legs };
+  }
+
   /* ── robot builder (own geometry + materials, nothing shared with ArtiBot) ── */
   function buildRobot() {
     const white = new T.MeshPhysicalMaterial({ color: 0xeef1f5, roughness: 0.26, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.04, envMapIntensity: 0.9 });

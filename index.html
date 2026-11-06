@@ -25787,7 +25787,11 @@ sync();
     '@media(prefers-reduced-motion:reduce){.os-pane[data-pane="vex"]::before{animation:none;}}' +
 
     '#screenOS:has([data-pane="vex"].active) #osBackBtn{display:none !important;}' +
-    '#screenOS:has([data-pane="vex"].active) #osBody{overflow:hidden;}';
+        '#screenOS:has([data-pane="vex"].active) #osBody{overflow:hidden;padding:0 !important;margin:0 !important;top:0 !important;background:#171b20 !important;}' +
+    '#screenOS:has([data-pane="vex"].active){background:#171b20 !important;padding-top:0 !important;}' +
+    '#screenOS:has([data-pane="vex"].active) .os-header,#screenOS:has([data-pane="vex"].active) .os-topbar,#screenOS:has([data-pane="vex"].active) #osHeader{display:none !important;}' +
+    'body.abt-solo,html:has(body.abt-solo){background:#171b20 !important;}' +
+    '.os-pane[data-pane="vex"]{top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;width:100vw;height:100vh;height:100dvh;}';
   document.head.appendChild(css);
 
   const pane = document.createElement('div');

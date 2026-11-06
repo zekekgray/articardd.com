@@ -26416,6 +26416,107 @@ sync();
     pose(); idleLife(ts, dt);
   }
 
+    /* === ARTIDOG ACTIONS: sit / jump / sniff / trot / carry ng humanoid === */
+  const DG = { root: null, kind: '', last: '', did: false, u: 0, D: 0, next: 3, lx: -1.9, lz: 0.12, plx: -1.9, plz: 0.12, hd: 0, face: 0, mv: 0, ph: 0, sw: 0, wg: 0, S: null, T: null };
+  const DPK = { x: -1.5, z: 0.9 }, DQ = { x: -1.7, z: 0.5 }, DCR = new T.Vector3();   /* DPK = kung saan siya uupo at hihingi · DQ = kung saan siya bababa */
+  const dss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const dwrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+  function dogStart() {
+    let k = !DG.did ? 'carry' : ['carry', 'trot', 'sit', 'jump', 'sniff', 'trot', 'sit'][Math.floor(Math.random() * 7)];
+    if (k === DG.last) k = k === 'sit' ? 'sniff' : 'sit';
+    DG.did = true; DG.kind = k; DG.last = k; DG.u = 0; DG.S = { x: DG.lx, z: DG.lz };
+    DG.D = { carry: 13.5, sit: 4.5, jump: 1.5, sniff: 3.6, trot: 12 }[k];
+    if (k === 'trot') { do { DG.T = { x: -2.8 + Math.random() * 1.5, z: Math.random() }; } while (Math.hypot(DG.T.x - DG.lx, DG.T.z - DG.lz) < 0.6); }
+  }
+  function dogStep(dt, t) {
+    if (!D || !R) return;
+    if (DG.root !== D.root) { DG.root = D.root; DG.kind = ''; DG.lx = DG.plx = -1.9; DG.lz = DG.plz = 0.12; DG.hd = DG.face = DG.mv = DG.sw = DG.wg = 0; DG.next = 3 + Math.random() * 2; }
+    if (!DG.kind) { DG.next -= dt; if (DG.next <= 0 && !reduce) dogStart(); } else DG.u += dt;
+    const kk = DG.kind, u = DG.u;
+    let sit = 0, wag = 0, sniff = 0, air = 0, yJ = 0, aw = 0, c = 0, arc = 0, pit = 0, lookY = 0, lookX = 0;
+
+    if (kk === 'sit') { sit = dss(0, .6, u) * (1 - dss(DG.D - .7, DG.D, u)); wag = .5 * sit; DG.face = 0; }
+    else if (kk === 'jump') { const v = u - .25; if (v > 0 && v < 1.1) air = Math.abs(Math.sin(Math.PI * v / .55)); yJ = .55 * air; wag = 1; }
+    else if (kk === 'sniff') { sniff = dss(0, .5, u) * (1 - dss(DG.D - .6, DG.D, u)); }
+    else if (kk === 'trot') {
+      const dx = DG.T.x - DG.lx, dz = DG.T.z - DG.lz, d = Math.hypot(dx, dz), sp = 1.5 * dt;
+      if (d <= sp) { DG.lx = DG.T.x; DG.lz = DG.T.z; DG.D = u; } else { DG.lx += dx / d * sp; DG.lz += dz / d * sp; }
+    }
+    else if (kk === 'carry') {
+      const S = DG.S;
+      if (u < 10) { const e = dss(0, 2.2, u); DG.lx = S.x + (DPK.x - S.x) * e; DG.lz = S.z + (DPK.z - S.z) * e; }
+      else { DG.lx = DQ.x; DG.lz = DQ.z; }
+      DG.face = u < 3.4 ? Math.atan2(-DPK.x, -DPK.z) : 0;
+      sit = dss(2.2, 3.0, u) * (1 - dss(3.3, 3.6, u));
+      c = dss(3.4, 4.1, u) * (1 - dss(10, 10.7, u));
+      if (u >= 3.4 && u < 4.1) { arc = .9 * Math.sin(Math.PI * (u - 3.4) / .7); pit = .4 * arc / .9; }
+      else if (u >= 10 && u < 10.7) { arc = .9 * Math.sin(Math.PI * (u - 10) / .7); pit = -.3 * arc / .9; }
+      aw = dss(2.8, 3.9, u) * (1 - dss(10.3, 11.3, u));
+      lookY = dss(1.4, 2.4, u) * (1 - dss(3.4, 4.2, u)) + dss(10.2, 10.9, u) * (1 - dss(11.6, 12.6, u));
+      lookX = dss(1.4, 2.4, u) * (1 - dss(11.6, 12.6, u)) * .25 + c * .22;
+      wag = dss(1.5, 2.4, u) * (1 - dss(12, 13, u));
+    }
+    if (kk && u >= DG.D) { DG.kind = ''; DG.next = 4 + Math.random() * 6; DG.face = 0; }
+
+    /* galaw + heading */
+    const still = kk === 'carry' && u > 3.3;
+    const mdx = DG.lx - DG.plx, mdz = DG.lz - DG.plz;
+    const spd = still ? 0 : Math.hypot(mdx, mdz) / Math.max(dt, 0.001);
+    DG.plx = DG.lx; DG.plz = DG.lz;
+    DG.mv += (Math.min(1, spd / 1.2) - DG.mv) * Math.min(1, dt * 10);
+    DG.ph += dt * 10 * DG.mv;
+    DG.hd += dwrap((spd > 0.25 ? Math.atan2(mdx, mdz) : DG.face) - DG.hd) * Math.min(1, dt * 7);
+    const sw = (DG.sw += (sit - DG.sw) * Math.min(1, dt * 9));
+    const wg = (DG.wg += (wag - DG.wg) * Math.min(1, dt * 6));
+
+    /* humanoid: tigil lakad, yakap, tingin sa aso */
+    if (kk === 'carry' && u < 12.5) { act = 'idle'; actT = 0; idleLeft = Math.max(idleLeft, 2); }
+    if (aw > 0.001) {
+      [-1, 1].forEach(sd => {
+        const A = R.arms[sd];
+        A.arm.rotation.z *= 1 - 0.8 * aw;
+        A.ua.rotation.x += (-0.55 + 0.04 * Math.sin(t * 3.1 + sd) * c - A.ua.rotation.x) * aw;
+        A.ua.rotation.z += (-sd * 0.3 - A.ua.rotation.z) * aw;
+        A.fa.rotation.x += (-1.0 - A.fa.rotation.x) * aw;
+        A.fa.rotation.z += (0 - A.fa.rotation.z) * aw;
+      });
+      R.body.rotation.x += 0.05 * aw;
+    }
+    R.headPivot.rotation.y += -0.6 * lookY;
+    R.headPivot.rotation.x += lookX;
+
+    /* posisyon sa mundo (sumasabay sa ikot ng robot) */
+    const yaw = R.robot.rotation.y, cy = Math.cos(yaw), sy = Math.sin(yaw);
+    let wx = DG.lx * cy + DG.lz * sy, wz = -DG.lx * sy + DG.lz * cy, wy = -3.98 + yJ;
+    if (c > 0.001) {
+         dogStep(dt, ts);
+    R.robot.updateMatrixWorld(true);
+      DCR.set(0, 5.15, 1.2); R.body.localToWorld(DCR);   /* cradle point sa harap ng tiyan ng robot (body space) */
+      wx += (DCR.x - wx) * c; wz += (DCR.z - wz) * c; wy += (DCR.y - wy) * c;
+    }
+    D.root.position.set(wx, wy + arc, wz);
+    D.root.rotation.y = yaw + DG.hd;
+
+    /* pose ng aso */
+    const calm = reduce ? 0.3 : 1, dg = D.root.children[0];
+    dg.rotation.x = -0.45 * sw - pit;
+    dg.position.y = -0.15 * sw + 0.035 * Math.abs(Math.sin(DG.ph)) * DG.mv;
+    D.legs.forEach((lg, i) => {
+      const hind = i === 0 || i === 2, off = (i === 0 || i === 3) ? 0 : Math.PI;
+      lg.rotation.x = Math.sin(DG.ph + off) * 0.5 * DG.mv + 0.45 * sw - (hind ? 0.8 * sw : 0)
+        + (hind ? 0.25 : -0.55) * c + 0.1 * Math.sin(t * 3 + i) * c + (hind ? 0.5 : -0.45) * air
+        + Math.sin(t * 2.5 + (i % 2) * Math.PI) * 0.018 * calm;
+    });
+    D.tail.rotation.y = Math.sin(t * (4.2 + 6 * wg)) * (0.38 + 0.2 * wg);
+    D.tail.rotation.x = -0.3 * wg;
+    D.body.scale.y = 0.75 + Math.sin(t * 1.8) * 0.012 * calm;
+    const up = kk === 'carry' ? Math.min(1, sw + c) : 0;
+    D.head.rotation.x = 0.55 * sniff + 0.08 * Math.sin(t * 9) * sniff - 0.4 * up;
+    D.head.rotation.y = Math.sin(t * 0.8) * 0.045 * calm;
+    D.head.rotation.z = 0.08 * Math.sin(t * 3) * wg;
+  }
+  /* === END ARTIDOG ACTIONS === */
+
   /* ── lifecycle ── */
   function init() {
     if (rd) return true;

@@ -26063,7 +26063,127 @@ sync();
   }
 
   /* ── artidog companion: independent model inside vex scene ── */
-  function buildartidog() {
+  function buildArtidog() {
+    const root = new T.Group();
+    root.name = 'artidog-companion';
+    root.position.set(-1.9, -3.98, 0.12);
+    scene.add(root);
+
+    const dog = new T.Group();
+    root.add(dog);
+
+    const dogWhite = new T.MeshPhysicalMaterial({ color: 0xeef1f5, roughness: 0.3, metalness: 0.12, clearcoat: 0.9 });
+    const dogDark = new T.MeshStandardMaterial({ color: 0x292e36, roughness: 0.35, metalness: 0.8 });
+    const dogSilver = new T.MeshStandardMaterial({ color: 0x9da9b7, roughness: 0.25, metalness: 0.85 });
+    const dogCyan = new T.MeshBasicMaterial({ color: 0x22e8ff, toneMapped: false });
+    const dogBlack = new T.MeshStandardMaterial({ color: 0x080b10, roughness: 0.2, metalness: 0.5 });
+    owned.mats.push(dogWhite, dogDark, dogSilver, dogCyan, dogBlack);
+
+    /* body + chest */
+    const dogBody = sphere(0.48, dogWhite, 1, 0.75, 0.75, 40);
+    dogBody.position.set(0, 0.78, 0);
+    dog.add(dogBody);
+
+    const dogChest = sphere(0.30, dogSilver, 0.85, 1, 0.72, 32);
+    dogChest.position.set(0, 0.65, 0.25);
+    dog.add(dogChest);
+
+    /* collar */
+    const dogCollar = ring(0.30, 0.045, dogCyan, 'z');
+    dogCollar.scale.set(1, 0.8, 1);
+    dogCollar.position.set(0, 0.98, 0.12);
+    dog.add(dogCollar);
+
+    /* head */
+    const dogHead = new T.Group();
+    dogHead.position.set(0, 1.28, 0.23);
+    dog.add(dogHead);
+    dogHead.add(sphere(0.43, dogWhite, 1, 0.92, 0.88, 40));
+
+    const muzzle = sphere(0.22, dogSilver, 1.05, 0.68, 0.85, 32);
+    muzzle.position.set(0, -0.17, 0.32);
+    dogHead.add(muzzle);
+
+    const nose = sphere(0.075, dogBlack, 1, 0.72, 0.65, 24);
+    nose.position.set(0, -0.13, 0.51);
+    dogHead.add(nose);
+
+    [-1, 1].forEach(side => {
+      const socket = sphere(0.095, dogDark, 1, 1, 0.45, 24);
+      socket.position.set(side * 0.205, 0.035, 0.355);
+      dogHead.add(socket);
+
+      const eye = sphere(0.055, dogCyan, 1, 1, 0.5, 20);
+      eye.position.set(side * 0.205, 0.035, 0.405);
+      dogHead.add(eye);
+
+      const ear = sphere(0.22, dogDark, 0.65, 1.25, 0.55, 28);
+      ear.position.set(side * 0.38, 0.30, -0.02);
+      ear.rotation.z = -side * 0.35;
+      dogHead.add(ear);
+
+      const inner = sphere(0.13, dogSilver, 0.7, 1, 0.3, 20);
+      inner.position.set(side * 0.39, 0.28, 0.08);
+      dogHead.add(inner);
+    });
+
+    /* four legs */
+    const dogLegs = [];
+    [-1, 1].forEach(sx => [-1, 1].forEach(sz => {
+      const leg = new T.Group();
+      leg.position.set(sx * 0.29, 0.43, sz * 0.26);
+      dog.add(leg);
+
+      const upper = cyl(0.115, 0.105, 0.40, dogWhite, 24);
+      upper.position.y = -0.08;
+      leg.add(upper);
+
+      const joint = sphere(0.12, dogDark, 1, 1, 1, 20);
+      joint.position.y = -0.29;
+      leg.add(joint);
+
+      const paw = sphere(0.17, dogSilver, 1.15, 0.65, 1.25, 24);
+      paw.position.set(0, -0.43, 0.045);
+      leg.add(paw);
+
+      const led = sphere(0.035, dogCyan, 1, 1, 0.5, 12);
+      led.position.set(0, -0.43, 0.19);
+      leg.add(led);
+
+      dogLegs.push(leg);
+    }));
+
+    /* tail (cylinder, walang CapsuleGeometry sa r128) */
+    const tail = new T.Group();
+    tail.position.set(0, 1.02, -0.39);
+    dog.add(tail);
+
+    const tailBase = cyl(0.07, 0.09, 0.36, dogSilver, 14);
+    tailBase.rotation.x = -Math.PI / 2.5;
+    tailBase.position.z = -0.16;
+    tail.add(tailBase);
+
+    const tailTip = sphere(0.12, dogWhite, 0.8, 0.8, 1.3, 20);
+    tailTip.position.z = -0.38;
+    tail.add(tailTip);
+
+    /* antenna */
+    const antenna = cyl(0.025, 0.035, 0.18, dogSilver, 16);
+    antenna.position.set(0, 0.47, -0.02);
+    dogHead.add(antenna);
+
+    const antennaLight = sphere(0.065, dogCyan, 1, 1, 1, 16);
+    antennaLight.position.set(0, 0.57, -0.02);
+    dogHead.add(antennaLight);
+
+    root.userData.character = 'artidog';
+    root.userData.companionOf = 'vex';
+
+    return { root: root, body: dogBody, head: dogHead, tail: tail, legs: dogLegs };
+  }
+
+  /* LUMANG SIRA, hindi na tinatawag. Pwede mong burahin mamaya. */
+  function buildartidog_OLD_UNUSED() {
     const root = new t.group();
     root.name = 'artidog-companion';
     root.position.set(-1.95, -3.98, 0.12);
@@ -26296,7 +26416,7 @@ sync();
     const rimW = new T.DirectionalLight(0xffffff, 0.9); rimW.position.set(6, 3, -6); scene.add(rimW);
         R = buildRobot();
     if (R && R.root) R.root.scale.setScalar(1.2);
-
+    D = buildArtidog();
     return true;
   }
   function fit() {

@@ -26440,8 +26440,9 @@ sync();
     const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return false;
     if (w !== W || h !== H) {
       W = w; H = h; rd.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); rd.setSize(w, h, false);
-      const px = Math.min(h * 0.80, w * 1.5), visH = h * ROBOT_H / px;
-      cam.aspect = w / h; cam.position.set(0, 0, (visH / 2) / Math.tan(13 * Math.PI / 180)); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
+            const px = Math.min(h * 0.80, w * 1.5), visH = h * ROBOT_H / px;
+      const dropY = visH * 0.10;   /* 10% baba para hindi mauntog sa taas. Dagdagan/bawasan ang 0.10 */
+      cam.aspect = w / h; cam.position.set(0, dropY, (visH / 2) / Math.tan(13 * Math.PI / 180)); cam.lookAt(0, dropY, 0); cam.updateProjectionMatrix();
     }
     return true;
   }

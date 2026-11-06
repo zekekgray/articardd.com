@@ -25796,6 +25796,18 @@ sync();
 
   const pane = document.createElement('div');
   pane.className = 'os-pane'; pane.dataset.pane = 'vex';
+  (function () {
+    if (document.getElementById('vexSeamCss')) return;
+    const s = document.createElement('style'); s.id = 'vexSeamCss';
+    s.textContent =
+      '.os-pane[data-pane="vex"]{box-shadow:none !important;background-color:#303943 !important;' +
+      'background-image:radial-gradient(ellipse 48% 42% at 50% 48%,rgba(110,205,230,.13),transparent 72%),' +
+      'radial-gradient(ellipse 90% 65% at 50% 55%,rgba(255,255,255,.045),transparent 75%),' +
+      'linear-gradient(180deg,#303943 0%,#20262d 52%,#11151a 100%) !important;}' +
+      '#screenOS:has([data-pane="vex"].active),#screenOS:has([data-pane="vex"].active) #osBody{background:#303943 !important;}' +
+      'body.abt-solo,html:has(body.abt-solo){background:#303943 !important;}';
+    document.head.appendChild(s);
+  })();
   pane.innerHTML = '<canvas id="vexCv" role="img" aria-label="VEX, your AI assistant"></canvas>';
   osBody.appendChild(pane);
   const cv = pane.firstElementChild;

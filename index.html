@@ -26294,11 +26294,8 @@ sync();
     const key = new T.DirectionalLight(0xffffff, 0.7); key.position.set(3, 8, 10); scene.add(key);
     const rimC = new T.DirectionalLight(0x7fe9ff, 1.1); rimC.position.set(-6, 4, -6); scene.add(rimC);
     const rimW = new T.DirectionalLight(0xffffff, 0.9); rimW.position.set(6, 3, -6); scene.add(rimW);
-    R = buildRobot();
+        R = buildRobot();
     if (R && R.root) R.root.scale.setScalar(1.2);
-
-    D = buildArtiDog();
-    if (D && D.root) D.root.scale.setScalar(1.2);
 
     return true;
   }

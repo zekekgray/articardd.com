@@ -2107,6 +2107,16 @@ body.qr3d #holdOpenBtn #holdQr{opacity:1 !important;}
 #SCREENOS .OS-PANE[DATA-PANE="ADDRESS"] .AB-PANE-HEADER .OS-TITLE{PADDING-LEFT:66PX !IMPORTANT;}
 #screenOS .os-pane[data-pane="address"] .ab-pane-header > div:first-child{width:100% !important;justify-content:center !important;}
 #screenOS .os-pane[data-pane="address"] .ab-pane-header .os-title{margin-left:0 !important;padding-left:0 !important;padding-right:0 !important;}
+/* === START: FILES + CALENDAR HEADER (same as Contacts) === */
+#screenOS .os-pane[data-pane="files"] .ab-pane-header,
+#screenOS .os-pane[data-pane="upcoming"] .up-pane-header{position:relative;}
+#screenOS .os-pane[data-pane="files"] .ab-pane-header > div:first-child,
+#screenOS .os-pane[data-pane="upcoming"] .up-pane-header > div:first-child{width:100% !important;justify-content:center !important;}
+#screenOS .os-pane[data-pane="files"] .os-title,
+#screenOS .os-pane[data-pane="upcoming"] .os-title{margin-top:calc(max(14px,env(safe-area-inset-top)) + 4px) !important;margin-left:0 !important;padding-left:0 !important;padding-right:0 !important;}
+#screenOS .os-pane[data-pane="files"] .ab-add-btn,
+#screenOS .os-pane[data-pane="upcoming"] .up-add-btn{position:absolute;right:0;top:max(14px,env(safe-area-inset-top));z-index:5;height:54px;margin:0;padding:0 20px;border-radius:27px;}
+/* === END: FILES + CALENDAR HEADER === */
 /* === END: CONTACTS BACK PILL === */
 /* === END: CONTACTS PRODUCTIVITY FOLDER === */
 /* [AB:SHARED:GLOBAL-STYLES:CSS:END] */

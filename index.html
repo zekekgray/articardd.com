@@ -125,7 +125,7 @@ body:has(#screenos.active [data-pane="affinity"].active .af-sp){background:#1c1c
 }
 /* [AB:SHARED:NAVIGATION:TOP-SEGMENTS:END] */
 /* [AB:PATCH:CONTACTS-FIXED:BEGIN] */
-#screenOS:has(.os-pane[data-pane="address"].active) #osBackBtn{display:none !important;}
+#screenOS:has(.os-pane[data-pane="address"].active) #osBackBtn{display:flex !important;}
 body:has(#screenOS.active .os-pane[data-pane="address"].active) #acGNav{display:none !important;}
 #screenOS:has(.os-pane[data-pane="address"].active) #osBody{padding-bottom:max(28px,env(safe-area-inset-bottom)) !important;}
 #screenOS .os-pane[data-pane="address"] .os-title{margin-top:calc(max(14px,env(safe-area-inset-top)) + 4px);}
@@ -2101,6 +2101,7 @@ body.qr3d #holdOpenBtn #holdQr{opacity:1 !important;}
 .abf-lb{font:500 12px -apple-system,'SF Pro Text',sans-serif;color:#1c1c1e;}
 @media (prefers-reduced-motion:reduce){.abf-panel,.abf-bg,.abf-title{transition:opacity .01ms;}}
 /* === START: CONTACTS BACK PILL === */
+#abBackBtn{display:none !important;}
 #ABBACKBTN{POSITION:ABSOLUTE;LEFT:0;TOP:MAX(14PX,ENV(SAFE-AREA-INSET-TOP));Z-INDEX:50;DISPLAY:FLEX;ALIGN-ITEMS:CENTER;JUSTIFY-CONTENT:CENTER;WIDTH:54PX;HEIGHT:54PX;PADDING:0;BORDER-RADIUS:50%;BACKGROUND:RGBA(255,255,255,0.82);BACKDROP-FILTER:BLUR(20PX) SATURATE(180%);-WEBKIT-BACKDROP-FILTER:BLUR(20PX) SATURATE(180%);BORDER:0.6PX SOLID RGBA(255,255,255,0.9);BOX-SHADOW:0 2PX 8PX RGBA(0,0,0,0.10),INSET 0 1PX 0 RGBA(255,255,255,0.7);COLOR:#1C1C1E;CURSOR:POINTER;-WEBKIT-TAP-HIGHLIGHT-COLOR:TRANSPARENT;TRANSITION:TRANSFORM .12S,OPACITY .12S;}
 #ABBACKBTN:ACTIVE{TRANSFORM:SCALE(.90);OPACITY:.75;}
 #SCREENOS .OS-PANE[DATA-PANE="ADDRESS"] .AB-PANE-HEADER .OS-TITLE{PADDING-LEFT:66PX !IMPORTANT;}

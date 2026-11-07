@@ -30643,6 +30643,279 @@ function afArtiverse(id) {
 })();
 /* === END: CONTACTS PINCH DIRECTORY === */
 
+/* === START: AFFINITY HUB PINCH DIRECTORY === */
+(function () {
+  var ov = document.getElementById('afHubOv');
+  if (!ov || window.__ahDir) return;
+  window.__ahDir = 1;
+  var scroller = ov.querySelector('.af-hub-scroll');
+  if (!scroller) return;
+
+  var EASE = 'cubic-bezier(.22,.9,.24,1)', GAP = 12, PAD_X = 16, PAD_T = 8, PAD_B = 170;
+  window.AB_PINCH_AV = window.AB_PINCH_AV || 88;   /* iisang laki: Contacts, ArtiChats, Affinity */
+  var FIX_S = window.AB_PINCH_AV;
+  var dirOn = false, busy = false, dirty = false, tiles = [], rt = null, grid = null, backBtn = null;
+  var lpT = null, lpFired = false, lpX = 0, lpY = 0;
+
+  var st = document.createElement('style');
+  st.id = 'ahDirCss';
+  st.textContent =
+    '#ahDirWrap{position:absolute;left:0;right:0;bottom:0;top:calc(max(14px,env(safe-area-inset-top)) + 70px);z-index:2;display:none;}' +
+    '#ahDirWrap.show{display:block;}' +
+    '#ahDirWrap.closing{pointer-events:none;}' +
+    '#ahDirWrap .ah-dir-grid{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;' +
+      'padding:' + PAD_T + 'px ' + PAD_X + 'px ' + PAD_B + 'px;display:grid;justify-content:center;align-content:start;scrollbar-width:none;' +
+      '-webkit-mask-image:linear-gradient(transparent 0,#000 14px,#000 calc(100% - 120px),transparent calc(100% - 70px));' +
+      'mask-image:linear-gradient(transparent 0,#000 14px,#000 calc(100% - 120px),transparent calc(100% - 70px));}' +
+    '#ahDirWrap .ah-dir-grid::-webkit-scrollbar{display:none;}' +
+    '.ah-dir-hd{grid-column:1/-1;font:700 12px -apple-system,"SF Pro Text",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(60,60,67,.55);padding:10px 2px 2px;}' +
+    '.ah-dir-hd:first-child{padding-top:2px;}' +
+    '.ah-dir-empty{grid-column:1/-1;text-align:center;font:13px -apple-system,"SF Pro Text",sans-serif;color:rgba(60,60,67,.45);padding:6px 0 10px;}' +
+    '.ah-dir-tile{background:none;border:0;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;transition:transform .15s cubic-bezier(.34,1.56,.64,1);}' +
+    '.ah-dir-tile:active{transform:scale(.9);}' +
+    '.ah-dir-av{position:relative;border-radius:50%;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.14);}' +
+    '.ah-dir-mk{position:absolute;right:-3px;bottom:-3px;width:22px;height:22px;border-radius:50%;background:#1c1c1e;border:2px solid #ECE4D6;color:#ECE4D6;display:flex;align-items:center;justify-content:center;}' +
+    '.ah-dir-nm{max-width:100%;font:600 11px/15px -apple-system,"SF Pro Text",sans-serif;color:rgba(60,60,67,.78);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.ah-dir-back{position:absolute;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:8px;height:44px;padding:0 20px;border-radius:22px;border:.6px solid rgba(255,255,255,.9);background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 14px rgba(0,0,0,.14);color:#1c1c1e;font:700 13px -apple-system,"SF Pro Text",sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;}' +
+    '.ah-dir-back:active{transform:translateX(-50%) scale(.94);}' +
+    '#afHubOv .af-hub-scroll{transition:opacity .22s ease;}' +
+    '#afHubOv.ah-dir-on .af-hub-scroll{opacity:0 !important;pointer-events:none !important;}';
+  document.head.appendChild(st);
+
+  var wrap = document.createElement('div');
+  wrap.id = 'ahDirWrap';
+  wrap.innerHTML = '<div class="ah-dir-grid" role="list" aria-label="People"></div>' +
+    '<button type="button" class="ah-dir-back" aria-label="Back to list view"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>List</button>';
+  ov.appendChild(wrap);
+  grid = wrap.querySelector('.ah-dir-grid');
+  backBtn = wrap.querySelector('.ah-dir-back');
+
+  var esc = function (s) { return typeof auEsc === 'function' ? auEsc(s) : String(s == null ? '' : s); };
+  var hap = function (t) { try { if (typeof haptic === 'function') haptic(t); } catch (e) {} };
+  var reduce = function () { return window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; };
+  var hubOpen = function () { return ov.classList.contains('show'); };
+
+  var CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  /* data: pareho ng hub paint() */
+  function people() {
+    var all = afStories() || [], seen = {}, conn = [], disc = [];
+    all.forEach(function (s) {
+      if (s.mine) return;
+      var k = s.authorId || s.name;
+      if (!k || seen[k]) return;
+      seen[k] = 1;
+      (afConnected(s) ? conn : disc).push(s);
+    });
+    return { conn: conn, disc: disc };
+  }
+  function srcRect(id) {
+    var el = scroller.querySelector('.os-row[data-act="person"][data-id="' + encodeURIComponent(id) + '"] > :first-child');
+    if (!el) return null;
+    var r = el.getBoundingClientRect();
+    return (r.width && r.bottom > 0 && r.top < window.innerHeight) ? r : null;
+  }
+
+  function build(P) {
+    var W = (grid.clientWidth || window.innerWidth) - PAD_X * 2;
+    var c = Math.max(1, Math.floor((W + GAP) / (FIX_S + GAP)));
+    var cw = (W - (c - 1) * GAP) / c;
+    grid.style.gridTemplateColumns = 'repeat(' + c + ',' + cw + 'px)';
+    grid.style.gap = GAP + 'px';
+    grid.innerHTML = '';
+    tiles = [];
+
+    function section(title, list, emptyMsg) {
+      var h = document.createElement('div');
+      h.className = 'ah-dir-hd';
+      h.textContent = title + ' · ' + list.length;
+      grid.appendChild(h);
+      if (!list.length) {
+        var e = document.createElement('div');
+        e.className = 'ah-dir-empty';
+        e.textContent = emptyMsg;
+        grid.appendChild(e);
+        return;
+      }
+      list.forEach(function (s) {
+        var sent = AF.mine[s.id] === 'bond' && !afConnected(s);
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'ah-dir-tile'; b.setAttribute('role', 'listitem');
+        b.setAttribute('data-id', s.id);
+        b.setAttribute('aria-label', (s.name || 'User') + (s.role ? ', ' + s.role : '') + (sent ? ', request sent' : ''));
+        b.innerHTML =
+          '<div class="ah-dir-av" style="width:' + FIX_S + 'px;height:' + FIX_S + 'px;">' +
+            afAvOf(s, FIX_S) + (sent ? '<span class="ah-dir-mk" aria-hidden="true">' + CHECK + '</span>' : '') +
+          '</div>' +
+          '<div class="ah-dir-nm" style="max-width:' + cw + 'px;">' + esc(String(s.name || 'User').split(/\s+/)[0]) + '</div>';
+        grid.appendChild(b);
+        tiles.push({ el: b, av: b.firstChild, nm: b.lastChild, id: s.id });
+      });
+    }
+    section('Your Connections', P.conn, 'No connections yet.');
+    section('People You Can Connect With', P.disc, 'No one to suggest right now.');
+  }
+
+  function openDir() {
+    if (dirOn || busy || !hubOpen()) return;
+    var P = people();
+    if (!P.conn.length && !P.disc.length) { hap('error'); return; }
+    dirOn = true; busy = true; hap('medium');
+    var ids = P.conn.concat(P.disc).map(function (s) { return s.id; });
+    var src = {};
+    ids.forEach(function (id) { src[id] = srcRect(id); });
+    wrap.classList.remove('closing'); wrap.classList.add('show');
+    build(P);
+    ov.classList.add('ah-dir-on');
+    if (!reduce()) {
+      tiles.forEach(function (t, i) {
+        var d = t.av.getBoundingClientRect(), s = src[t.id], delay = Math.min(i * 7, 140);
+        if (s && d.width) {
+          t.av.style.transformOrigin = '0 0';
+          t.av.animate([{ transform: 'translate(' + (s.left - d.left) + 'px,' + (s.top - d.top) + 'px) scale(' + (s.width / d.width) + ')' }, { transform: 'none' }], { duration: 480, delay: delay, easing: EASE, fill: 'backwards' });
+        } else {
+          t.av.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, delay: delay, easing: EASE, fill: 'backwards' });
+        }
+        t.nm.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 180 + delay, fill: 'backwards' });
+      });
+    }
+    setTimeout(function () { busy = false; flush(); }, reduce() ? 0 : 520);
+  }
+
+  function finish() {
+    wrap.classList.remove('show', 'closing');
+    grid.innerHTML = '';
+    tiles = []; busy = false;
+  }
+  function closeDir(instant) {
+    if (!dirOn) return;
+    if (busy && !instant) return;
+    dirOn = false; clearTimeout(lpT);
+    ov.classList.remove('ah-dir-on');
+    if (instant || reduce()) { finish(); return; }
+    hap('medium'); busy = true; wrap.classList.add('closing');
+    tiles.forEach(function (t, i) {
+      var s = srcRect(t.id), d = t.av.getBoundingClientRect(), delay = Math.min(i * 5, 100);
+      if (s && d.width) {
+        t.av.style.transformOrigin = '0 0';
+        t.av.animate([{ transform: 'none' }, { transform: 'translate(' + (s.left - d.left) + 'px,' + (s.top - d.top) + 'px) scale(' + (s.width / d.width) + ')' }], { duration: 400, delay: delay, easing: EASE, fill: 'forwards' });
+      } else {
+        t.av.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(.5)', opacity: 0 }], { duration: 260, delay: delay, easing: EASE, fill: 'forwards' });
+      }
+      t.nm.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' });
+    });
+    setTimeout(finish, 520);
+  }
+
+  /* tap = Artiverse, long-press = peek */
+  function openPerson(id) {
+    hap('light');
+    closeDir(true);
+    if (window.afHubClose) window.afHubClose();
+    setTimeout(function () { try { window.afArtiverse(id); } catch (e) {} }, 260);
+  }
+  backBtn.addEventListener('click', function () { closeDir(); });
+  grid.addEventListener('click', function (e) {
+    if (lpFired) { lpFired = false; return; }
+    var t = e.target.closest('.ah-dir-tile'); if (!t) return;
+    openPerson(t.getAttribute('data-id'));
+  });
+  grid.addEventListener('pointerdown', function (e) {
+    var t = e.target.closest('.ah-dir-tile'); if (!t) return;
+    lpFired = false; lpX = e.clientX; lpY = e.clientY; clearTimeout(lpT);
+    lpT = setTimeout(function () { lpFired = true; hap('medium'); peek(t.getAttribute('data-id')); }, 430);
+  });
+  grid.addEventListener('pointermove', function (e) {
+    if (lpT && (Math.abs(e.clientX - lpX) > 8 || Math.abs(e.clientY - lpY) > 8)) { clearTimeout(lpT); lpT = null; }
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+    grid.addEventListener(ev, function () { clearTimeout(lpT); lpT = null; });
+  });
+  grid.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+  window.ahDirConnect = async function (id) {
+    var s = afStories().find(function (x) { return x.id === id; });
+    if (!s || s.mine) return;
+    closeAuGenericModal('ahPeekOv');
+    await afBond(s);
+    queue();
+  };
+  window.ahDirAct = function (id, act) {
+    closeAuGenericModal('ahPeekOv');
+    var s = afStories().find(function (x) { return x.id === id; });
+    if (!s) return;
+    if (act === 'artiverse') { setTimeout(function () { openPerson(id); }, 260); return; }
+    if (act === 'message') { closeDir(true); if (window.afHubClose) window.afHubClose(); setTimeout(function () { afGo(s.name, 'message'); }, 260); }
+  };
+  function peek(id) {
+    var s = afStories().find(function (x) { return x.id === id; }); if (!s) return;
+    var F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
+    var conn = afConnected(s), sent = AF.mine[s.id] === 'bond' && !conn;
+    var primary = conn
+      ? '<button type="button" class="dc-btn" style="margin-bottom:8px;" onclick="ahDirAct(\'' + id + '\',\'message\')">Message</button>'
+      : '<button type="button" class="dc-btn" style="margin-bottom:8px;" ' + ((sent || s.allowBond === false) ? 'disabled style="opacity:.5;margin-bottom:8px;"' : '') + ' onclick="ahDirConnect(\'' + id + '\')">' + (sent ? 'Request sent' : (s.allowBond === false ? 'Not accepting bonds' : 'Connect')) + '</button>';
+    auMakeSheet('ahPeekOv', esc(s.name || 'User'),
+      '<div style="text-align:center;margin:-4px 0 14px;"><div style="display:flex;justify-content:center;margin-bottom:10px;">' + afAvOf(s, 72) + '</div>' +
+      '<div style="' + F + 'font-size:13px;color:rgba(60,60,67,.55);">' + esc(s.role || '') + (s.role ? ' · ' : '') + 'Posted ' + esc(afAgo(s.t)) + '</div></div>' +
+      primary +
+      '<button type="button" class="dc-btn alt" onclick="ahDirAct(\'' + id + '\',\'artiverse\')">View Artiverse</button>');
+    var o = document.getElementById('ahPeekOv'); if (o) o.style.zIndex = '9870';
+  }
+
+  /* live update */
+  function flush() {
+    if (!dirOn || busy || !dirty) return;
+    dirty = false;
+    if (!hubOpen()) { closeDir(true); return; }
+    var keep = grid.scrollTop; build(people()); grid.scrollTop = keep;
+  }
+  function queue() { if (!dirOn) return; dirty = true; clearTimeout(rt); rt = setTimeout(flush, 120); }
+
+  var _ar = afRender;
+  afRender = function () { var r = _ar.apply(this, arguments); queue(); return r; };
+  window.addEventListener('resize', queue);
+
+  /* isara ang grid kapag nagsara ang hub o umalis sa Affinity */
+  new MutationObserver(function () { if (dirOn && !hubOpen()) closeDir(true); })
+    .observe(ov, { attributes: true, attributeFilter: ['class'] });
+
+  /* PINCH */
+  function canPinch() { return hubOpen() && !document.querySelector('.share-overlay.show,#confirmDialogOverlay'); }
+  function dist(t) { var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY; return Math.sqrt(dx * dx + dy * dy) || 1; }
+  var g = null;
+  ov.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 2 && canPinch()) { g = { d0: dist(e.touches), done: false }; clearTimeout(lpT); lpT = null; }
+    else if (e.touches.length !== 2) g = null;
+  }, { passive: true });
+  ov.addEventListener('touchmove', function (e) {
+    if (!g || e.touches.length !== 2) return;
+    e.preventDefault();
+    if (g.done) return;
+    var r = dist(e.touches) / g.d0;
+    if (!dirOn && r < 0.82) { g.done = true; openDir(); }
+    else if (dirOn && r > 1.22) { g.done = true; closeDir(); }
+  }, { passive: false });
+  ['touchend', 'touchcancel'].forEach(function (ev) {
+    ov.addEventListener(ev, function (e) { if (e.touches.length < 2) g = null; }, { passive: true });
+  });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
+    ov.addEventListener(ev, function (e) { if (canPinch()) e.preventDefault(); }, { passive: false });
+  });
+  /* trackpad pinch (desktop testing) */
+  var wAcc = 0, wLast = 0, wLock = 0;
+  ov.addEventListener('wheel', function (e) {
+    if (!e.ctrlKey || !canPinch()) return;
+    e.preventDefault();
+    var now = Date.now();
+    if (now - wLast > 300) wAcc = 0; wLast = now;
+    if (now - wLock < 600) return;
+    wAcc += e.deltaY;
+    if (wAcc > 12 && !dirOn) { wLock = now; wAcc = 0; openDir(); }
+    else if (wAcc < -12 && dirOn) { wLock = now; wAcc = 0; closeDir(); }
+  }, { passive: false });
+})();
+/* === END: AFFINITY HUB PINCH DIRECTORY === */
+
 /* === START: ARTICHATS PINCH DIRECTORY === */
 (function () {
   if (window.__acDir) return; window.__acDir = 1;

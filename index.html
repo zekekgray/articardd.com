@@ -15437,7 +15437,10 @@ async function submitFreeSignup() {
   try {
     const d = await apiPost('ownerSignupFree', { name, email });
     sessionStorage.setItem('athna-owner-token', d.token); sessionStorage.setItem('athna-owner-session', '1');
-    try { localStorage.setItem('ac-onb-new', '1'); localStorage.setItem('athna-guide-seen-v1', '1'); } catch (e) {}
+        try {
+      localStorage.setItem('ac-onb-new', '1');
+      localStorage.removeItem('athna-guide-seen-v1');
+    } catch (e) {}
     try { localStorage.setItem('athna-owner-remember', JSON.stringify({ token: d.token, expiresAt: d.expiresAt })); } catch (e) {}
     const F = "font-family:-apple-system,'SF Pro Text',sans-serif;";
     document.getElementById('fsBody').innerHTML = `<div style="${F}font-size:13px;color:rgba(60,60,67,0.6);line-height:1.5;margin:-4px 2px 12px;">Save your Private Key now. It is shown only once and signs you in.</div>

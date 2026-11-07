@@ -26858,7 +26858,7 @@ vexPaintAct();
   function frame(now) {
     raf = 0; if (!run) return;
     if (!live()) { halt(); return; }
-    if (!vexon) { halt(); vexstill(); return; }
+    if (!vexOn) { halt(); vexStill(); return; }
     raf = requestAnimationFrame(frame);
     if (now - last < 15) return;
     const dt = Math.min(0.05, (now - last) / 1000); last = now; ts += dt;

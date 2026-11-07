@@ -26595,28 +26595,55 @@ const headPivot = new T.Group(); headPivot.position.set(0, 0.2, 0); neckBase.add
       dogHead.add(inner);
     });
 
-    /* four legs */
+        /* four articulated legs: hip + knee + shin + paw pressure LED */
     const dogLegs = [];
+
     [-1, 1].forEach(sx => [-1, 1].forEach(sz => {
       const leg = new T.Group();
       leg.position.set(sx * 0.29, 0.43, sz * 0.26);
       dog.add(leg);
 
+      /* upper leg */
       const upper = cyl(0.115, 0.105, 0.40, dogWhite, 24);
       upper.position.y = -0.08;
       leg.add(upper);
 
+      /* lower-leg pivot */
+      const lower = new T.Group();
+      lower.position.y = -0.29;
+      leg.add(lower);
+
+      /* knee joint */
       const joint = sphere(0.12, dogDark, 1, 1, 1, 20);
-      joint.position.y = -0.29;
-      leg.add(joint);
+      joint.position.set(0, 0, 0);
+      lower.add(joint);
 
+      /* shin */
+      const shin = cyl(0.095, 0.085, 0.16, dogWhite, 20);
+      shin.position.y = -0.08;
+      lower.add(shin);
+
+      /* paw */
       const paw = sphere(0.17, dogSilver, 1.15, 0.65, 1.25, 24);
-      paw.position.set(0, -0.43, 0.045);
-      leg.add(paw);
+      paw.position.set(0, -0.14, 0.045);
+      lower.add(paw);
 
-      const led = sphere(0.035, dogCyan, 1, 1, 0.5, 12);
-      led.position.set(0, -0.43, 0.19);
-      leg.add(led);
+      /* independent pressure LED material */
+      const ledMat = dogCyan.clone();
+      owned.mats.push(ledMat);
+
+      const pawLed = sphere(0.035, ledMat, 1, 1, 0.5, 12);
+      pawLed.position.set(0, -0.14, 0.19);
+      lower.add(pawLed);
+
+      /* REQUIRED REFERENCES FOR dogExpress() */
+      leg.userData = {
+        lower: lower,
+        led: ledMat,
+        ledM: pawLed,
+        paw: paw,
+        p: 0
+      };
 
       dogLegs.push(leg);
     }));

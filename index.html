@@ -30017,310 +30017,187 @@ function afArtiverse(id) {
 
 /* === START: AFFINITY HUB (BACK PILL + MODAL NG AFFINITIES AT ARTIVERSE) === */
 (function () {
-  if (window.afHubOpen) return;
-
-  const os = document.getElementById('screenOS');
+  var os = document.getElementById('screenOS');
   if (!os) return;
 
-  const CH = '<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  /* alisin ang lahat ng lumang kopya para walang duplicate ids */
+  Array.prototype.slice.call(document.querySelectorAll('#afTop,#afHubOv,#afHubFixCss')).forEach(function (n) { n.remove(); });
 
-  const CV = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  var CH = '<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  var CV = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  var GLOBE = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>';
 
-  const GLOBE = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>';
+  /* CSS na hindi madaling ma-override */
+  var st = document.createElement('style');
+  st.id = 'afHubFixCss';
+  st.textContent =
+    '#afHubOv{position:fixed !important;inset:0 !important;z-index:9840 !important;background:#ECE4D6;display:none;overflow:hidden;pointer-events:auto !important;}' +
+    '#afHubOv.show{display:block !important;animation:screenFadeIn .3s cubic-bezier(.16,1,.3,1) forwards;}' +
+    '#afHubOv .af-hub-scroll{position:absolute;left:0;right:0;top:0;bottom:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(max(14px,env(safe-area-inset-top)) + 70px) 16px calc(130px + env(safe-area-inset-bottom));z-index:1;}' +
+    '#afHubOv .af-bk{z-index:3;pointer-events:auto !important;}' +
+    '#afHubOv .t{z-index:2;}' +
+    '#afTop .af-bk{pointer-events:auto !important;z-index:63;}' +
+    'body.af-hub-open #acGNav{z-index:9860 !important;}';
+  document.head.appendChild(st);
 
-  /* FIRST SCREEN */
-  const top = document.createElement('div');
+  function esc(s) {
+    if (typeof auEsc === 'function') return auEsc(s);
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+  }
+  function hap() { try { if (typeof haptic === 'function') haptic('light'); } catch (e) {} }
+  function toast(m) { try { if (typeof showToast === 'function') showToast(m, 'error'); } catch (e) {} }
+  function keepActive(el) {
+    new MutationObserver(function () { if (el.hasAttribute('inert')) el.removeAttribute('inert'); })
+      .observe(el, { attributes: true, attributeFilter: ['inert'] });
+  }
+
+  /* FIRST SCREEN: pangalan sa gitna + back pill */
+  var top = document.createElement('div');
   top.id = 'afTop';
-
-  let userName = 'You';
-
-  try {
-    if (typeof piName === 'function') {
-      userName = piName() || 'You';
-    }
-  } catch (e) {}
-
-  top.innerHTML =
-    '<div class="t">' + auEsc(userName) + '</div>' +
-    '<button type="button" class="af-bk" id="afHubTrigger" aria-label="Open Affinity">' +
-    CH +
-    '</button>';
-
+  top.innerHTML = '<div class="t"></div><button type="button" class="af-bk" aria-label="Open Affinity">' + CH + '</button>';
   os.appendChild(top);
+  var nameEl = top.querySelector('.t');
+  var trigger = top.querySelector('.af-bk');
+  keepActive(top);
 
-  /* SECOND SCREEN */
-  const ov = document.createElement('div');
+  function myName() {
+    try { return (typeof piName === 'function' && piName()) || (currentEntry && currentEntry.name) || 'You'; }
+    catch (e) { return 'You'; }
+  }
+  function refreshName() {
+    var n = myName();
+    if (nameEl.textContent !== n) nameEl.textContent = n;
+  }
+  refreshName();
+
+  /* SECOND SCREEN: AFFINITY MODAL */
+  var ov = document.createElement('div');
   ov.id = 'afHubOv';
-  ov.setAttribute('role', 'dialog');
-  ov.setAttribute('aria-modal', 'true');
   ov.setAttribute('aria-label', 'Affinity');
-
   ov.innerHTML =
-    '<button type="button" class="af-bk" id="afHubBack" aria-label="Back to stories">' +
-    CH +
-    '</button>' +
-    '<div class="t">Affinity</div>' +
-    '<div id="afHubBody"></div>';
-
+    '<div class="af-hub-scroll"></div>' +
+    '<button type="button" class="af-bk" aria-label="Back to stories">' + CH + '</button>' +
+    '<div class="t">Affinity</div>';
   document.body.appendChild(ov);
+  var scroller = ov.querySelector('.af-hub-scroll');
+  var backBtn = ov.querySelector('.af-bk');
+  keepActive(ov);
 
-  const body = document.getElementById('afHubBody');
-
-  /* ROW BUILDER */
-  function row(av, title, sub, action, storyId) {
-    const id = storyId
-      ? ' data-story-id="' + encodeURIComponent(storyId) + '"'
-      : '';
-
-    return (
-      '<div class="os-row" role="button" tabindex="0"' +
-      ' data-af-action="' + action + '"' + id +
-      ' style="cursor:pointer;pointer-events:auto;">' +
-        av +
-        '<div class="os-row-text">' +
-          '<div class="os-row-title">' + title + '</div>' +
-          '<div class="os-row-sub">' + sub + '</div>' +
-        '</div>' +
-        CV +
-      '</div>'
-    );
+  function row(av, title, sub, act, id) {
+    return '<div class="os-row" role="button" tabindex="0" data-act="' + act + '"' +
+      (id ? ' data-id="' + encodeURIComponent(id) + '"' : '') +
+      ' style="cursor:pointer;">' + av +
+      '<div class="os-row-text"><div class="os-row-title">' + title + '</div><div class="os-row-sub">' + sub + '</div></div>' + CV + '</div>';
   }
-
   function group(html) {
-    return html
-      ? '<div class="os-group">' + html + '</div>'
-      : '<div class="af-he">Nothing here yet.</div>';
+    return html ? '<div class="os-group">' + html + '</div>' : '<div class="af-he">Nothing here yet.</div>';
+  }
+  function av(s) {
+    try { return afAvOf(s, 42); } catch (e) { return ''; }
   }
 
-  /* BUILD MODAL CONTENT */
   function paint() {
-    if (!body) return;
-
     try {
-      const all = afStories() || [];
-      const mine = all.filter(s => s.mine);
-
-      const seen = new Set();
-      const people = [];
-
-      all.filter(s => !s.mine).forEach(s => {
-        const key = s.authorId || s.name;
-
-        if (!key || seen.has(key)) return;
-
-        seen.add(key);
+      var all = afStories() || [];
+      var mine = all.filter(function (s) { return s.mine; });
+      var seen = {}, people = [];
+      all.forEach(function (s) {
+        if (s.mine) return;
+        var k = s.authorId || s.name;
+        if (!k || seen[k]) return;
+        seen[k] = 1;
         people.push(s);
       });
-
-      const connected = people.filter(s => afConnected(s));
-      const discover = people.filter(s => !afConnected(s));
+      var connected = people.filter(function (s) { return afConnected(s); });
+      var discover = people.filter(function (s) { return !afConnected(s); });
 
       function personRow(s) {
-        return row(
-          afAvOf(s, 42),
-          auEsc(s.name || 'User'),
-          auEsc(
-            (s.role || '') +
-            (s.role ? ' · ' : '') +
-            'Posted ' + afAgo(s.t)
-          ),
-          'person',
-          s.id
-        );
+        return row(av(s), esc(s.name || 'User'),
+          esc((s.role || '') + (s.role ? ' · ' : '') + 'Posted ' + afAgo(s.t)), 'person', s.id);
       }
 
-      body.innerHTML =
-
-        /* MY ARTIVERSE */
+      scroller.innerHTML =
         '<div class="af-hl">My Artiverse</div>' +
-
-        group(
-          row(
-            '<div class="os-row-icon" style="background:#1c1c1e;">' +
-              GLOBE +
-            '</div>',
-            'My Artiverse',
-            'View and edit your Artiverse',
-            'my-artiverse'
-          )
-        ) +
-
-        /* MY STORY */
+        group(row('<div class="os-row-icon" style="background:#1c1c1e;">' + GLOBE + '</div>',
+          'My Artiverse', 'View and edit your Artiverse', 'my-artiverse')) +
         '<div class="af-hl">My Story</div>' +
-
-        (
-          mine.length
-            ? group(
-                mine.map(s =>
-                  row(
-                    afAvOf(s, 42),
-                    'You',
-                    auEsc(afAgo(s.t)),
-                    'my-story',
-                    s.id
-                  )
-                ).join('')
-              )
-            : '<div class="af-he">You have no active story. Tap + on the feed to add one.</div>'
-        ) +
-
-        /* CONNECTIONS */
+        (mine.length
+          ? group(mine.map(function (s) { return row(av(s), 'You', esc(afAgo(s.t)), 'my-story', s.id); }).join(''))
+          : '<div class="af-he">You have no active story. Tap + on the feed to add one.</div>') +
         '<div class="af-hl">Your Connections</div>' +
-
-        group(
-          connected.map(personRow).join('')
-        ) +
-
-        /* DISCOVER */
+        group(connected.map(personRow).join('')) +
         '<div class="af-hl">People You Can Connect With</div>' +
-
-        group(
-          discover.map(personRow).join('')
-        );
-
+        group(discover.map(personRow).join(''));
     } catch (err) {
-      console.error('[Affinity Hub] Render error:', err);
-
-      body.innerHTML =
-        '<div class="af-he">Unable to load Affinity right now. Please try again.</div>';
+      console.error('[Affinity Hub] paint error:', err);
+      scroller.innerHTML = '<div class="af-he">Unable to load Affinity right now.<br>' + esc(err && err.message) + '</div>';
     }
   }
 
-  /* OPEN MODAL */
-  window.afHubOpen = function () {
-    if (typeof haptic === 'function') haptic('light');
-
-    document.body.classList.add('af-hub-open');
-
-    ov.classList.add('show');
-
-    paint();
-
-    body.scrollTop = 0;
-  };
-
-  /* BACK TO STORY SCREEN */
-  window.afHubClose = function () {
-    if (typeof haptic === 'function') haptic('light');
-
+  function openHub() {
+    try {
+      refreshName();
+      paint();
+      document.body.classList.add('af-hub-open');
+      ov.removeAttribute('inert');
+      ov.classList.add('show');
+      scroller.scrollTop = 0;
+    } catch (err) {
+      console.error('[Affinity Hub] open error:', err);
+      toast('Affinity: ' + (err && err.message));
+    }
+  }
+  function closeHub() {
     ov.classList.remove('show');
-
     document.body.classList.remove('af-hub-open');
-  };
+    refreshName();
+  }
 
-  /* BACK PILL EVENTS */
-  document.getElementById('afHubTrigger').addEventListener('click', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    window.afHubOpen();
+  window.afHubOpen = function () { hap(); openHub(); };
+  window.afHubClose = function () { hap(); closeHub(); };
+
+  trigger.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); window.afHubOpen(); });
+  backBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); window.afHubClose(); });
+
+  /* CLICKS SA ROWS (event delegation) */
+  scroller.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act]');
+    if (!t || !scroller.contains(t)) return;
+    var act = t.getAttribute('data-act');
+    var id = t.getAttribute('data-id') ? decodeURIComponent(t.getAttribute('data-id')) : '';
+    hap();
+    closeHub();
+    setTimeout(function () {
+      try {
+        if (act === 'my-artiverse') window.arvOpenMine();
+        else if (act === 'my-story') window.afGoMine();
+        else if (act === 'person' && id) window.afArtiverse(id);
+      } catch (err) {
+        console.error('[Affinity Hub] action error:', err);
+        toast('Affinity: ' + (err && err.message));
+      }
+    }, 260);
   });
-
-  document.getElementById('afHubBack').addEventListener('click', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    window.afHubClose();
-  });
-
-  /* CLICK HANDLER: EVENT DELEGATION */
-  body.addEventListener('click', function (e) {
-    const target = e.target.closest('[data-af-action]');
-
-    if (!target || !body.contains(target)) return;
-
-    const action = target.dataset.afAction;
-    const storyId = target.dataset.storyId
-      ? decodeURIComponent(target.dataset.storyId)
-      : '';
-
-    if (typeof haptic === 'function') haptic('light');
-
-    if (action === 'my-artiverse') {
-      window.afHubClose();
-
-      setTimeout(function () {
-        if (typeof window.arvOpenMine === 'function') {
-          window.arvOpenMine();
-        }
-      }, 260);
-
-      return;
-    }
-
-    if (action === 'my-story') {
-      window.afHubClose();
-
-      setTimeout(function () {
-        if (typeof window.afGoMine === 'function') {
-          window.afGoMine();
-        }
-      }, 260);
-
-      return;
-    }
-
-    if (action === 'person' && storyId) {
-      window.afHubClose();
-
-      setTimeout(function () {
-        if (typeof window.afArtiverse === 'function') {
-          window.afArtiverse(storyId);
-        }
-      }, 260);
-    }
-  });
-
-  /* KEYBOARD ACCESS */
-  body.addEventListener('keydown', function (e) {
+  scroller.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-
-    const target = e.target.closest('[data-af-action]');
-    if (!target) return;
-
+    var t = e.target.closest('[data-act]');
+    if (!t) return;
     e.preventDefault();
-    target.click();
+    t.click();
   });
 
-  /* CLOSE WHEN LEAVING AFFINITY */
-  const pane = document.querySelector('.os-pane[data-pane="affinity"]');
-
+  /* isara kapag umalis sa Affinity (pane ay hinahanap tuwing tatawag, kaya hindi na null) */
   function watch() {
-    if (!ov.classList.contains('show')) return;
-
-    const stillAffinity =
-      pane &&
-      pane.classList.contains('active') &&
-      os.classList.contains('active');
-
-    if (!stillAffinity) {
-      window.afHubClose();
-    }
+    if (!ov.classList.contains('show')) { refreshName(); return; }
+    var pane = document.querySelector('.os-pane[data-pane="affinity"]');
+    var osOn = os.classList.contains('active') && !os.classList.contains('leaving');
+    if (!osOn || (pane && !pane.classList.contains('active'))) closeHub();
   }
+  new MutationObserver(watch).observe(os, { attributes: true, attributeFilter: ['class'], subtree: true });
 
-  if (pane) {
-    new MutationObserver(watch).observe(pane, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-  }
-
-  new MutationObserver(watch).observe(os, {
-    attributes: true,
-    attributeFilter: ['class']
-  });
-
-  /* NAVIGATION */
-  const nav = document.getElementById('acGNav');
-
-  if (nav) {
-    nav.addEventListener('click', function () {
-      setTimeout(function () {
-        if (ov.classList.contains('show')) {
-          window.afHubClose();
-        }
-      }, 0);
-    }, true);
-  }
-
+  /* pag pumindot sa bottom nav, isara ang hub */
+  var nav = document.getElementById('acGNav');
+  if (nav) nav.addEventListener('click', function () { setTimeout(closeHub, 0); }, true);
 })();
 /* === END: AFFINITY HUB === */
 

@@ -30037,7 +30037,11 @@ function afArtiverse(id) {
     '#afHubOv .af-bk{z-index:3;pointer-events:auto !important;}' +
     '#afHubOv .t{z-index:2;}' +
     '#afTop .af-bk{pointer-events:auto !important;z-index:63;}' +
-    'body.af-hub-open #acGNav{z-index:9860 !important;}';
+    'body.af-hub-open #acGNav{z-index:9860 !important;}' +
+    '#afTop .t{display:none !important;}' +
+    '#screenOS:has([data-pane="affinity"].active) .af-sp .af-sc .hd{justify-content:center !important;padding-left:84px !important;padding-right:84px !important;padding-top:calc(max(14px,env(safe-area-inset-top)) + 7px) !important;}' +
+    '.af-sp .af-sc .hd > div:last-child{min-width:0;max-width:100%;}' +
+    '.af-sp .af-sc .hd > div:last-child b,.af-sp .af-sc .hd > div:last-child small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}';
   document.head.appendChild(st);
 
   function esc(s) {

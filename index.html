@@ -29985,243 +29985,183 @@ function afArtiverse(id) {
 
 /* === START: AFFINITY HUB (BACK PILL + MODAL NG AFFINITIES AT ARTIVERSE) === */
 (function () {
-  'use strict';
-
   if (window.afHubOpen) return;
 
   const os = document.getElementById('screenOS');
   if (!os) return;
 
   const CH = '<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+  const CV = '<svg class="os-row-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  const GLOBE = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>';
 
+  /* FIRST SCREEN: centered user name + back pill */
   const top = document.createElement('div');
   top.id = 'afTop';
 
+  const userName = typeof piName === 'function'
+    ? piName()
+    : ((PERSONAL_INFO && PERSONAL_INFO.displayName) || 'You');
+
   top.innerHTML =
-    '<div class="t">Affinity</div>' +
-    '<button type="button" class="af-bk" aria-label="Affinities">' +
-    CH + '</button>';
+    '<div class="t">' + auEsc(userName) + '</div>' +
+    '<button type="button" class="af-bk" aria-label="Open Affinity" onclick="afHubOpen()">' +
+    CH +
+    '</button>';
 
   os.appendChild(top);
 
+  /* SECOND SCREEN: AFFINITY MODAL */
   const ov = document.createElement('div');
   ov.id = 'afHubOv';
-
   ov.setAttribute('role', 'dialog');
   ov.setAttribute('aria-modal', 'true');
-  ov.setAttribute('aria-label', 'Affinities');
+  ov.setAttribute('aria-label', 'Affinity');
 
   ov.innerHTML =
-    '<button type="button" class="af-bk" id="afHubBack" aria-label="Back to Affinity">' +
+    '<button type="button" class="af-bk" aria-label="Back to stories" onclick="afHubClose()">' +
     CH +
     '</button>' +
-    '<div class="t">Affinities</div>' +
+    '<div class="t">Affinity</div>' +
     '<div id="afHubBody"></div>';
 
   document.body.appendChild(ov);
 
-  function closeHub() {
-    document.body.classList.remove('af-hub-open');
-    ov.classList.remove('show');
+  function row(av, title, sub, js) {
+    return '<div class="os-row" role="button" tabindex="0" style="cursor:pointer;" ' +
+      'onclick="' + js + '" ' +
+      'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();' + js + '}">' +
+      av +
+      '<div class="os-row-text">' +
+      '<div class="os-row-title">' + title + '</div>' +
+      '<div class="os-row-sub">' + sub + '</div>' +
+      '</div>' + CV +
+      '</div>';
   }
 
-  function renderHub() {
+  function group(html) {
+    return html
+      ? '<div class="os-group">' + html + '</div>'
+      : '<div class="af-he">Nothing here yet.</div>';
+  }
+
+  function paint() {
     const body = document.getElementById('afHubBody');
     if (!body) return;
 
-    const stories = typeof afStories === 'function'
-      ? afStories()
-      : [];
+    const all = afStories();
+    const mine = all.filter(s => s.mine);
 
-    const mine = stories.filter(s => s.mine);
-    const people = [];
     const seen = new Set();
+    const people = [];
 
-    stories.forEach(s => {
-      if (s.mine) return;
-
+    all.filter(s => !s.mine).forEach(s => {
       const key = s.authorId || s.name;
-      if (!key || seen.has(key)) return;
+      if (seen.has(key)) return;
 
       seen.add(key);
       people.push(s);
     });
 
-    let html = '';
+    const connected = people.filter(s => afConnected(s));
+    const discover = people.filter(s => !afConnected(s));
 
-    html += '<div class="af-hl">My Artiverse</div>';
+    function personRow(s) {
+      const sub = (s.role || '') +
+        (s.role ? ' · ' : '') +
+        'Posted ' + afAgo(s.t);
 
-    html +=
-      '<div class="os-group">' +
-        '<div class="os-row" id="afHubMyArtiverse" role="button" tabindex="0">' +
-          '<div class="os-row-icon" style="background:#1c1c1e;color:white;">' +
-            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-              '<circle cx="12" cy="12" r="10"/>' +
-              '<path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0-20"/>' +
-            '</svg>' +
-          '</div>' +
-          '<div class="os-row-text">' +
-            '<div class="os-row-title">My Artiverse</div>' +
-            '<div class="os-row-sub">View and edit your Artiverse</div>' +
-          '</div>' +
-          '<span class="os-row-chevron">›</span>' +
-        '</div>' +
-      '</div>';
-
-    html += '<div class="af-hl">My story</div>';
-
-    if (mine.length) {
-      html += '<div class="os-group">';
-
-      mine.forEach(s => {
-        html +=
-          '<div class="os-row" data-mine-id="' +
-          auEsc(s.id) + '" role="button" tabindex="0">' +
-            afAvOf(s, 42) +
-            '<div class="os-row-text">' +
-              '<div class="os-row-title">You</div>' +
-              '<div class="os-row-sub">' + auEsc(afAgo(s.t)) + '</div>' +
-            '</div>' +
-            '<span class="os-row-chevron">›</span>' +
-          '</div>';
-      });
-
-      html += '</div>';
-    } else {
-      html += '<div class="af-he">You have no active story yet.</div>';
+      return row(
+        afAvOf(s, 42),
+        auEsc(s.name),
+        auEsc(sub),
+        "afHubClose();setTimeout(function(){afArtiverse('" + s.id + "')},260)"
+      );
     }
 
-    html += '<div class="af-hl">Affinities</div>';
+    body.innerHTML =
+      '<div class="af-hl">My Artiverse</div>' +
+      group(
+        row(
+          '<div class="os-row-icon" style="background:#1c1c1e;">' + GLOBE + '</div>',
+          'My Artiverse',
+          'View and edit your Artiverse',
+          'afHubClose();setTimeout(function(){arvOpenMine()},260)'
+        )
+      ) +
 
-    if (people.length) {
-      html += '<div class="os-group">';
+      '<div class="af-hl">My Story</div>' +
+      (mine.length
+        ? group(mine.map(s =>
+            row(
+              afAvOf(s, 42),
+              'You',
+              auEsc(afAgo(s.t)),
+              'afHubClose();setTimeout(function(){afGoMine()},260)'
+            )
+          ).join(''))
+        : '<div class="af-he">You have no active story. Tap + on the feed to add one.</div>'
+      ) +
 
-      people.forEach(s => {
-        html +=
-          '<div class="os-row" data-person-id="' +
-          auEsc(s.id) + '" role="button" tabindex="0">' +
-            afAvOf(s, 42) +
-            '<div class="os-row-text">' +
-              '<div class="os-row-title">' + auEsc(s.name) + '</div>' +
-              '<div class="os-row-sub">' +
-                auEsc(s.role || 'Affinity') +
-              '</div>' +
-            '</div>' +
-            '<span class="os-row-chevron">›</span>' +
-          '</div>';
-      });
+      '<div class="af-hl">Your Connections</div>' +
+      group(connected.map(personRow).join('')) +
 
-      html += '</div>';
-    } else {
-      html += '<div class="af-he">No active affinities yet.</div>';
-    }
-
-    html +=
-      '<div class="af-hl">People you can connect with</div>' +
-      '<div class="af-he">More people will appear here when their profiles are available.</div>';
-
-    body.innerHTML = html;
-
-    body.querySelectorAll('[data-person-id]').forEach(el => {
-      el.addEventListener('click', function () {
-        const id = this.getAttribute('data-person-id');
-        closeHub();
-
-        setTimeout(function () {
-          if (typeof afArtiverse === 'function') {
-            afArtiverse(id);
-          }
-        }, 260);
-      });
-    });
-
-    body.querySelectorAll('[data-mine-id]').forEach(el => {
-      el.addEventListener('click', function () {
-        const id = this.getAttribute('data-mine-id');
-        closeHub();
-
-        setTimeout(function () {
-          if (typeof afArtiverse === 'function') {
-            afArtiverse(id);
-          }
-        }, 260);
-      });
-    });
-
-    const myArtiverse = document.getElementById('afHubMyArtiverse');
-
-    if (myArtiverse && mine.length) {
-      myArtiverse.addEventListener('click', function () {
-        closeHub();
-
-        setTimeout(function () {
-          if (typeof afArtiverse === 'function') {
-            afArtiverse(mine[0].id);
-          }
-        }, 260);
-      });
-    }
+      '<div class="af-hl">People You Can Connect With</div>' +
+      group(discover.map(personRow).join(''));
   }
 
   window.afHubOpen = function () {
-    if (typeof haptic === 'function') haptic('light');
-
+    haptic('light');
+    paint();
     document.body.classList.add('af-hub-open');
     ov.classList.add('show');
-
-    renderHub();
   };
 
   window.afHubClose = function () {
-    if (typeof haptic === 'function') haptic('light');
-    closeHub();
+    haptic('light');
+    document.body.classList.remove('af-hub-open');
+    ov.classList.remove('show');
   };
 
-  top.querySelector('.af-bk').addEventListener('click', function () {
-    window.afHubOpen();
-  });
+  /* Close hub when leaving Affinity */
+  const pane = document.querySelector('.os-pane[data-pane="affinity"]');
 
-  document.getElementById('afHubBack').addEventListener('click', function () {
-    window.afHubClose();
-  });
+  function watch() {
+    if (!ov.classList.contains('show')) return;
 
-  const pane = document.querySelector(
-    '.os-pane[data-pane="affinity"]'
-  );
+    const stillAffinity =
+      pane &&
+      pane.classList.contains('active') &&
+      os.classList.contains('active');
 
-  function watchHub() {
-    if (
-      ov.classList.contains('show') &&
-      !(pane &&
-        pane.classList.contains('active') &&
-        os.classList.contains('active'))
-    ) {
-      closeHub();
+    if (!stillAffinity) {
+      document.body.classList.remove('af-hub-open');
+      ov.classList.remove('show');
     }
   }
 
-  if (pane && window.MutationObserver) {
-    new MutationObserver(watchHub).observe(pane, {
+  if (pane) {
+    new MutationObserver(watch).observe(pane, {
       attributes: true,
       attributeFilter: ['class']
     });
   }
 
-  if (window.MutationObserver) {
-    new MutationObserver(watchHub).observe(os, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-  }
+  new MutationObserver(watch).observe(os, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
 
+  /* Navigation remains usable inside the Affinity modal */
   const nav = document.getElementById('acGNav');
 
   if (nav) {
     nav.addEventListener('click', function () {
-      setTimeout(closeHub, 0);
+      setTimeout(function () {
+        document.body.classList.remove('af-hub-open');
+        ov.classList.remove('show');
+      }, 0);
     }, true);
   }
-
 })();
 /* === END: AFFINITY HUB === */
 
